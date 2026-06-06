@@ -1,0 +1,45 @@
+.section {
+  padding: clamp(40px, 5vw, 80px) clamp(20px, 4vw, 60px);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  background: var(--cream);
+}
+
+.count {
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.empty {
+  text-align: center;
+  padding: clamp(32px, 4vw, 48px) clamp(16px, 2vw, 20px);
+  color: #555555;
+}
+
+.emptyIcon {
+  display: block;
+  margin: 0 auto 16px;
+  color: #999999;
+}
+
+.resetLink {
+  margin-top: clamp(10px, 1vw, 12px);
+  color: #555555;
+  text-decoration: underline;
+  font-size: clamp(12px, 1vw, 14px);
+}
+
+.resetLink:hover {
+  color: #1A1A1A;
+}

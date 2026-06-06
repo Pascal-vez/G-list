@@ -1,0 +1,116 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: #FAFAFA;
+  border-radius: clamp(14px, 1.5vw, 16px) clamp(14px, 1.5vw, 16px) 0 0;
+  width: 100%;
+  max-width: clamp(480px, 45vw, 600px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: clamp(14px, 1.5vw, 16px) clamp(14px, 1.5vw, 16px) clamp(10px, 1.2vw, 12px);
+  gap: clamp(10px, 1.2vw, 12px);
+}
+
+.title {
+  font-size: clamp(14px, 1.3vw, 16px);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.address {
+  font-size: clamp(12px, 1vw, 14px);
+  color: #555555;
+}
+
+.distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: clamp(11px, 0.95vw, 13px);
+  font-weight: 500;
+  color: #F5C518;
+  margin-top: 4px;
+}
+
+.close {
+  width: clamp(32px, 3.5vw, 36px);
+  height: clamp(32px, 3.5vw, 36px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555555;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.close:hover {
+  background: #F0F0F0;
+}
+
+.mapWrap {
+  flex: 1;
+  min-height: clamp(200px, 22vw, 240px);
+  padding: 0 clamp(14px, 1.5vw, 16px);
+}
+
+.map {
+  width: 100%;
+  height: clamp(200px, 22vw, 240px);
+  border: none;
+  border-radius: clamp(10px, 1vw, 12px);
+  background: #F0F0F0;
+}
+
+.directionsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: clamp(10px, 1.2vw, 12px) clamp(14px, 1.5vw, 16px) clamp(16px, 2vw, 20px);
+  padding: clamp(12px, 1.3vw, 14px);
+  background: #F5C518;
+  color: #1A1A1A;
+  font-weight: 700;
+  font-size: clamp(12px, 1vw, 14px);
+  border-radius: clamp(8px, 1vw, 10px);
+  transition: background 0.2s ease;
+}
+
+.directionsBtn:hover {
+  background: #D4A800;
+}
+
+@media (min-width: 768px) {
+  .overlay {
+    align-items: center;
+    padding: clamp(16px, 2vw, 20px);
+  }
+
+  .modal {
+    border-radius: clamp(14px, 1.5vw, 16px);
+    max-height: 80vh;
+  }
+
+  .map {
+    height: clamp(280px, 28vw, 320px);
+  }
+}

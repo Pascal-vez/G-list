@@ -1,0 +1,239 @@
+.page {
+  background: #FAFAFA;
+  min-height: 60vh;
+}
+
+.hero {
+  background: #1A1A1A;
+  padding: calc(var(--header-height) + clamp(16px, 2vw, 20px)) clamp(20px, 4vw, 60px) clamp(24px, 3vw, 32px);
+  color: #FAFAFA;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255,255,255,0.6);
+  margin-bottom: clamp(18px, 2vw, 24px);
+  transition: color 0.2s ease;
+}
+
+.back:hover {
+  color: #FAFAFA;
+}
+
+.heroContent {
+  display: flex;
+  gap: clamp(16px, 2vw, 20px);
+  align-items: flex-start;
+}
+
+.avatar {
+  width: clamp(64px, 6vw, 90px);
+  height: clamp(64px, 6vw, 90px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 28px);
+  color: white;
+  flex-shrink: 0;
+  border: 3px solid #F5C518;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 10px);
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.nameRow h1 {
+  font-size: clamp(20px, 2.2vw, 30px);
+}
+
+.profession {
+  color: #F5C518;
+  font-weight: 500;
+  font-size: clamp(14px, 1.3vw, 18px);
+  margin-bottom: 4px;
+}
+
+.statusRow {
+  margin-bottom: 8px;
+}
+
+.slogan {
+  font-size: clamp(13px, 1.1vw, 15px);
+  color: rgba(255,255,255,0.7);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.location,
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: clamp(11px, 0.95vw, 13px);
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+
+.starFill {
+  color: #F5C518;
+  fill: #F5C518;
+}
+
+.socialWrap {
+  margin-top: clamp(16px, 2vw, 20px);
+  padding-top: clamp(12px, 1.5vw, 16px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.body {
+  max-width: clamp(600px, 55vw, 800px);
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 40px) clamp(20px, 4vw, 60px) clamp(40px, 5vw, 48px);
+}
+
+.statBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #E7F3FF;
+  color: #1877F2;
+  padding: clamp(10px, 1.2vw, 12px) clamp(14px, 1.5vw, 16px);
+  border-radius: clamp(8px, 1vw, 10px);
+  font-size: clamp(12px, 1vw, 14px);
+  font-weight: 500;
+  margin-bottom: clamp(16px, 2vw, 20px);
+}
+
+.section {
+  margin-bottom: clamp(22px, 2.5vw, 28px);
+}
+
+.section h2 {
+  font-size: clamp(15px, 1.4vw, 18px);
+  margin-bottom: clamp(10px, 1.2vw, 12px);
+  padding-bottom: 6px;
+  border-bottom: 2px solid #F5C518;
+}
+
+.desc {
+  font-size: clamp(13px, 1.1vw, 15px);
+  color: #555555;
+  line-height: 1.7;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 0.8vw, 8px);
+}
+
+.tag {
+  background: #F0F0F0;
+  padding: clamp(5px, 0.6vw, 6px) clamp(12px, 1.2vw, 14px);
+  border-radius: 20px;
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 500;
+}
+
+.tagGold {
+  background: #F5C518;
+  color: #1A1A1A;
+  padding: clamp(5px, 0.6vw, 6px) clamp(12px, 1.2vw, 14px);
+  border-radius: 20px;
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 500;
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vw, 8px);
+  margin-bottom: clamp(12px, 1.5vw, 14px);
+}
+
+.contactList p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(13px, 1.1vw, 15px);
+  color: #555555;
+}
+
+.horairesRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(13px, 1.1vw, 15px);
+  color: #555555;
+}
+
+.whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: clamp(12px, 1.3vw, 14px);
+  background: #25D366;
+  color: white;
+  font-weight: 600;
+  font-size: clamp(12px, 1vw, 14px);
+  border-radius: clamp(8px, 1vw, 12px);
+  transition: opacity 0.2s ease;
+}
+
+.whatsapp:hover {
+  opacity: 0.9;
+}
+
+.reviews {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.2vw, 12px);
+}
+
+.review {
+  background: white;
+  padding: clamp(12px, 1.5vw, 14px);
+  border-radius: clamp(10px, 1vw, 12px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.reviewHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.reviewName {
+  font-weight: 600;
+  font-size: clamp(13px, 1.1vw, 15px);
+}
+
+.review p {
+  font-size: clamp(12px, 1vw, 14px);
+  color: #555555;
+  line-height: 1.5;
+}
+
+.reviewDate {
+  font-size: clamp(10px, 0.9vw, 12px);
+  color: #999;
+  margin-top: 6px;
+  display: block;
+}
+
+.empty {
+  text-align: center;
+  padding: calc(var(--header-height) + clamp(60px, 6vw, 80px)) clamp(16px, 2vw, 20px) clamp(60px, 6vw, 80px);
+}

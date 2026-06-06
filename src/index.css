@@ -1,0 +1,221 @@
+:root {
+  --bg-deep: #0E1208;
+  --bg-mid: #141A0E;
+  --yellow: #F5C518;
+  --yellow-dim: rgba(245, 197, 24, 0.15);
+  --white: #F0EDE6;
+  --gray: #8A8A7A;
+  --gold: #F5C518;
+  --gold-hover: #D4A800;
+  --black: #1A1A1A;
+  --card-bg: #F0F0F0;
+  --text-secondary: #555555;
+  --whatsapp: #25D366;
+  --verified-bg: #E7F3FF;
+  --verified-text: #1877F2;
+  --unverified-bg: #EEEEEE;
+  --unverified-text: #757575;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
+  --radius: 12px;
+  --transition: 0.2s ease;
+  --header-height: 72px;
+  --banner-height: 0px;
+  --cream: #F8F6F0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--header-height);
+  overflow-x: clip;
+  min-width: 1280px;
+  font-size: clamp(14px, 1.2vw, 17px);
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  background: var(--cream);
+  color: var(--black);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  min-width: 1280px;
+}
+
+@media (max-width: 768px) {
+  html,
+  body {
+    min-width: 0;
+    font-size: 14px;
+  }
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
+#categories,
+#professionals,
+#regions {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: var(--black);
+  font-weight: 700;
+  padding: clamp(8px, 0.9vw, 12px) clamp(14px, 1.5vw, 22px);
+  border-radius: clamp(6px, 0.8vw, 10px);
+  font-size: clamp(13px, 1.1vw, 15px);
+  transition: background var(--transition);
+}
+
+.btn-primary:hover {
+  background: var(--gold-hover);
+}
+
+.btn-whatsapp {
+  background: var(--whatsapp);
+  color: white;
+  font-weight: 500;
+  padding: clamp(8px, 0.9vw, 12px) clamp(14px, 1.5vw, 16px);
+  border-radius: clamp(6px, 0.8vw, 8px);
+  font-size: clamp(12px, 1vw, 14px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity var(--transition);
+}
+
+.btn-whatsapp:hover {
+  opacity: 0.9;
+}
+
+.badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: clamp(10px, 0.9vw, 12px);
+  font-weight: 500;
+}
+
+.badge-verified.verified {
+  background: var(--verified-bg);
+  color: var(--verified-text);
+}
+
+.badge-verified.verified svg {
+  color: #1877F2;
+}
+
+.badge-verified.unverified {
+  background: var(--unverified-bg);
+  color: var(--unverified-text);
+}
+
+.badge-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: clamp(2px, 0.3vw, 3px) clamp(8px, 0.9vw, 10px);
+  border-radius: 20px;
+  font-size: clamp(10px, 0.9vw, 12px);
+  font-weight: 600;
+  background: #E7F3FF;
+  color: #1877F2;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes pulsePoint {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.12; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,32 @@
+.grid {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.pulseCell {
+  fill: rgba(245, 197, 24, 0);
+  animation: gridPulse 4s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes gridPulse {
+  0%, 100% { fill: rgba(245, 197, 24, 0); }
+  50% { fill: rgba(245, 197, 24, 0.12); }
+}
+
+.gridMobile .pulseCell {
+  animation-name: gridPulseMobile;
+}
+
+@keyframes gridPulseMobile {
+  0%, 100% { fill: rgba(245, 197, 24, 0); }
+  50% { fill: rgba(245, 197, 24, 0.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulseCell {
+    animation: none;
+  }
+}

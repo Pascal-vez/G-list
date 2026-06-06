@@ -1,0 +1,198 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Poppins', sans-serif;
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
+  background-image: url('/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 18, 8, 0.82);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  width: 100%;
+  max-width: clamp(480px, 45vw, 620px);
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 32px) clamp(16px, 2vw, 20px) clamp(32px, 4vw, 40px);
+  overflow-y: auto;
+  text-align: center;
+}
+
+.logo {
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: clamp(12px, 1.5vw, 16px);
+}
+
+.logoG {
+  color: #F5C518;
+}
+
+.logoList {
+  color: #FFFFFF;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(245, 197, 24, 0.12);
+  border: 1px solid rgba(245, 197, 24, 0.35);
+  color: #F5C518;
+  border-radius: 50px;
+  padding: clamp(6px, 0.8vw, 7px) clamp(14px, 1.5vw, 18px);
+  font-size: clamp(11px, 1vw, 12px);
+  font-weight: 500;
+  margin-bottom: clamp(20px, 2.5vw, 28px);
+}
+
+.title {
+  color: #FFFFFF;
+  font-size: clamp(28px, 3.5vw, 48px);
+  font-weight: 700;
+  margin-bottom: clamp(8px, 1vw, 10px);
+}
+
+.subtitle {
+  color: #F5C518;
+  font-size: clamp(14px, 1.5vw, 20px);
+  font-style: italic;
+  margin-bottom: clamp(18px, 2vw, 24px);
+}
+
+.intro {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(13px, 1.1vw, 16px);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: clamp(18px, 2vw, 24px);
+}
+
+.noteBlock {
+  background: rgba(245, 197, 24, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.3);
+  border-radius: clamp(10px, 1vw, 12px);
+  padding: clamp(14px, 1.5vw, 20px);
+  max-width: 520px;
+  width: 100%;
+  margin-bottom: clamp(18px, 2vw, 24px);
+  text-align: left;
+}
+
+.noteTitle {
+  color: #F5C518;
+  font-size: clamp(12px, 1vw, 13px);
+  font-weight: 700;
+  margin-bottom: clamp(6px, 0.8vw, 8px);
+}
+
+.noteText {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: clamp(12px, 1vw, 13px);
+  line-height: 1.6;
+}
+
+.callout {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: clamp(13px, 1.1vw, 14px);
+  line-height: 1.7;
+  max-width: 480px;
+  margin-bottom: clamp(24px, 3vw, 32px);
+}
+
+.primaryBtn,
+.secondaryBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+  min-height: clamp(48px, 5vw, 60px);
+  border-radius: clamp(8px, 1vw, 14px);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.primaryBtn {
+  background: #F5C518;
+  color: #0E1208;
+  padding: clamp(12px, 1.4vw, 16px) clamp(24px, 2.5vw, 32px);
+  font-size: clamp(14px, 1.3vw, 17px);
+  font-weight: 700;
+  border: none;
+  margin-bottom: clamp(10px, 1.2vw, 14px);
+}
+
+.primaryBtn:hover {
+  background: #D4A800;
+}
+
+.secondaryBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  padding: clamp(11px, 1.2vw, 13px) clamp(20px, 2vw, 28px);
+  font-size: clamp(13px, 1.2vw, 14px);
+  font-weight: 500;
+  margin-bottom: clamp(24px, 3vw, 32px);
+}
+
+.secondaryBtn:hover {
+  border-color: #F5C518;
+  color: #F5C518;
+}
+
+.btnHint {
+  font-size: clamp(10px, 0.9vw, 11px);
+  color: rgba(14, 18, 8, 0.6);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.btnHintSecondary {
+  font-size: clamp(10px, 0.9vw, 11px);
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.footer {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: clamp(11px, 0.95vw, 12px);
+  line-height: 1.8;
+}
+
+.footer p {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .content {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+}

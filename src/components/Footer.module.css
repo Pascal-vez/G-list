@@ -1,0 +1,425 @@
+.footer {
+  margin-top: auto;
+  background: #0E1208;
+  color: #FFFFFF;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ── Zone 1 — CTA ── */
+.ctaBand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: #F5C518;
+  padding: clamp(32px, 4vw, 60px) clamp(24px, 4vw, 60px);
+}
+
+.ctaText {
+  flex: 1;
+  min-width: 0;
+}
+
+.ctaTitle {
+  font-size: clamp(18px, 2vw, 28px);
+  font-weight: 700;
+  color: #0E1208;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.ctaSubtitle {
+  font-size: clamp(12px, 1.1vw, 15px);
+  color: rgba(14, 18, 8, 0.7);
+  line-height: 1.55;
+  max-width: 520px;
+}
+
+.ctaBtn {
+  flex-shrink: 0;
+  background: #0E1208;
+  color: #F5C518;
+  font-weight: 700;
+  font-size: clamp(13px, 1.2vw, 16px);
+  padding: clamp(11px, 1.2vw, 14px) clamp(20px, 2vw, 28px);
+  border-radius: clamp(8px, 1vw, 10px);
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ctaBtn:hover {
+  background: #1a2010;
+  transform: translateY(-1px);
+}
+
+/* ── Zone 2 — Footer principal ── */
+.main {
+  padding: clamp(40px, 5vw, 70px) clamp(24px, 4vw, 60px) clamp(32px, 4vw, 40px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: clamp(28px, 3vw, 40px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Colonne 1 — Brand */
+.colBrand {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+
+.logoLink img {
+  height: clamp(22px, 2.2vw, 30px);
+  width: auto;
+}
+
+.brandSlogan {
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+}
+
+.brandDesc {
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.65;
+  max-width: 260px;
+}
+
+.socials {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.socialBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.socialBtn:hover {
+  background: #F5C518;
+  color: #0E1208;
+  border-color: #F5C518;
+}
+
+.guineaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  background: rgba(245, 197, 24, 0.12);
+  border: 1px solid rgba(245, 197, 24, 0.25);
+  color: #F5C518;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Titres de section */
+.sectionTitle {
+  font-size: clamp(11px, 0.9vw, 13px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.85);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #F5C518;
+}
+
+.sectionTitleSub {
+  font-size: clamp(11px, 0.9vw, 13px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.55);
+  padding-bottom: 8px;
+  margin: 20px 0 12px;
+  border-bottom: 1px solid rgba(245, 197, 24, 0.2);
+}
+
+/* Colonne 2 — Navigation */
+.linkList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.navLink {
+  display: inline-block;
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 2;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.navLink:hover {
+  color: #F5C518;
+  transform: translateX(4px);
+}
+
+/* Colonne 3 — Catégories */
+.categoryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 2;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.categoryLink:hover {
+  color: #F5C518;
+  transform: translateX(4px);
+}
+
+.categoryIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Colonne 4 — Contact */
+.contactList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.contactList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+}
+
+.contactList svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: rgba(245, 197, 24, 0.7);
+}
+
+.prototypeBlock {
+  margin-bottom: 16px;
+}
+
+.prototypeTitle {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #F5C518;
+  margin-bottom: 6px;
+}
+
+.prototypeText {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.55;
+}
+
+.feedbackBtn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 50px;
+  background: rgba(245, 197, 24, 0.12);
+  border: 1px solid rgba(245, 197, 24, 0.25);
+  color: #F5C518;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.feedbackBtn:hover {
+  background: rgba(245, 197, 24, 0.2);
+  border-color: rgba(245, 197, 24, 0.45);
+}
+
+/* ── Zone 3 — Régions ── */
+.regionsBand {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: clamp(16px, 2vw, 20px) clamp(24px, 4vw, 60px);
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.regionsLabel {
+  flex-shrink: 0;
+  font-size: clamp(10px, 0.9vw, 12px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.regionsPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.regionPill {
+  padding: clamp(4px, 0.5vw, 7px) clamp(10px, 1vw, 14px);
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(11px, 0.9vw, 13px);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.regionPill:hover {
+  background: rgba(245, 197, 24, 0.15);
+  border-color: rgba(245, 197, 24, 0.4);
+  color: #F5C518;
+}
+
+/* ── Zone 4 — Copyright ── */
+.copyrightBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(12px, 1.2vw, 18px) clamp(24px, 4vw, 60px);
+  padding-right: clamp(220px, 20vw, 300px);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.copyrightText {
+  font-size: clamp(11px, 0.9vw, 13px);
+  color: rgba(255, 255, 255, 0.3);
+  line-height: 1.5;
+}
+
+.legalLinks {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.legalLinks a {
+  font-size: clamp(11px, 0.9vw, 13px);
+  color: rgba(255, 255, 255, 0.25);
+  transition: color 0.2s ease;
+}
+
+.legalLinks a:hover {
+  color: #F5C518;
+}
+
+.legalLinks span {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .ctaBand {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: calc(var(--header-height) + 28px) 20px 36px;
+    scroll-margin-top: var(--header-height);
+  }
+
+  .ctaBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .main {
+    padding: 40px 20px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .brandDesc {
+    max-width: none;
+  }
+
+  .regionsBand {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 20px;
+  }
+
+  .regionsPills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .regionsPills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .copyrightBar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 20px;
+    padding-right: 20px;
+  }
+
+  .legalLinks {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .colBrand {
+    grid-column: 1 / -1;
+  }
+}

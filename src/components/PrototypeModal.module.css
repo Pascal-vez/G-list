@@ -1,0 +1,62 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 2vw, 20px);
+  animation: fadeIn 0.25s ease;
+}
+
+.modal {
+  background: #FAFAFA;
+  border-radius: clamp(14px, 1.5vw, 16px);
+  padding: clamp(24px, 2.5vw, 32px) clamp(18px, 2vw, 24px);
+  max-width: clamp(320px, 28vw, 420px);
+  width: 100%;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+.iconWrap {
+  width: clamp(52px, 5.5vw, 64px);
+  height: clamp(52px, 5.5vw, 64px);
+  border-radius: 50%;
+  background: #FFFBE6;
+  border: 2px solid #F5C518;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto clamp(16px, 2vw, 20px);
+  color: #F5C518;
+  font-size: clamp(24px, 2.5vw, 34px);
+}
+
+.title {
+  font-size: clamp(18px, 2vw, 20px);
+  margin-bottom: clamp(10px, 1.2vw, 12px);
+}
+
+.text {
+  font-size: clamp(13px, 1.1vw, 14px);
+  color: #555555;
+  line-height: 1.6;
+  margin-bottom: clamp(20px, 2.5vw, 24px);
+}
+
+.btn {
+  width: 100%;
+  height: clamp(44px, 4.5vw, 56px);
+  background: #F5C518;
+  color: #1A1A1A;
+  font-weight: 700;
+  font-size: clamp(14px, 1.2vw, 15px);
+  border-radius: clamp(8px, 1vw, 10px);
+  transition: background 0.2s ease;
+}
+
+.btn:hover {
+  background: #D4A800;
+}

@@ -1,0 +1,15 @@
+.wrapper {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.proCard {
+  transition: transform 0.2s ease;
+}

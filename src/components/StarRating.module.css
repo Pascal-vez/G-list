@@ -1,0 +1,34 @@
+.stars {
+  display: flex;
+  gap: clamp(3px, 0.4vw, 4px);
+}
+
+.star {
+  color: #E0E0E0;
+  transition: color 0.15s ease, transform 0.15s ease;
+  line-height: 1;
+  padding: 0;
+  font-size: clamp(14px, 1.3vw, 18px);
+}
+
+.star.filled {
+  color: #F5C518;
+}
+
+.star:not(:disabled):hover {
+  transform: scale(1.15);
+}
+
+.display {
+  display: inline-flex;
+  gap: 2px;
+  font-size: clamp(14px, 1.3vw, 18px);
+}
+
+.display .filled {
+  color: #F5C518;
+}
+
+.display .empty {
+  color: #E0E0E0;
+}

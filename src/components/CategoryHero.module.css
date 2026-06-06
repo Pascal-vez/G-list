@@ -1,0 +1,208 @@
+.hero {
+  position: relative;
+  min-height: clamp(280px, 28vw, 360px);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg-deep);
+}
+
+.bgImage {
+  position: absolute;
+  inset: 0;
+  top: 8%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 58%;
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      105deg,
+      rgba(14, 18, 8, 0.97) 0%,
+      rgba(14, 18, 8, 0.9) 38%,
+      rgba(14, 18, 8, 0.55) 62%,
+      rgba(14, 18, 8, 0.25) 100%
+    ),
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--cat-color) 18%, rgba(14, 18, 8, 0.95)) 0%,
+      transparent 55%
+    );
+  pointer-events: none;
+}
+
+.accentBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    var(--cat-color),
+    color-mix(in srgb, var(--cat-color) 40%, transparent)
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 3;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: calc(var(--header-height) + clamp(14px, 1.5vw, 20px)) clamp(20px, 4vw, 60px) clamp(28px, 3vw, 40px);
+  min-height: clamp(280px, 28vw, 360px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(240, 237, 230, 0.6);
+  font-size: clamp(12px, 1vw, 14px);
+  font-weight: 500;
+  margin-bottom: clamp(14px, 1.5vw, 20px);
+  transition: color 0.2s ease;
+  width: fit-content;
+}
+
+.back:hover {
+  color: var(--cat-color);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(12px, 1.5vw, 16px);
+  max-width: clamp(480px, 45vw, 680px);
+}
+
+.iconWrap {
+  width: clamp(56px, 5vw, 72px);
+  height: clamp(56px, 5vw, 72px);
+  border-radius: clamp(10px, 1vw, 18px);
+  background: var(--cat-bg);
+  border: 1px solid color-mix(in srgb, var(--cat-color) 35%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--cat-color) 20%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.textBlock {
+  min-width: 0;
+}
+
+.eyebrow {
+  font-size: clamp(10px, 0.9vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cat-color);
+  margin-bottom: clamp(6px, 0.8vw, 8px);
+}
+
+.title {
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: clamp(8px, 1vw, 10px);
+}
+
+.description {
+  font-size: clamp(13px, 1.1vw, 16px);
+  color: rgba(240, 237, 230, 0.72);
+  line-height: 1.65;
+  margin-bottom: clamp(12px, 1.5vw, 16px);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(8px, 1vw, 10px);
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  padding: clamp(6px, 0.7vw, 7px) clamp(12px, 1.2vw, 14px);
+  border-radius: clamp(6px, 0.8vw, 8px);
+  background: var(--cat-color);
+  color: var(--bg-deep);
+  font-size: clamp(12px, 1vw, 14px);
+  font-weight: 700;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(240, 237, 230, 0.35);
+}
+
+.regionHint {
+  font-size: clamp(11px, 0.95vw, 13px);
+  color: rgba(240, 237, 230, 0.55);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: clamp(300px, 50vw, 340px);
+  }
+
+  .inner {
+    min-height: clamp(300px, 50vw, 340px);
+    padding: calc(var(--header-height) + 10px) clamp(16px, 4vw, 20px) clamp(24px, 4vw, 28px);
+  }
+
+  .bgImage {
+    top: 10%;
+    object-position: 75% 62%;
+    transform: scale(1.12);
+  }
+
+  .overlay {
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(14, 18, 8, 0.92) 0%,
+        rgba(14, 18, 8, 0.82) 55%,
+        rgba(14, 18, 8, 0.65) 100%
+      ),
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--cat-color) 15%, rgba(14, 18, 8, 0.9)) 0%,
+        transparent 80%
+      );
+  }
+
+  .content {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .content {
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(16px, 2vw, 24px);
+  }
+
+  .description {
+    max-width: clamp(420px, 40vw, 520px);
+  }
+}

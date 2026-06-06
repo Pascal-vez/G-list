@@ -1,0 +1,57 @@
+.map {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.breatheGroup {
+  transform-origin: 50% 50%;
+  animation: breathe 8s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+.land {
+  fill: rgba(245, 197, 24, 0.06);
+  stroke: #F5C518;
+  stroke-width: 1.5;
+  stroke-opacity: 0.35;
+}
+
+.connection {
+  stroke: #F5C518;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  stroke-opacity: 0.2;
+  fill: none;
+}
+
+.regionPoint {
+  fill: #F5C518;
+  animation: pulsePoint 3s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+.hubPoint {
+  fill: #F5C518;
+  animation: pulsePoint 2.5s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes pulsePoint {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breatheGroup,
+  .regionPoint,
+  .hubPoint {
+    animation: none;
+    opacity: 0.7;
+  }
+}
