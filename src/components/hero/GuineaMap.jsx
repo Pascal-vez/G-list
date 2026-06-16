@@ -91,17 +91,17 @@ export default function GuineaMap({ className = '' }) {
         <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
         <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
       </circle>
-      <text x="70" y="220" fontSize="9" fill="#F5C518" opacity="0.7" fontFamily="Poppins, sans-serif">Conakry</text>
+      <text x="70" y="220" fontSize="9" fill="#F5C518" opacity="0.7" fontFamily="Inter, sans-serif">Conakry</text>
 
       <circle cx="115" cy="185" r="3" fill="#F5C518" opacity="0.7">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="3s" begin="0.5s" repeatCount="indefinite" />
       </circle>
-      <text x="120" y="182" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Poppins, sans-serif">Kindia</text>
+      <text x="120" y="182" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Inter, sans-serif">Kindia</text>
 
       <circle cx="168" cy="145" r="3" fill="#F5C518" opacity="0.7">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="4s" begin="1s" repeatCount="indefinite" />
       </circle>
-      <text x="173" y="142" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Poppins, sans-serif">Labé</text>
+      <text x="173" y="142" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Inter, sans-serif">Labé</text>
 
       <circle cx="195" cy="168" r="3" fill="#F5C518" opacity="0.7">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="3.5s" begin="0.8s" repeatCount="indefinite" />
@@ -118,12 +118,12 @@ export default function GuineaMap({ className = '' }) {
       <circle cx="280" cy="168" r="3" fill="#F5C518" opacity="0.7">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="4.5s" begin="0.7s" repeatCount="indefinite" />
       </circle>
-      <text x="285" y="165" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Poppins, sans-serif">Kankan</text>
+      <text x="285" y="165" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Inter, sans-serif">Kankan</text>
 
       <circle cx="262" cy="255" r="3" fill="#F5C518" opacity="0.7">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="3.8s" begin="1.2s" repeatCount="indefinite" />
       </circle>
-      <text x="267" y="252" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Poppins, sans-serif">Nzérékoré</text>
+      <text x="267" y="252" fontSize="8" fill="#F5C518" opacity="0.5" fontFamily="Inter, sans-serif">Nzérékoré</text>
 
       <circle cx="295" cy="130" r="3" fill="#F5C518" opacity="0.7">
         <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.5s" begin="2s" repeatCount="indefinite" />

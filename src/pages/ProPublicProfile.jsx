@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Clock, MessageCircle, Star, BadgeCheck, ArrowLeft, Eye } from 'lucide-react';
-import { getProAccount, getProReviews, getProAverageRating, isPremiumActive, incrementProProfileViews } from '../utils/storage';
+import { MapPin, Phone, Clock, MessageCircle, Star, BadgeCheck, ArrowLeft, Eye, Globe } from 'lucide-react';
+import { getProAccount, getProReviews, getProAverageRating, isPremiumActive, incrementProProfileViews, getMinisiteSlugForPro } from '../utils/storage';
+import { getMinisitePublicPath } from '../utils/minisite';
 import { getInitials, getAvatarColor, formatWhatsAppLink } from '../utils/helpers';
+import { usePageMeta } from '../hooks/usePageMeta';
 import { StarDisplay } from '../components/StarRating';
 import SocialLinks from '../components/SocialLinks';
 import OpenStatusBadge from '../components/OpenStatusBadge';
@@ -11,6 +13,15 @@ import styles from './ProPublicProfile.module.css';
 export default function ProPublicProfile() {
   const account = getProAccount();
   const premium = account && isPremiumActive(account);
+
+  usePageMeta({
+    title: account ? account.nom : 'Mon profil public',
+    description: account
+      ? `${account.profession} à ${account.region} — profil professionnel G-List`
+      : 'Votre page publique sur G-List',
+    path: '/mon-profil',
+    noIndex: true,
+  });
 
   useEffect(() => {
     if (account) incrementProProfileViews();
@@ -27,6 +38,7 @@ export default function ProPublicProfile() {
 
   const reviews = getProReviews(account.id);
   const avgRating = getProAverageRating(account.id);
+  const minisiteSlug = premium ? getMinisiteSlugForPro(account.id, account) : null;
 
   return (
     <div className={styles.page}>
@@ -44,7 +56,7 @@ export default function ProPublicProfile() {
           </div>
           <div>
             <div className={styles.nameRow}>
-              <h1>{account.nom}</h1>
+              <h1 className="hero-display">{account.nom}</h1>
               {premium && (
                 <span className="badge-verified verified">
                   <BadgeCheck size={14} />
@@ -80,6 +92,16 @@ export default function ProPublicProfile() {
       </div>
 
       <div className={styles.body}>
+        {minisiteSlug && (
+          <Link to={getMinisitePublicPath(minisiteSlug)} className={styles.visitSiteBanner}>
+            <Globe size={20} aria-hidden="true" />
+            <div>
+              <strong>Visiter mon site</strong>
+              <span>Portfolio complet — glist.gn/pro/{minisiteSlug}</span>
+            </div>
+          </Link>
+        )}
+
         {premium && account.profileViews != null && (
           <div className={styles.statBar}>
             <Eye size={16} />

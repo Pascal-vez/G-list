@@ -5,13 +5,13 @@ function ProCard({ x, y, initials, label, city, color }) {
     <g transform={`translate(${x}, ${y})`} className={styles.proCard}>
       <rect width="52" height="52" rx="10" fill="#1F1F1F" stroke={color} strokeWidth="1.5" />
       <circle cx="26" cy="20" r="11" fill={color} />
-      <text x="26" y="24" textAnchor="middle" fill="white" fontSize="9" fontWeight="700" fontFamily="Poppins, sans-serif">
+      <text x="26" y="24" textAnchor="middle" fill="white" fontSize="9" fontWeight="700" fontFamily="Inter, sans-serif">
         {initials}
       </text>
-      <text x="26" y="38" textAnchor="middle" fill="#F5C518" fontSize="7" fontWeight="600" fontFamily="Poppins, sans-serif">
+      <text x="26" y="38" textAnchor="middle" fill="#F5C518" fontSize="7" fontWeight="600" fontFamily="Inter, sans-serif">
         {label}
       </text>
-      <text x="26" y="47" textAnchor="middle" fill="#777" fontSize="6.5" fontFamily="Poppins, sans-serif">
+      <text x="26" y="47" textAnchor="middle" fill="#777" fontSize="6.5" fontFamily="Inter, sans-serif">
         {city}
       </text>
     </g>
@@ -136,8 +136,8 @@ export default function HeroIllustration() {
             <animate attributeName="r" values="38;48;38" dur="3s" repeatCount="indefinite" />
             <animate attributeName="opacity" values="0.3;0.1;0.3" dur="3s" repeatCount="indefinite" />
           </circle>
-          <text x={hub.x} y={hub.y - 4} textAnchor="middle" fill="#1A1A1A" fontSize="20" fontWeight="700" fontFamily="Poppins, sans-serif">G</text>
-          <text x={hub.x} y={hub.y + 14} textAnchor="middle" fill="#1A1A1A" fontSize="10" fontWeight="600" fontFamily="Poppins, sans-serif">-List</text>
+          <text x={hub.x} y={hub.y - 4} textAnchor="middle" fill="#1A1A1A" fontSize="20" fontWeight="700" fontFamily="Inter, sans-serif">G</text>
+          <text x={hub.x} y={hub.y + 14} textAnchor="middle" fill="#1A1A1A" fontSize="10" fontWeight="600" fontFamily="Inter, sans-serif">-List</text>
         </g>
 
         {/* Carrés pros aux 6 régions */}
@@ -148,7 +148,7 @@ export default function HeroIllustration() {
         </g>
 
         {/* Légende carte */}
-        <text x="250" y="348" textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9" fontWeight="500" fontFamily="Poppins, sans-serif" letterSpacing="1">
+        <text x="250" y="348" textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9" fontWeight="500" fontFamily="Inter, sans-serif" letterSpacing="1">
           RÉPUBLIQUE DE GUINÉE · TOUTES LES RÉGIONS CONNECTÉES
         </text>
       </svg>

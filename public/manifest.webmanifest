@@ -1,0 +1,18 @@
+{
+  "name": "G-List — Annuaire professionnel Guinée",
+  "short_name": "G-List",
+  "description": "Trouvez les meilleurs professionnels de Guinée",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F6F0",
+  "theme_color": "#F5C518",
+  "lang": "fr-GN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

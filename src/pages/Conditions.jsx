@@ -1,57 +1,65 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export default function Conditions() {
+  usePageMeta({
+    title: 'Conditions d\'utilisation',
+    description: 'Conditions générales d\'utilisation de la plateforme G-List.',
+    path: '/conditions',
+  });
+
   return (
     <InfoPageLayout
       title="Conditions d'utilisation"
-      subtitle="Juin 2026 — Version prototype"
+      subtitle="Dernière mise à jour : juin 2026"
       pageKey="conditions"
     >
-      <InfoSection title="Nature du service">
+      <InfoSection title="1. Objet">
         <p>
-          G-List est actuellement un prototype de validation. La plateforme n&apos;est pas encore
-          en production officielle. Toutes les informations affichées — professionnels, notes,
-          avis, coordonnées — sont entièrement fictives et créées uniquement à des fins de test.
+          Les présentes conditions régissent l&apos;accès et l&apos;utilisation de G-List, annuaire professionnel
+          permettant aux visiteurs de rechercher des professionnels en Guinée et aux professionnels de gérer leur présence en ligne.
         </p>
       </InfoSection>
 
-      <InfoSection title="Utilisation du prototype">
+      <InfoSection title="2. Comptes utilisateurs">
         <p>
-          En accédant à G-List, vous acceptez que les informations affichées sont fictives, que le
-          prototype est fourni à des fins d&apos;évaluation uniquement, qu&apos;aucune transaction
-          réelle ne peut être effectuée via cette plateforme, et que les numéros WhatsApp affichés
-          sont fictifs et non fonctionnels.
+          Les visiteurs peuvent créer un compte pour gérer favoris et historique. Les professionnels disposent d&apos;un
+          espace dédié avec différents plans (Free, Advanced, Premium). Vous êtes responsable de la confidentialité de
+          vos identifiants.
         </p>
       </InfoSection>
 
-      <InfoSection title="Responsabilité">
+      <InfoSection title="3. Contenus publiés">
         <p>
-          G-List prototype est fourni tel quel, sans garantie d&apos;aucune sorte. Le créateur de
-          G-List ne peut être tenu responsable d&apos;une quelconque décision prise sur la base
-          des informations affichées dans ce prototype.
+          Les professionnels garantissent l&apos;exactitude des informations publiées (coordonnées, tarifs, qualifications).
+          G-List se réserve le droit de modérer, suspendre ou supprimer tout contenu non conforme.
         </p>
       </InfoSection>
 
-      <InfoSection title="Propriété intellectuelle">
+      <InfoSection title="4. Avis et signalements">
         <p>
-          Le nom G-List, le logo, le design et le concept de la plateforme sont la propriété
-          exclusive de leur créateur. Toute reproduction, copie ou utilisation sans autorisation
-          explicite est strictement interdite.
+          Les avis doivent être honnêtes et fondés sur une expérience réelle. Les utilisateurs peuvent signaler un profil
+          via le bouton dédié. G-List examine les signalements et peut retirer des contenus abusifs.
         </p>
       </InfoSection>
 
-      <InfoSection title="Liste d'attente">
+      <InfoSection title="5. Abonnements et paiements">
         <p>
-          En rejoignant la liste d&apos;attente G-List, vous acceptez d&apos;être contacté sur
-          WhatsApp lors du lancement officiel de la plateforme. Vous pouvez vous désinscrire à
-          tout moment en nous contactant directement.
+          Les plans payants sont facturés en GNF selon les tarifs affichés. Les paiements via mobile money seront traités
+          par un prestataire sécurisé. Aucun remboursement n&apos;est dû pour la période entamée sauf disposition légale contraire.
         </p>
       </InfoSection>
 
-      <InfoSection title="Évolution des conditions">
+      <InfoSection title="6. Responsabilité">
         <p>
-          Ces conditions seront remplacées par des conditions complètes lors du lancement officiel
-          de G-List en République de Guinée.
+          G-List est une plateforme de mise en relation. Les prestations sont fournies directement par les professionnels
+          référencés. G-List ne saurait être tenu responsable des litiges entre utilisateurs et professionnels.
+        </p>
+      </InfoSection>
+
+      <InfoSection title="7. Droit applicable">
+        <p>
+          Les présentes conditions sont régies par le droit guinéen. En cas de litige, les tribunaux de Conakry sont compétents.
         </p>
       </InfoSection>
     </InfoPageLayout>

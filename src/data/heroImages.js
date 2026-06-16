@@ -1,8 +1,8 @@
 export const HERO_SLIDES = [
-  '/images/hero-1.png',
-  '/images/hero-2.png',
-  '/images/hero-5.png',
-  '/images/hero-6.png',
+  '/images/hero-1.svg',
+  '/images/hero-2.svg',
+  '/images/hero-5.svg',
+  '/images/hero-6.svg',
 ];
 
 /** Intervalle entre chaque image (2 min) */

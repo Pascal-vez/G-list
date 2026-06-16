@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { acknowledgePrototype } from '../utils/storage';
 import styles from './PrototypeModal.module.css';
 
@@ -11,16 +11,15 @@ export default function PrototypeModal({ onAccept }) {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <div className={styles.iconWrap}>
-          <AlertTriangle size={32} />
-        </div>
-        <h2 className={styles.title}>Prototype de test</h2>
+        <h2 className={styles.title}>Bienvenue sur G-List</h2>
         <p className={styles.text}>
-          Les informations affichées sont fictives. G-List est en phase de validation.
-          Votre avis nous aide à construire la bonne plateforme.
+          En continuant, vous acceptez nos{' '}
+          <Link to="/conditions" onClick={handleAccept}>conditions d&apos;utilisation</Link>
+          {' '}et notre{' '}
+          <Link to="/confidentialite" onClick={handleAccept}>politique de confidentialité</Link>.
         </p>
-        <button className={styles.btn} onClick={handleAccept}>
-          J'ai compris
+        <button type="button" className={styles.btn} onClick={handleAccept}>
+          J&apos;accepte et je continue
         </button>
       </div>
     </div>

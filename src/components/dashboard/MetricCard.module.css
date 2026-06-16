@@ -1,0 +1,60 @@
+.card {
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.trendUp {
+  color: #2e7d32;
+  background: rgba(46, 125, 50, 0.1);
+}
+
+.trendDown {
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.08);
+}
+
+.value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0E1208;
+  line-height: 1.2;
+}
+
+.label {
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+}
+
+.period {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 4px;
+}

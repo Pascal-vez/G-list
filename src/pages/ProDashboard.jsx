@@ -1,34 +1,104 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Briefcase, MapPin, Phone, Search, Crown, BadgeCheck,
   Save, Smartphone, AlertCircle, CheckCircle, Star,
   Eye, MessageSquare, BarChart3, ExternalLink, Lock, LogOut, KeyRound, Settings,
+  LayoutDashboard, Image, Bell, HelpCircle, Menu, X, Users, Globe, FileText,
+  Award, TrendingUp, Zap, History, CreditCard,
 } from 'lucide-react';
 import { REGIONS } from '../data/constants';
 import ProfessionSelect, { resolveProfessionValue, professionToFormFields } from '../components/ProfessionSelect';
 import {
   getProAccount, saveProAccount, createProAccount, loginProAccount,
-  recoverProPassword, logoutProAccount,
-  subscribePremium, unsubscribePremium, isPremiumActive, PREMIUM_PRICE_GNF,
-  getProReviews, getProAverageRating,
+  logoutProAccount, deleteProAccount,
+  subscribePremium, unsubscribePremium, PREMIUM_PRICE_GNF,
+  getProReviews, getProAverageRating, getProPlanLevel, upgradePlan, isPremiumActive,
+  BILLING_CYCLE_MONTHLY, BILLING_CYCLE_ANNUAL,
 } from '../utils/storage';
 import { getInitials, getAvatarColor } from '../utils/helpers';
+import { getUnreadCount } from '../utils/notificationInbox';
+import { SAAS_PLATFORM_LEVEL } from '../utils/saasLevel100';
 import { StarDisplay } from '../components/StarRating';
 import { NETWORKS } from '../components/SocialLinks';
+import { usePageMeta } from '../hooks/usePageMeta';
+import { UPGRADE_CONGRATS } from '../utils/planConfig';
+import DateRangePicker, { defaultDateRange } from '../components/dashboard/DateRangePicker';
 import styles from './ProDashboard.module.css';
+import {
+  ServicesTab, PhotosTab, ReviewsTabExtended, UpgradeTab,
+  AnalyticsTab, ConcurrenceTab, SuggestionsTab, CrmTab, MinisiteTab,
+  ReportsTab, ReputationTab, RankingTab, AlertsTab,
+  OverviewFreeTab, ProfileTabExtended, SettingsTab,
+  HistoryTab, BillingTab, NotificationsTab,
+} from './ProDashboardExtras';
 
 function formatGNF(n) {
   return new Intl.NumberFormat('fr-GN').format(n);
 }
 
-const TABS = [
-  { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
-  { id: 'profile', label: 'Mon profil', icon: Briefcase },
-  { id: 'reviews', label: 'Avis', icon: MessageSquare },
-  { id: 'premium', label: 'Premium', icon: Crown },
-  { id: 'settings', label: 'Paramètres', icon: Settings },
-];
+function getTabsForPlan(plan) {
+  const base = [
+    { id: 'overview', label: 'Tableau de bord', icon: LayoutDashboard, section: 'principal' },
+    { id: 'profile', label: 'Mon profil', icon: Briefcase, section: 'principal' },
+    { id: 'services', label: 'Services', icon: Briefcase, section: 'principal' },
+    { id: 'photos', label: 'Photos', icon: Image, section: 'principal' },
+    { id: 'reviews', label: 'Avis clients', icon: MessageSquare, section: 'principal' },
+    { id: 'upgrade', label: 'Upgrade', icon: Crown, section: 'compte' },
+    { id: 'history', label: 'Historique', icon: History, section: 'compte' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, section: 'compte' },
+    { id: 'settings', label: 'Paramètres', icon: Settings, section: 'compte' },
+  ];
+  if (plan === 'advanced' || plan === 'premium') {
+    base.splice(8, 0,
+      { id: 'billing', label: 'Facturation', icon: CreditCard, section: 'compte' },
+    );
+  }
+  if (plan === 'advanced' || plan === 'premium') {
+    base.splice(6, 0,
+      { id: 'analytics', label: 'Statistiques', icon: BarChart3, section: 'pro' },
+      { id: 'concurrence', label: 'Concurrence', icon: Search, section: 'pro' },
+      { id: 'suggestions', label: 'Suggestions IA', icon: Star, section: 'pro' },
+      { id: 'alerts', label: 'Centre d\'alertes', icon: Zap, section: 'pro' },
+    );
+  }
+  if (plan === 'premium') {
+    base.splice(10, 0,
+      { id: 'crm', label: 'CRM Prospects', icon: Users, section: 'premium' },
+      { id: 'minisite', label: 'Mini-site', icon: Globe, section: 'premium' },
+      { id: 'reports', label: 'Rapports', icon: FileText, section: 'premium' },
+      { id: 'reputation', label: 'Score Réputation', icon: Award, section: 'premium' },
+      { id: 'ranking', label: 'Classement', icon: TrendingUp, section: 'premium' },
+    );
+  }
+  return base;
+}
+
+const TAB_SUBTITLES = {
+  overview: 'Vue d\'ensemble de votre activité et de votre profil',
+  profile: 'Gérez les informations visibles sur votre fiche',
+  services: 'Liste des prestations que vous proposez',
+  photos: 'Galerie et visuels de votre activité',
+  reviews: 'Avis et retours de vos clients',
+  upgrade: 'Comparez les offres et évoluez',
+  settings: 'Compte et préférences',
+  analytics: 'Performances et trafic sur 30 jours',
+  concurrence: 'Positionnement dans votre catégorie',
+  suggestions: 'Recommandations pour améliorer votre visibilité',
+  crm: 'Suivi de vos prospects et conversions',
+  minisite: 'Éditeur portfolio — sections, fichiers et lien personnalisé',
+  reports: 'Rapports mensuels de performance',
+  reputation: 'Score global de votre réputation',
+  ranking: 'Classement dans votre ville',
+  alerts: 'Centre d\'alertes — événements et notifications',
+  history: 'Historique complet de votre activité',
+  billing: 'Abonnements et historique des paiements',
+  notifications: 'Boîte de réception G-List',
+};
+
+const DATE_FILTER_TABS = new Set([
+  'overview', 'analytics', 'reviews', 'crm', 'reports', 'reputation', 'alerts', 'history',
+]);
 
 const EMPTY_FORM = {
   nom: '', categorie: '', profession: '', customProfession: '', region: '', quartier: '', telephone: '', whatsapp: '',
@@ -51,12 +121,17 @@ function accountToForm(acc) {
 }
 
 export default function ProDashboard() {
+  usePageMeta({
+    title: 'Espace professionnel',
+    description: 'Gérez votre profil, vos avis et votre visibilité sur G-List.',
+    path: '/espace-pro',
+    noIndex: true,
+  });
+
   const [account, setAccount] = useState(() => getProAccount());
   const [authMode, setAuthMode] = useState('login');
   const [form, setForm] = useState(() => accountToForm(getProAccount()));
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [recoveredPassword, setRecoveredPassword] = useState(null);
   const [authError, setAuthError] = useState('');
   const [tab, setTab] = useState('overview');
   const [saved, setSaved] = useState(false);
@@ -64,12 +139,46 @@ export default function ProDashboard() {
   const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
   const [premiumSuccess, setPremiumSuccess] = useState(false);
   const [premiumCancelled, setPremiumCancelled] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState('');
+  const [dateRange, setDateRange] = useState(defaultDateRange);
+  const [upgradeCongrats, setUpgradeCongrats] = useState(null);
+  const [searchParams] = useSearchParams();
 
   const isLoggedIn = !!account;
 
-  const premiumActive = account && isPremiumActive(account);
+  const plan = getProPlanLevel(account);
+  const TABS = getTabsForPlan(plan);
+  const activeTab = TABS.find((t) => t.id === tab) || TABS[0];
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && TABS.some((item) => item.id === t)) {
+      setTab(t);
+    }
+  }, [searchParams, plan]);
   const reviews = account ? getProReviews(account.id) : [];
   const avgRating = account ? getProAverageRating(account.id) : 0;
+  const adminBroadcastCount = useMemo(() => getUnreadCount(), [tab, account]);
+
+  const handleTabChange = (id) => {
+    setTab(id);
+    setSidebarOpen(false);
+  };
+
+  const handleHeaderSearch = (e) => {
+    e.preventDefault();
+    if (headerSearch.trim()) {
+      window.location.href = `/annuaire?search=${encodeURIComponent(headerSearch.trim())}`;
+    }
+  };
+
+  const sidebarSections = [
+    { key: 'principal', label: 'Menu' },
+    { key: 'pro', label: 'Outils pro' },
+    { key: 'premium', label: 'Premium' },
+    { key: 'compte', label: null },
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,6 +226,8 @@ export default function ProDashboard() {
         setAuthError('Un compte existe déjà avec cet email. Connectez-vous.');
         setAuthMode('login');
         setLoginForm((prev) => ({ ...prev, email: form.email }));
+      } else if (err.message === 'PASSWORD_TOO_SHORT') {
+        setAuthError('Le mot de passe doit contenir au moins 6 caractères.');
       } else {
         setAuthError('Email et mot de passe sont obligatoires pour créer un compte.');
       }
@@ -126,7 +237,6 @@ export default function ProDashboard() {
   const handleLogin = (e) => {
     e.preventDefault();
     setAuthError('');
-    setRecoveredPassword(null);
     const session = loginProAccount(loginForm.email, loginForm.password);
     if (!session) {
       setAuthError('Email ou mot de passe incorrect.');
@@ -137,32 +247,33 @@ export default function ProDashboard() {
     setLoginForm({ email: '', password: '' });
   };
 
-  const handleForgotPassword = (e) => {
-    e.preventDefault();
-    setAuthError('');
-    const password = recoverProPassword(forgotEmail);
-    if (!password) {
-      setAuthError('Aucun compte trouvé avec cet email.');
-      setRecoveredPassword(null);
-      return;
-    }
-    setRecoveredPassword(password);
-  };
-
   const handleLogout = () => {
     logoutProAccount();
     setAccount(null);
     setForm(EMPTY_FORM);
     setAuthMode('login');
     setTab('overview');
-    setRecoveredPassword(null);
     setAuthError('');
+  };
+
+  const handleDeleteAccount = (password) => {
+    if (!account?.email) return { ok: false, error: 'NOT_FOUND' };
+    const result = deleteProAccount(account.email, password);
+    if (result.ok) {
+      setAccount(null);
+      setForm(EMPTY_FORM);
+      setAuthMode('login');
+      setTab('overview');
+      setAuthError('');
+    }
+    return result;
   };
 
   const handleSave = (e) => {
     e.preventDefault();
     const updated = buildAccount();
     saveProAccount(updated);
+    import('../utils/platformEvents.js').then((m) => m.onProProfileSave(updated.id)).catch(() => {});
     setAccount(updated);
     flash();
   };
@@ -179,6 +290,18 @@ export default function ProDashboard() {
       setPremiumSuccess(true);
       setShowPremiumModal(false);
       setTimeout(() => setPremiumSuccess(false), 5000);
+    }
+  };
+
+  const handleUpgrade = (newPlan, billingCycle = BILLING_CYCLE_MONTHLY) => {
+    const currentPlan = getProPlanLevel(account);
+    const order = { free: 0, advanced: 1, premium: 2 };
+    const updated = upgradePlan(newPlan, { billingCycle });
+    if (updated) {
+      setAccount(updated);
+      if (order[newPlan] > order[currentPlan] && UPGRADE_CONGRATS[newPlan]) {
+        setUpgradeCongrats({ plan: newPlan, billingCycle });
+      }
     }
   };
 
@@ -220,7 +343,7 @@ export default function ProDashboard() {
                 key={id}
                 type="button"
                 className={`${styles.authTab} ${authMode === id ? styles.authTabActive : ''}`}
-                onClick={() => { setAuthMode(id); setAuthError(''); setRecoveredPassword(null); }}
+                onClick={() => { setAuthMode(id); setAuthError(''); }}
               >
                 {label}
               </button>
@@ -229,7 +352,7 @@ export default function ProDashboard() {
 
           {authError && <p className={styles.authError}>{authError}</p>}
 
-          {authMode === 'login' && !recoveredPassword && (
+          {authMode === 'login' && (
             <form onSubmit={handleLogin} className={styles.form}>
               <label>
                 Email *
@@ -255,51 +378,9 @@ export default function ProDashboard() {
               <button type="submit" className={styles.saveBtn}>
                 <KeyRound size={18} /> Se connecter
               </button>
-              <button
-                type="button"
-                className={styles.forgotBtn}
-                onClick={() => { setAuthMode('forgot'); setAuthError(''); setRecoveredPassword(null); }}
-              >
+              <Link to="/mot-de-passe-oublie?type=pro" className={styles.forgotBtn}>
                 Mot de passe oublié ?
-              </button>
-            </form>
-          )}
-
-          {authMode === 'forgot' && (
-            <form onSubmit={handleForgotPassword} className={styles.form}>
-              <p className={styles.forgotHint}>
-                Entrez votre email pour afficher votre mot de passe (prototype de démonstration).
-              </p>
-              <label>
-                Email *
-                <input
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  required
-                  className={styles.input}
-                  placeholder="votre@email.com"
-                />
-              </label>
-              {recoveredPassword && (
-                <div className={styles.recoveredBox}>
-                  <KeyRound size={18} />
-                  <div>
-                    <strong>Votre mot de passe :</strong>
-                    <p className={styles.recoveredPassword}>{recoveredPassword}</p>
-                  </div>
-                </div>
-              )}
-              <button type="submit" className={styles.saveBtn}>
-                Afficher mon mot de passe
-              </button>
-              <button
-                type="button"
-                className={styles.forgotBtn}
-                onClick={() => { setAuthMode('login'); setAuthError(''); }}
-              >
-                ← Retour à la connexion
-              </button>
+              </Link>
             </form>
           )}
 
@@ -315,7 +396,7 @@ export default function ProDashboard() {
               </label>
               <label>
                 Mot de passe *
-                <input type="password" name="password" value={form.password} onChange={handleChange} required minLength={4} className={styles.input} />
+                <input type="password" name="password" value={form.password} onChange={handleChange} required minLength={6} className={styles.input} />
               </label>
               <ProfessionSelect
                 category={form.categorie}
@@ -327,7 +408,7 @@ export default function ProDashboard() {
                 inputClassName={styles.input}
               />
               <label>
-                Région *
+                Villes *
                 <select name="region" value={form.region} onChange={handleChange} required className={styles.input}>
                   <option value="">Sélectionner</option>
                   {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -351,7 +432,7 @@ export default function ProDashboard() {
             </form>
           )}
 
-          <Link to="/" className={styles.browseLink}>
+          <Link to="/annuaire" className={styles.browseLink}>
             <Search size={16} /> Consulter l'annuaire
           </Link>
           </div>
@@ -361,28 +442,104 @@ export default function ProDashboard() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        {/* Header */}
-        <div className={styles.dashHeader}>
-          <div className={styles.avatar} style={{ background: getAvatarColor(account.categorie || account.profession) }}>
+    <div className={styles.dashLayout}>
+      {sidebarOpen && <button type="button" className={styles.sidebarBackdrop} onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu" />}
+
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        <div className={styles.sidebarProfile}>
+          <button type="button" className={styles.sidebarClose} onClick={() => setSidebarOpen(false)} aria-label="Fermer">
+            <X size={20} />
+          </button>
+          <div
+            className={styles.sidebarAvatar}
+            style={{ background: getAvatarColor(account.categorie || account.profession) }}
+          >
             {getInitials(account.nom)}
           </div>
-          <div className={styles.dashHeaderInfo}>
-            <div className={styles.nameRow}>
-              <h1>{account.nom}</h1>
-              {account.verifie && (
-                <span className="badge-verified verified">
-                  <BadgeCheck size={13} /> Vérifié
-                </span>
+          <div className={styles.sidebarUserInfo}>
+            <div className={styles.sidebarNameRow}>
+              <strong>{account.nom}</strong>
+              {isPremiumActive(account) && (
+                <BadgeCheck size={14} className={styles.sidebarVerified} aria-label="Compte vérifié" />
               )}
             </div>
-            <p className={styles.profession}>{account.profession}</p>
+            <span>{account.profession}</span>
+            {account.region && (
+              <span className={styles.sidebarRegion}>{account.region}</span>
+            )}
           </div>
-          <button type="button" className={styles.logoutBtn} onClick={handleLogout} title="Se déconnecter">
-            <LogOut size={18} />
-          </button>
         </div>
+
+        <nav className={styles.sidebarNav}>
+          {sidebarSections.map(({ key, label }) => {
+            const items = TABS.filter((t) => t.section === key);
+            if (!items.length) return null;
+            return (
+              <div key={key} className={styles.sidebarGroup}>
+                {label && <span className={styles.sidebarGroupLabel}>{label}</span>}
+                {items.map(({ id, label: tabLabel, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`${styles.sidebarItem} ${tab === id ? styles.sidebarItemActive : ''}`}
+                    onClick={() => handleTabChange(id)}
+                  >
+                    <Icon size={18} />
+                    <span>{tabLabel}</span>
+                    {id === 'reviews' && reviews.length > 0 && (
+                      <span className={styles.sidebarBadge}>{reviews.length}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </nav>
+
+        {plan !== 'premium' && (
+          <div className={styles.sidebarPremium}>
+            <Crown size={18} />
+            <div>
+              <strong>Premium</strong>
+              <p>Débloquez CRM, mini-site et rapports.</p>
+            </div>
+            <button type="button" onClick={() => handleTabChange('upgrade')}>Voir les offres</button>
+          </div>
+        )}
+      </aside>
+
+      <div className={styles.main}>
+        <header className={styles.mainHeader}>
+          <div className={styles.mainHeaderLeft}>
+            <button type="button" className={styles.menuBtn} onClick={() => setSidebarOpen(true)} aria-label="Menu">
+              <Menu size={22} />
+            </button>
+            <div>
+              <h1 className={styles.mainTitle}>{activeTab.label}</h1>
+              <p className={styles.mainSubtitle}>{TAB_SUBTITLES[tab] || ''}</p>
+            </div>
+          </div>
+          <div className={styles.mainHeaderRight}>
+            <form className={styles.headerSearch} onSubmit={handleHeaderSearch}>
+              <Search size={16} />
+              <input
+                type="search"
+                placeholder="Rechercher..."
+                value={headerSearch}
+                onChange={(e) => setHeaderSearch(e.target.value)}
+              />
+            </form>
+            <button type="button" className={styles.headerIconBtn} title="Notifications" onClick={() => handleTabChange('notifications')}>
+              <Bell size={18} />
+              {adminBroadcastCount > 0 && (
+                <span className={styles.notifBadge}>{adminBroadcastCount}</span>
+              )}
+            </button>
+            <button type="button" className={styles.headerIconBtn} title="Aide" onClick={() => handleTabChange('suggestions')}>
+              <HelpCircle size={18} />
+            </button>
+          </div>
+        </header>
 
         {saved && <div className={styles.toast}><CheckCircle size={16} /> Profil mis à jour</div>}
         {premiumSuccess && (
@@ -396,299 +553,127 @@ export default function ProDashboard() {
           </div>
         )}
 
-        {/* Tabs */}
-        <nav className={styles.tabs}>
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={`${styles.tab} ${tab === id ? styles.tabActive : ''}`}
-              onClick={() => setTab(id)}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-              {id === 'reviews' && reviews.length > 0 && (
-                <span className={styles.tabBadge}>{reviews.length}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        {/* Vue d'ensemble */}
+        <div className={styles.mainContent}>
+        {DATE_FILTER_TABS.has(tab) && (
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+        )}
         {tab === 'overview' && (
           <div className={styles.tabContent}>
-            <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <Star size={20} className={styles.statIconGold} />
-                <span className={styles.statValue}>{avgRating ? avgRating.toFixed(1) : '—'}</span>
-                <span className={styles.statLabel}>Note moyenne</span>
-              </div>
-              <div className={styles.statCard}>
-                <MessageSquare size={20} className={styles.statIconGold} />
-                <span className={styles.statValue}>{reviews.length}</span>
-                <span className={styles.statLabel}>Avis reçus</span>
-              </div>
-              <div className={`${styles.statCard} ${!premiumActive ? styles.statLocked : ''}`}>
-                <Eye size={20} className={styles.statIconBlue} />
-                <span className={styles.statValue}>
-                  {premiumActive ? account.profileViews || 0 : <Lock size={16} />}
-                </span>
-                <span className={styles.statLabel}>Visites profil</span>
-              </div>
-              <div className={styles.statCard}>
-                <Phone size={20} className={styles.statIconGreen} />
-                <span className={styles.statValue}>{Math.floor((account.profileViews || 0) * 0.3)}</span>
-                <span className={styles.statLabel}>Contacts WhatsApp</span>
-              </div>
-            </div>
-
+            <OverviewFreeTab
+              account={account}
+              reviews={reviews}
+              avgRating={avgRating}
+              plan={plan}
+              onUpgrade={handleUpgrade}
+              onTabChange={handleTabChange}
+              onAccountUpdate={setAccount}
+              dateRange={dateRange}
+            />
             <div className={styles.actionRow}>
-              <Link to="/" className={styles.actionBtn}>
-                <Search size={18} /> Consulter les services
-              </Link>
-              <Link to="/mon-profil" className={styles.actionBtnOutline}>
-                <ExternalLink size={18} /> Voir mon profil public
-              </Link>
+              <Link to="/" className={styles.actionBtn}><Search size={18} /> Consulter les services</Link>
+              <Link to="/mon-profil" className={styles.actionBtnOutline}><ExternalLink size={18} /> Voir mon profil public</Link>
             </div>
-
-            {reviews.length > 0 && (
-              <section className={styles.card}>
-                <h2>Derniers avis</h2>
-                {reviews.slice(0, 2).map((r) => (
-                  <div key={r.id} className={styles.reviewPreview}>
-                    <div className={styles.reviewHead}>
-                      <strong>{r.prenom}</strong>
-                      <StarDisplay rating={r.note} size={12} />
-                    </div>
-                    <p>{r.commentaire}</p>
-                  </div>
-                ))}
-                <button className={styles.seeAll} onClick={() => setTab('reviews')}>
-                  Voir tous les avis →
-                </button>
-              </section>
-            )}
           </div>
         )}
 
-        {/* Mon profil */}
         {tab === 'profile' && (
           <div className={styles.tabContent}>
-            <form onSubmit={handleSave} className={styles.form}>
-              <section className={styles.card}>
-                <h2>Informations de base</h2>
-                {[
-                  ['nom', 'Nom complet'], ['telephone', 'Téléphone'], ['whatsapp', 'WhatsApp'], ['email', 'Email'],
-                ].map(([name, label]) => (
-                  <label key={name}>
-                    {label}
-                    <input name={name} value={form[name] || ''} onChange={handleChange} className={styles.input} />
-                  </label>
-                ))}
-                <ProfessionSelect
-                  category={form.categorie}
-                  profession={form.profession}
-                  customProfession={form.customProfession}
-                  onCategoryChange={(v) => setForm((prev) => ({ ...prev, categorie: v, profession: '', customProfession: '' }))}
-                  onProfessionChange={(v) => setForm((prev) => ({ ...prev, profession: v }))}
-                  onCustomProfessionChange={(v) => setForm((prev) => ({ ...prev, customProfession: v }))}
-                  inputClassName={styles.input}
-                  required={false}
-                />
-                <label>
-                  Région
-                  <select name="region" value={form.region} onChange={handleChange} className={styles.input}>
-                    {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Quartier
-                  <input name="quartier" value={form.quartier} onChange={handleChange} className={styles.input} />
-                </label>
-                <label>
-                  Description
-                  <textarea name="description" value={form.description} onChange={handleChange} rows={4} className={styles.textarea} />
-                </label>
-              </section>
-
-              {premiumActive ? (
-                <section className={styles.card}>
-                  <h2>Profil professionnel <span className={styles.premiumTag}>Premium</span></h2>
-                  <label>
-                    Slogan
-                    <input name="slogan" value={form.slogan} onChange={handleChange} className={styles.input} placeholder="Ex: Votre expert de confiance à Conakry" />
-                  </label>
-                  <label>
-                    Horaires
-                    <input name="horaires" value={form.horaires} onChange={handleChange} className={styles.input} />
-                  </label>
-                  <label>
-                    Services (séparés par des virgules)
-                    <input name="servicesStr" value={form.servicesStr} onChange={handleChange} className={styles.input} placeholder="Consultation, Dépannage, Installation" />
-                  </label>
-                  <label>
-                    Spécialités (séparées par des virgules)
-                    <input name="specialitesStr" value={form.specialitesStr} onChange={handleChange} className={styles.input} />
-                  </label>
-
-                  <h3 className={styles.subHeading}>Réseaux sociaux & liens</h3>
-                  {NETWORKS.map(({ key, label }) => (
-                    <label key={key}>
-                      {label}
-                      <input
-                        value={form.social[key] || ''}
-                        onChange={(e) => handleSocialChange(key, e.target.value)}
-                        className={styles.input}
-                        placeholder={`Lien ${label}`}
-                      />
-                    </label>
-                  ))}
-                </section>
-              ) : (
-                <div className={styles.lockedSection}>
-                  <Lock size={24} />
-                  <p>Profil professionnel complet, réseaux sociaux et portfolio — réservé aux abonnés Premium.</p>
-                  <button type="button" className={styles.unlockBtn} onClick={() => setTab('premium')}>
-                    <Crown size={16} /> Passer à Premium
-                  </button>
-                </div>
-              )}
-
-              <button type="submit" className={styles.saveBtn}>
-                <Save size={18} /> Enregistrer
-              </button>
-            </form>
+            <ProfileTabExtended account={account} form={form} handleSave={handleSave} handleChange={handleChange} handleSocialChange={handleSocialChange} />
           </div>
         )}
 
-        {/* Avis */}
+        {tab === 'services' && (
+          <div className={styles.tabContent}>
+            <ServicesTab account={account} plan={plan} onSave={(acc) => { saveProAccount(acc); setAccount(acc); flash(); }} />
+          </div>
+        )}
+
+        {tab === 'photos' && (
+          <div className={styles.tabContent}><PhotosTab account={account} plan={plan} /></div>
+        )}
+
         {tab === 'reviews' && (
-          <div className={styles.tabContent}>
-            <section className={styles.card}>
-              <div className={styles.reviewsHeader}>
-                <h2>Avis & commentaires</h2>
-                {avgRating > 0 && (
-                  <div className={styles.avgRating}>
-                    <span className={styles.avgNum}>{avgRating.toFixed(1)}</span>
-                    <StarDisplay rating={avgRating} size={18} />
-                    <span className={styles.avgCount}>{reviews.length} avis</span>
-                  </div>
-                )}
-              </div>
-              {reviews.length === 0 ? (
-                <p className={styles.emptyText}>Aucun avis pour le moment. Partagez votre profil !</p>
-              ) : (
-                <div className={styles.reviewsList}>
-                  {reviews.map((r) => (
-                    <div key={r.id} className={styles.reviewCard}>
-                      <div className={styles.reviewHead}>
-                        <div>
-                          <strong>{r.prenom}</strong>
-                          <StarDisplay rating={r.note} size={13} />
-                        </div>
-                        <span className={styles.reviewDate}>
-                          {new Date(r.date).toLocaleDateString('fr-FR')}
-                        </span>
-                      </div>
-                      <p className={styles.reviewComment}>{r.commentaire}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
+          <div className={styles.tabContent}><ReviewsTabExtended account={account} plan={plan} dateRange={dateRange} /></div>
         )}
 
-        {/* Premium */}
-        {tab === 'premium' && (
-          <div className={styles.tabContent}>
-            <section className={`${styles.card} ${styles.premiumCard}`}>
-              <div className={styles.premiumHeader}>
-                <Crown size={28} className={styles.crown} />
-                <div>
-                  <h2>G-List Premium</h2>
-                  <p className={styles.premiumSub}>Votre page professionnelle complète</p>
-                </div>
-              </div>
+        {tab === 'upgrade' && (
+          <div className={styles.tabContent}><UpgradeTab account={account} plan={plan} onUpgrade={handleUpgrade} /></div>
+        )}
 
-              {premiumActive ? (
-                <>
-                  <div className={styles.premiumActive}>
-                    <BadgeCheck size={22} className={styles.blueIcon} />
-                    <div>
-                      <p className={styles.premiumStatus}>Abonnement actif — Badge bleu certifié</p>
-                      <p className={styles.premiumExpiry}>
-                        Renouvellement avant le {new Date(account.premiumExpires).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.unsubscribeBtn}
-                    onClick={() => setShowUnsubscribeModal(true)}
-                  >
-                    Se désabonner du Premium
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className={styles.price}>{formatGNF(PREMIUM_PRICE_GNF)} <span>GNF / mois</span></p>
-                  <ul className={styles.featureList}>
-                    <li><BadgeCheck size={15} /> Badge bleu certifié (comme Facebook)</li>
-                    <li><Eye size={15} /> Statistiques de visites sur votre profil</li>
-                    <li><ExternalLink size={15} /> Page professionnelle complète</li>
-                    <li><Phone size={15} /> Réseaux sociaux & portfolio cliquables</li>
-                    <li><MapPin size={15} /> Mise en avant sur la carte</li>
-                    <li><Star size={15} /> Services, spécialités & slogan personnalisés</li>
-                  </ul>
-                  <button className={styles.premiumBtn} onClick={() => setShowPremiumModal(true)}>
-                    <Crown size={18} /> S'abonner — {formatGNF(PREMIUM_PRICE_GNF)} GNF/mois
-                  </button>
-                </>
-              )}
+        {tab === 'analytics' && (plan === 'advanced' || plan === 'premium') && (
+          <div className={styles.tabContent}><AnalyticsTab account={account} dateRange={dateRange} /></div>
+        )}
 
-              <div className={styles.renewalNotice}>
-                <AlertCircle size={14} />
-                <p>
-                  Il est de <strong>votre responsabilité</strong> de renouveler votre abonnement
-                  dans l'application via dépôt <strong>Mobile Money</strong> (Orange Money, MTN MoMo).
-                </p>
-              </div>
-            </section>
-          </div>
+        {tab === 'concurrence' && (plan === 'advanced' || plan === 'premium') && (
+          <div className={styles.tabContent}><ConcurrenceTab account={account} /></div>
+        )}
+
+        {tab === 'suggestions' && (plan === 'advanced' || plan === 'premium') && (
+          <div className={styles.tabContent}><SuggestionsTab account={account} onTabChange={handleTabChange} /></div>
+        )}
+
+        {tab === 'crm' && plan === 'premium' && (
+          <div className={styles.tabContent}><CrmTab account={account} dateRange={dateRange} /></div>
+        )}
+
+        {tab === 'minisite' && plan === 'premium' && (
+          <MinisiteTab account={account} />
+        )}
+
+        {tab === 'reports' && plan === 'premium' && (
+          <div className={styles.tabContent}><ReportsTab account={account} dateRange={dateRange} /></div>
+        )}
+
+        {tab === 'reputation' && plan === 'premium' && (
+          <div className={styles.tabContent}><ReputationTab account={account} dateRange={dateRange} /></div>
+        )}
+
+        {tab === 'ranking' && plan === 'premium' && (
+          <div className={styles.tabContent}><RankingTab account={account} /></div>
+        )}
+
+        {tab === 'alerts' && (plan === 'advanced' || plan === 'premium') && (
+          <div className={styles.tabContent}><AlertsTab account={account} plan={plan} dateRange={dateRange} /></div>
+        )}
+
+        {tab === 'history' && (
+          <div className={styles.tabContent}><HistoryTab account={account} dateRange={dateRange} /></div>
+        )}
+
+        {tab === 'billing' && (plan === 'advanced' || plan === 'premium') && (
+          <div className={styles.tabContent}><BillingTab account={account} plan={plan} /></div>
+        )}
+
+        {tab === 'notifications' && (
+          <div className={styles.tabContent}><NotificationsTab onUpdate={() => setTab(tab)} /></div>
         )}
 
         {/* Paramètres */}
         {tab === 'settings' && (
           <div className={styles.tabContent}>
-            <section className={styles.card}>
-              <h2>Compte</h2>
-              <div className={styles.settingsRow}>
-                <span className={styles.settingsLabel}>Nom</span>
-                <span className={styles.settingsValue}>{account.nom}</span>
-              </div>
-              <div className={styles.settingsRow}>
-                <span className={styles.settingsLabel}>Email</span>
-                <span className={styles.settingsValue}>{account.email}</span>
-              </div>
-              <div className={styles.settingsRow}>
-                <span className={styles.settingsLabel}>Profession</span>
-                <span className={styles.settingsValue}>{account.profession}</span>
-              </div>
-            </section>
-
-            <section className={styles.card}>
-              <h2>Session</h2>
-              <p className={styles.settingsHint}>
-                Déconnectez-vous pour quitter votre espace pro sur cet appareil.
-              </p>
-              <button type="button" className={styles.logoutSettingsBtn} onClick={handleLogout}>
-                <LogOut size={18} />
-                Se déconnecter
-              </button>
-            </section>
+            <SettingsTab account={account} onLogout={handleLogout} onDeleteAccount={handleDeleteAccount} />
           </div>
         )}
+        </div>
       </div>
+
+      {upgradeCongrats && (
+        <div className={styles.modalOverlay} onClick={() => setUpgradeCongrats(null)}>
+          <div className={`${styles.modal} ${styles.congratsModal}`} onClick={(e) => e.stopPropagation()}>
+            <Crown size={36} className={styles.modalCrown} />
+            <h3>{UPGRADE_CONGRATS[upgradeCongrats.plan].title}</h3>
+            <p className={styles.modalText}>{UPGRADE_CONGRATS[upgradeCongrats.plan].message}</p>
+            {upgradeCongrats.billingCycle === BILLING_CYCLE_ANNUAL && (
+              <p className={styles.congratsAnnual}>
+                Abonnement annuel activé — 2 mois offerts inclus.
+              </p>
+            )}
+            <button type="button" className={styles.confirmBtn} onClick={() => setUpgradeCongrats(null)}>
+              C&apos;est parti !
+            </button>
+          </div>
+        </div>
+      )}
 
       {showUnsubscribeModal && (
         <div className={styles.modalOverlay} onClick={() => setShowUnsubscribeModal(false)}>

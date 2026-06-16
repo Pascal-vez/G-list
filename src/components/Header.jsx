@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Menu, X, Briefcase, UserPlus, ChevronDown } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Briefcase, ChevronDown, User } from 'lucide-react';
 import Logo from './Logo';
 import { getUserType } from '../utils/storage';
 import { SITE_NAV_MAIN_LINKS, SITE_NAV_MORE_LINKS, DRAWER_NAV_ITEMS, DRAWER_EXTRA_ITEMS, SITE_INFO_LINKS } from '../data/siteNav';
@@ -9,22 +9,10 @@ import DrawerNavItem from './DrawerNavItem';
 import styles from './Header.module.css';
 
 export default function Header() {
-  const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
   const userType = getUserType();
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (query.trim()) {
-      navigate('/?search=' + encodeURIComponent(query.trim()));
-      setDrawerOpen(false);
-      setMobileSearchOpen(false);
-    }
-  };
 
   return (
     <>
@@ -32,19 +20,6 @@ export default function Header() {
         <Link to="/" className={styles.logoLink}>
           <Logo />
         </Link>
-
-        <form className={styles.searchDesktop} onSubmit={handleSearch}>
-          <input
-            type="search"
-            placeholder="Rechercher..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={styles.searchInput}
-          />
-          <button type="submit" className={styles.searchBtn} aria-label="Rechercher">
-            <Search size={20} />
-          </button>
-        </form>
 
         <nav className={styles.desktopNav} aria-label="Navigation principale">
           {SITE_NAV_MAIN_LINKS.map(({ label, to }) => (
@@ -54,7 +29,7 @@ export default function Header() {
           ))}
           <div className={styles.navDropdown}>
             <button type="button" className={styles.navLink} aria-haspopup="true" aria-expanded="false">
-              Plus <ChevronDown size={14} style={{ verticalAlign: '-2px' }} />
+              Plus <ChevronDown size={16} className={styles.chevron} aria-hidden="true" />
             </button>
             <div className={styles.navDropdownMenu}>
               {SITE_NAV_MORE_LINKS.map(({ label, to }) => (
@@ -75,56 +50,36 @@ export default function Header() {
         <div className={styles.actions}>
           {userType === 'pro' ? (
             <Link to="/espace-pro" className={styles.joinBtn}>
-              <Briefcase size={18} />
+              <Briefcase size={16} strokeWidth={2} aria-hidden="true" />
+              Mon espace
+            </Link>
+          ) : userType === 'visiteur' ? (
+            <Link to="/dashboard/visiteur" className={styles.joinBtn}>
+              <User size={16} strokeWidth={2} aria-hidden="true" />
               Mon espace
             </Link>
           ) : (
             <Link to="/espace-pro" className={styles.joinBtn}>
-              <UserPlus size={18} />
-              Rejoindre
+              <Briefcase size={16} strokeWidth={2} aria-hidden="true" />
+              Espace pro
             </Link>
           )}
           <button
-            className={styles.mobileIcon}
-            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            aria-label="Recherche"
-          >
-            <Search size={24} />
-          </button>
-          <button
+            type="button"
             className={styles.mobileIcon}
             onClick={() => setDrawerOpen(true)}
             aria-label="Menu"
           >
-            <Menu size={24} />
+            <Menu size={24} strokeWidth={2} />
           </button>
         </div>
       </header>
 
-      {mobileSearchOpen && (
-        <form className={styles.mobileSearchBar} onSubmit={handleSearch}>
-          <div className={styles.mobileSearchWrap}>
-            <Search size={18} className={styles.mobileSearchIcon} aria-hidden="true" />
-            <input
-              type="search"
-              placeholder="Médecin, plombier, restaurant..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoFocus
-              className={styles.mobileSearchInput}
-            />
-          </div>
-          <button type="submit" className={styles.mobileSearchSubmit} aria-label="Rechercher">
-            <Search size={20} />
-          </button>
-        </form>
-      )}
-
       {drawerOpen && (
         <div className={styles.drawerOverlay} onClick={() => setDrawerOpen(false)}>
           <nav className={styles.drawer} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.drawerClose} onClick={() => setDrawerOpen(false)} aria-label="Fermer">
-              <X size={24} />
+            <button type="button" className={styles.drawerClose} onClick={() => setDrawerOpen(false)} aria-label="Fermer">
+              <X size={26} strokeWidth={2.25} />
             </button>
             <p className={styles.drawerHeading}>Navigation</p>
             {DRAWER_NAV_ITEMS.map((item) => (

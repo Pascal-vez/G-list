@@ -97,7 +97,7 @@ export default function EvaluationModal({ open, onClose }) {
               <span className={styles.logoList}>-List</span>
             </p>
 
-            <h2 id="eval-title" className={styles.title}>Évaluez le prototype G-List</h2>
+            <h2 id="eval-title" className={styles.title}>Votre avis sur G-List</h2>
             <p className={styles.subtitle}>
               Votre avis nous aide à construire la bonne solution pour la Guinée
             </p>

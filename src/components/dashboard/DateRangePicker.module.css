@@ -1,0 +1,122 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  flex: 1;
+}
+
+.summary > svg {
+  color: #F5C518;
+  flex-shrink: 0;
+}
+
+.summary strong {
+  display: block;
+  font-size: 13px;
+  color: #0E1208;
+  margin-bottom: 2px;
+}
+
+.summary span {
+  font-size: 12px;
+  color: #777;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.presetBtn {
+  padding: 6px 12px;
+  border: 1.5px solid #E8E8E8;
+  border-radius: 20px;
+  background: #FAFAFA;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.presetBtn:hover {
+  border-color: #F5C518;
+  color: #0E1208;
+}
+
+.presetBtnActive {
+  background: #0E1208;
+  border-color: #0E1208;
+  color: #F5C518;
+}
+
+.dates {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.dateField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+}
+
+.dateField input {
+  padding: 8px 10px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1A1A1A;
+  background: #fff;
+  min-width: 140px;
+}
+
+.dateField input:focus {
+  outline: none;
+  border-color: #F5C518;
+}
+
+@media (max-width: 768px) {
+  .bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .summary {
+    min-width: 0;
+  }
+
+  .dates {
+    width: 100%;
+  }
+
+  .dateField {
+    flex: 1;
+  }
+
+  .dateField input {
+    width: 100%;
+    min-width: 0;
+  }
+}

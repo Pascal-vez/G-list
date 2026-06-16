@@ -7,6 +7,19 @@
   background: var(--cream);
 }
 
+.annuaireLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.resultsArea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
 .count {
   font-size: 14px;
   color: #888;

@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { REGIONS } from '../data/constants';
 import ProfessionSelect, { resolveProfessionValue } from '../components/ProfessionSelect';
-import { addWaitlistEntry } from '../utils/storage';
+import { submitWaitlist } from '../api/waitlist';
+import { usePageMeta } from '../hooks/usePageMeta';
 import styles from './Join.module.css';
 
 function Confetti() {
@@ -64,15 +65,21 @@ export default function Join() {
   });
   const [success, setSuccess] = useState(false);
 
+  usePageMeta({
+    title: 'Rejoindre G-List',
+    description: 'Inscrivez-vous sur la liste d\'attente G-List — annuaire professionnel en Guinée.',
+    path: '/rejoindre',
+  });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const profession = resolveProfessionValue(form.categorie, form.profession, form.customProfession);
-    addWaitlistEntry({ ...form, profession });
+    await submitWaitlist({ ...form, profession });
     setSuccess(true);
   };
 
@@ -119,7 +126,7 @@ export default function Join() {
             onCustomProfessionChange={(v) => setForm((prev) => ({ ...prev, customProfession: v }))}
           />
 
-          <FormField label="Région *" icon={MapPin} iconColor="#4CAF50" accent="rgba(76, 175, 80, 0.12)">
+          <FormField label="Villes *" icon={MapPin} iconColor="#4CAF50" accent="rgba(76, 175, 80, 0.12)">
             <select
               name="region"
               value={form.region}
@@ -127,7 +134,7 @@ export default function Join() {
               required
               className={`${styles.input} ${styles.select}`}
             >
-              <option value="">Sélectionner une région</option>
+              <option value="">Sélectionner une ville</option>
               {REGIONS.map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}

@@ -1,0 +1,101 @@
+.page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.box {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.box h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.sub {
+  color: #555;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 10px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tabActive {
+  border-color: #F5C518 !important;
+  background: rgba(245, 197, 24, 0.1) !important;
+  font-weight: 600;
+}
+
+.form label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.success {
+  color: #16A34A;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.error {
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.tokenHint {
+  font-size: 13px;
+  color: #555;
+}
+
+.back {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.back a {
+  color: #555;
+  text-decoration: underline;
+}

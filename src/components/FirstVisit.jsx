@@ -1,7 +1,7 @@
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import styles from './FirstVisit.module.css';
 
-export default function FirstVisit({ onExplore, onEvaluate }) {
+export default function FirstVisit({ onExplore }) {
   return (
     <div className={styles.screen}>
       <div className={styles.bg} aria-hidden="true" />
@@ -13,48 +13,33 @@ export default function FirstVisit({ onExplore, onEvaluate }) {
           <span className={styles.logoList}>-List</span>
         </p>
 
-        <span className={styles.badge}>Annuaire professionnel · Guinée</span>
+        <span className={styles.badge}>Annuaire professionnel · Guinée 🇬🇳</span>
 
-        <h1 className={styles.title}>Bienvenue sur G-List</h1>
+        <h1 className={`${styles.title} hero-display`}>Bienvenue sur G-List</h1>
         <p className={styles.subtitle}>
-          L&apos;annuaire des professionnels de confiance en Guinée
+          Trouvez et contactez les meilleurs professionnels près de chez vous
         </p>
 
         <p className={styles.intro}>
-          Vous êtes sur le point de découvrir le prototype de G-List — la plateforme qui
-          connecte les guinéens aux meilleurs professionnels de leur région : médecins,
-          artisans, restaurants, techniciens et bien plus.
+          Médecins, artisans, restaurants, techniciens, avocats et bien plus — parcourez
+          l&apos;annuaire par catégorie, ville ou recherche libre. Contactez directement
+          via WhatsApp ou demandez un devis.
         </p>
 
-        <div className={styles.noteBlock}>
-          <p className={styles.noteTitle}>⚠️ Note importante</p>
-          <p className={styles.noteText}>
-            Les professionnels et informations affichés sur cette version sont entièrement
-            fictifs. Ce prototype est une simulation créée uniquement pour valider le concept
-            avant le lancement officiel.
-          </p>
-        </div>
-
-        <p className={styles.callout}>
-          Votre avis est notre boussole. Après avoir exploré la plateforme, dites-nous ce que
-          vous en pensez — cela nous aide à construire la bonne solution pour la Guinée.
-        </p>
+        <ul className={styles.features}>
+          <li>14 villes couvertes</li>
+          <li>21 catégories de services</li>
+          <li>Profils vérifiés et avis clients</li>
+        </ul>
 
         <button type="button" className={styles.primaryBtn} onClick={onExplore}>
-          <span><ArrowRight size={18} style={{ verticalAlign: '-4px', marginRight: '8px' }} />Explorer G-List</span>
-          <span className={styles.btnHint}>Je comprends que les infos sont fictives</span>
-        </button>
-
-        <button type="button" className={styles.secondaryBtn} onClick={onEvaluate}>
-          <span><Star size={16} style={{ verticalAlign: '-3px', marginRight: '8px' }} />Évaluer G-List maintenant</span>
-          <span className={styles.btnHintSecondary}>
-            pour ceux qui veulent donner leur avis directement
-          </span>
+          <ArrowRight size={18} />
+          Explorer l&apos;annuaire
         </button>
 
         <footer className={styles.footer}>
           <p>Ce message ne s&apos;affichera qu&apos;une seule fois.</p>
-          <p>G-List © 2026 — Prototype de validation.</p>
+          <p>G-List © 2026 — Fait pour la Guinée</p>
         </footer>
       </div>
     </div>

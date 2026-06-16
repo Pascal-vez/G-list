@@ -1,0 +1,201 @@
+.band {
+  position: relative;
+  background: #fff;
+  border-top: 1px solid #EFEFEF;
+  border-bottom: 1px solid #EFEFEF;
+  padding: clamp(40px, 5vw, 56px) clamp(20px, 4vw, 60px) clamp(44px, 5vw, 60px);
+  font-family: inherit;
+}
+
+.inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 36px);
+}
+
+/* ── Header ── */
+.head {
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.headBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.22);
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.headTitle {
+  margin: 0 0 8px;
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: -0.02em;
+}
+
+.headDesc {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #888;
+  line-height: 1.6;
+}
+
+/* ── Stats grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: clamp(20px, 2.5vw, 28px) clamp(14px, 2vw, 20px);
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+  border-color: rgba(76, 175, 80, 0.28);
+}
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.value {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.starsRow {
+  margin: 2px 0 4px;
+  line-height: 1;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 400;
+  color: #888;
+  line-height: 1.4;
+}
+
+.hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: #aaa;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* ── Trust bar ── */
+.trustBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 24px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 14px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.trustTrack {
+  width: 100%;
+  height: 6px;
+  border-radius: 50px;
+  background: #F0F0F0;
+  overflow: hidden;
+}
+
+.trustFill {
+  height: 100%;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #4CAF50 0%, #2E7D32 100%);
+  transition: width 0.6s ease;
+}
+
+.trustText {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: #888;
+  text-align: center;
+}
+
+.trustText strong {
+  color: #2E7D32;
+  font-weight: 700;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .card {
+    flex-direction: row;
+    text-align: left;
+    align-items: flex-start;
+    padding: 18px 16px;
+  }
+
+  .cardBody {
+    align-items: flex-start;
+  }
+
+  .iconWrap {
+    width: 40px;
+    height: 40px;
+    margin-top: 2px;
+  }
+}

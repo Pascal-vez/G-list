@@ -1,36 +1,35 @@
 .container {
   position: fixed;
-  bottom: clamp(56px, 5vw, 72px);
-  right: clamp(16px, 2vw, 28px);
+  bottom: clamp(20px, 3vw, 28px);
+  right: clamp(16px, 2vw, 24px);
   z-index: 150;
 }
 
 .fab {
-  width: clamp(44px, 4.5vw, 56px);
-  height: clamp(44px, 4.5vw, 56px);
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: #F5C518;
-  color: #1A1A1A;
+  background: rgba(245, 197, 24, 0.92);
+  color: #0E1208;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease;
 }
 
 .fab:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: #F5C518;
 }
 
 .popup {
   position: absolute;
-  bottom: calc(clamp(44px, 4.5vw, 56px) + 12px);
+  bottom: calc(40px + 10px);
   right: 0;
   width: clamp(240px, 22vw, 300px);
   background: #FAFAFA;
-  border-radius: clamp(10px, 1vw, 12px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   padding: clamp(14px, 1.5vw, 22px);
   animation: slideUp 0.25s ease;
 }
@@ -123,30 +122,36 @@
   padding: clamp(10px, 1.2vw, 12px) 0;
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 768px) {
   .container {
-    bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    right: 16px;
-  }
-
-  .fab {
-    width: 48px;
-    height: 48px;
+    bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    right: 14px;
   }
 }
 
 @media (max-width: 480px) {
   .popup {
     position: fixed;
-    left: 16px;
-    right: 16px;
-    bottom: calc(max(16px, env(safe-area-inset-bottom, 0px)) + 48px + 12px);
+    left: 14px;
+    right: 14px;
+    bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 40px + 10px);
     width: auto;
   }
 }
 
 @media (max-width: 360px) {
   .popup {
-    bottom: calc(max(16px, env(safe-area-inset-bottom, 0px)) + 48px + 10px + 48px + 12px);
+    bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 40px + 8px + 40px + 10px);
   }
 }

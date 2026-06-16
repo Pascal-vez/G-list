@@ -2,10 +2,11 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import bcrypt from 'bcryptjs';
 import {
   Shield, Lock, Eye, EyeOff,
-  RotateCw, Download, Trash2, LogOut,
-  Star, ThumbsUp, ThumbsDown, MessageSquare,
-  Users, Lightbulb, BarChart2, CheckCircle, HelpCircle, XCircle,
-  ClipboardList, UserPlus,
+  RotateCw, LogOut,
+  MessageSquare, Bell,
+  Users, Lightbulb,
+  LayoutDashboard, UserCircle, BarChart3, Map,
+  FileText, FileBarChart, ShieldAlert, Sparkles, Wallet, Crown, Menu, X, ScrollText,
 } from 'lucide-react';
 import {
   getItem,
@@ -21,13 +22,54 @@ import {
   setAdminSession,
   formatCountdown,
 } from '../utils/adminAuth';
+import DateRangePicker, { defaultDateRange } from '../components/dashboard/DateRangePicker';
+import GlistBot from '../components/GlistBot';
+import { filterByDateRange } from '../utils/dateRange';
 import styles from './Admin.module.css';
+import {
+  AdminOverview, AdminProfessionals, AdminUsers, AdminAnalytics,
+  AdminMap, AdminOpportunities, AdminContent, AdminModeration,
+  AdminIAInsights, AdminRevenue, AdminReports, AdminSubscriptionPlans, AdminFeedback,
+  AdminNotifications, AdminAuditLog,
+} from './AdminDashboardExtras';
+
+const ADMIN_TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'pros', label: 'Professionnels', icon: Users },
+  { id: 'users', label: 'Utilisateurs', icon: UserCircle },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'map', label: 'Carte Guinée', icon: Map },
+  { id: 'opportunities', label: 'Opportunités', icon: Lightbulb },
+  { id: 'content', label: 'Contenu', icon: FileText },
+  { id: 'moderation', label: 'Modération', icon: ShieldAlert },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'audit', label: 'Journal d\'audit', icon: ScrollText },
+  { id: 'ia', label: 'IA Insights', icon: Sparkles },
+  { id: 'revenue', label: 'Revenus', icon: Wallet },
+  { id: 'reports', label: 'Rapports', icon: FileBarChart },
+  { id: 'plans', label: 'Offres', icon: Crown },
+  { id: 'legacy', label: 'Feedback', icon: MessageSquare },
+];
 
 /** Bcrypt hash from .env — quotes required in .env so $ chars are not stripped */
 function getAdminHash() {
   const raw = import.meta.env.VITE_ADMIN_HASH;
   if (!raw || typeof raw !== 'string') return '';
   return raw.trim().replace(/^["']|["']$/g, '');
+}
+
+/** Mot de passe prototype si VITE_ADMIN_HASH absent (défaut : glist2026) */
+function getAdminFallbackPassword() {
+  const raw = import.meta.env.VITE_ADMIN_PASSWORD;
+  if (raw && typeof raw === 'string') return raw.trim();
+  return 'glist2026';
+}
+
+async function verifyAdminPassword(password) {
+  const trimmed = password.trim();
+  const hash = getAdminHash();
+  if (hash) return bcrypt.compare(trimmed, hash);
+  return trimmed === getAdminFallbackPassword();
 }
 
 function buildEvaluationStats(evaluations) {
@@ -61,10 +103,6 @@ function buildEvaluationStats(evaluations) {
     avgNote: total ? (noteSum / total).toFixed(1) : '—',
     withComments,
   };
-}
-
-function renderStars(note) {
-  return '★'.repeat(note) + '☆'.repeat(5 - note);
 }
 
 function AdminLogin({ onSuccess }) {
@@ -114,7 +152,7 @@ function AdminLogin({ onSuccess }) {
       return;
     }
 
-    if (!getAdminHash()) {
+    if (!getAdminHash() && !getAdminFallbackPassword()) {
       setError('Configuration manquante. Contactez l\'administrateur.');
       return;
     }
@@ -123,7 +161,7 @@ function AdminLogin({ onSuccess }) {
     setError('');
 
     try {
-      const match = await bcrypt.compare(password.trim(), getAdminHash());
+      const match = await verifyAdminPassword(password);
 
       if (match) {
         attemptsRef.current = 0;
@@ -250,8 +288,15 @@ export default function Admin() {
   const [data, setData] = useState(null);
   const [evaluations, setEvaluations] = useState([]);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [adminTab, setAdminTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dateRange, setDateRange] = useState(defaultDateRange);
 
-  const evalStats = useMemo(() => buildEvaluationStats(evaluations), [evaluations]);
+  const filteredEvaluations = useMemo(
+    () => filterByDateRange(evaluations, dateRange.startDate, dateRange.endDate, 'date'),
+    [evaluations, dateRange.startDate, dateRange.endDate],
+  );
+  const evalStats = useMemo(() => buildEvaluationStats(filteredEvaluations), [filteredEvaluations]);
 
   const loadData = useCallback(() => {
     setEvaluations(getEvaluations());
@@ -263,7 +308,6 @@ export default function Admin() {
       engagementFound: getItem(KEYS.ENGAGEMENT_FOUND, 0),
       engagementSearching: getItem(KEYS.ENGAGEMENT_SEARCHING, 0),
       engagementTesting: getItem(KEYS.ENGAGEMENT_TESTING, 0),
-      waitlist: getItem(KEYS.WAITLIST, []),
     });
   }, []);
 
@@ -319,209 +363,124 @@ export default function Admin() {
     return <AdminLogin onSuccess={() => setAuthenticated(true)} />;
   }
 
-  const totalEngagement = (data?.engagementFound ?? 0) + (data?.engagementSearching ?? 0) + (data?.engagementTesting ?? 0);
-  const engPct = (n) => totalEngagement ? Math.round((n / totalEngagement) * 100) : 0;
+  const activeTab = ADMIN_TABS.find((t) => t.id === adminTab) || ADMIN_TABS[0];
 
   return (
-    <div className={styles.page}>
-      {/* Dashboard header */}
-      <div className={styles.dashTopBar}>
-        <div className={styles.dashTopBarLeft}>
-          <Shield size={20} className={styles.dashLogo} />
-          <span className={styles.dashTitle}>G-List Admin</span>
-          <span className={styles.dashBadge}>Dashboard</span>
-        </div>
-        <div className={styles.dashTopBarRight}>
-          <button type="button" onClick={loadData} className={styles.refreshBtn}>
-            <RotateCw size={14} /> Actualiser
-          </button>
-          <button type="button" onClick={handleLogout} className={styles.logoutBtn}>
-            <LogOut size={14} /> Se déconnecter
-          </button>
-        </div>
-      </div>
-
-      {/* KPI cards */}
-      <div className={styles.kpiGrid}>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiIcon} style={{ background: '#FEF9C3', color: '#CA8A04' }}><Star size={18} /></div>
-          <div>
-            <div className={styles.kpiValue}>{evalStats.avgNote}<span className={styles.kpiSub}>/5</span></div>
-            <div className={styles.kpiLabel}>Note moyenne</div>
-          </div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiIcon} style={{ background: '#DCFCE7', color: '#16A34A' }}><ThumbsUp size={18} /></div>
-          <div>
-            <div className={styles.kpiValue}>{data?.thumbsUp ?? 0}</div>
-            <div className={styles.kpiLabel}>Votes positifs</div>
-          </div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiIcon} style={{ background: '#FEE2E2', color: '#DC2626' }}><ThumbsDown size={18} /></div>
-          <div>
-            <div className={styles.kpiValue}>{data?.thumbsDown ?? 0}</div>
-            <div className={styles.kpiLabel}>Votes négatifs</div>
-          </div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiIcon} style={{ background: '#EDE9FE', color: '#7C3AED' }}><MessageSquare size={18} /></div>
-          <div>
-            <div className={styles.kpiValue}>{data?.profileReviews ?? 0}</div>
-            <div className={styles.kpiLabel}>Avis sur profils</div>
-          </div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiIcon} style={{ background: '#DBEAFE', color: '#2563EB' }}><UserPlus size={18} /></div>
-          <div>
-            <div className={styles.kpiValue}>{data?.waitlist?.length ?? 0}</div>
-            <div className={styles.kpiLabel}>Inscrits liste d'attente</div>
-          </div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiIcon} style={{ background: '#FFF7ED', color: '#EA580C' }}><Lightbulb size={18} /></div>
-          <div>
-            <div className={styles.kpiValue}>{data?.suggestions?.length ?? 0}</div>
-            <div className={styles.kpiLabel}>Suggestions reçues</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Engagement utilisateurs */}
-      <section className={styles.card}>
-        <h2><BarChart2 size={18} className={styles.sectionIcon} /> Engagement utilisateurs</h2>
-        <div className={styles.engagementRows}>
-          {[
-            { label: 'J\'ai trouvé ce que je cherche', value: data?.engagementFound ?? 0, icon: <CheckCircle size={15} />, color: '#16A34A' },
-            { label: 'Je cherche encore', value: data?.engagementSearching ?? 0, icon: <HelpCircle size={15} />, color: '#D97706' },
-            { label: 'Je teste juste la plateforme', value: data?.engagementTesting ?? 0, icon: <XCircle size={15} />, color: '#6B7280' },
-          ].map(({ label, value, icon, color }) => (
-            <div key={label} className={styles.engRow}>
-              <div className={styles.engRowHead}>
-                <span style={{ color }} className={styles.engIcon}>{icon}</span>
-                <span className={styles.engLabel}>{label}</span>
-                <span className={styles.engCount}>{value}</span>
-                <span className={styles.engPct}>{engPct(value)}%</span>
-              </div>
-              <div className={styles.engBarTrack}>
-                <div className={styles.engBarFill} style={{ width: `${engPct(value)}%`, background: color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Évaluations */}
-      <section className={styles.card}>
-        <h2><ClipboardList size={18} className={styles.sectionIcon} /> Évaluations reçues</h2>
-        <div className={styles.evalMetrics}>
-          <div className={styles.evalMetric}>
-            <span className={styles.evalMetricLabel}>Total évaluations</span>
-            <strong className={styles.evalMetricValue}>{evalStats.total}</strong>
-          </div>
-          <div className={styles.evalMetric}>
-            <span className={styles.evalMetricLabel}>Oui, absolument</span>
-            <strong className={styles.evalMetricValue}>{evalStats.pctOui}%</strong>
-          </div>
-          <div className={styles.evalMetric}>
-            <span className={styles.evalMetricLabel}>Peut-être</span>
-            <strong className={styles.evalMetricValue}>{evalStats.pctPeutEtre}%</strong>
-          </div>
-          <div className={styles.evalMetric}>
-            <span className={styles.evalMetricLabel}>Avec commentaires</span>
-            <strong className={styles.evalMetricValue}>{evalStats.withComments}</strong>
-          </div>
-        </div>
-
-        {evaluations.length > 0 ? (
-          <div className={styles.evalList}>
-            {[...evaluations].reverse().map((entry, index) => (
-              <div key={`${entry.date}-${index}`} className={styles.evalRow}>
-                <div className={styles.evalRowHead}>
-                  <span className={styles.evalStars}>{renderStars(entry.note)}</span>
-                  <span className={styles.evalUtile}>{entry.utile}</span>
-                  <span className={styles.evalDate}>
-                    {new Date(entry.date).toLocaleString('fr-FR')}
-                  </span>
-                </div>
-                {entry.plusPlu?.trim() && (
-                  <p className={styles.evalExcerpt}>
-                    <strong>Plu :</strong> {entry.plusPlu}
-                  </p>
-                )}
-                {entry.ameliorer?.trim() && (
-                  <p className={styles.evalExcerpt}>
-                    <strong>À améliorer :</strong> {entry.ameliorer}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.empty}>Aucune évaluation pour le moment.</p>
-        )}
-      </section>
-
-      {/* Liste d'attente */}
-      <section className={styles.card}>
-        <h2>
-          <Users size={18} className={styles.sectionIcon} />
-          Inscriptions liste d&apos;attente
-          <span className={styles.sectionCount}>{data?.waitlist?.length ?? 0}</span>
-        </h2>
-        {data?.waitlist?.length > 0 ? (
-          <div className={styles.table}>
-            <div className={`${styles.tableRow} ${styles.tableHeader}`}>
-              <span>Nom</span>
-              <span>Profession</span>
-              <span>Région</span>
-              <span>WhatsApp</span>
-            </div>
-            {data.waitlist.map((entry, i) => (
-              <div key={i} className={styles.tableRow}>
-                <span className={styles.tableName}>{entry.nom}</span>
-                <span>{entry.profession}</span>
-                <span>{entry.region}</span>
-                <span>{entry.whatsapp}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.empty}>Aucune inscription pour le moment.</p>
-        )}
-      </section>
-
-      {/* Suggestions */}
-      <section className={styles.card}>
-        <h2><Lightbulb size={18} className={styles.sectionIcon} /> Suggestions</h2>
-        {data?.suggestions?.length > 0 ? (
-          <ul className={styles.suggestionList}>
-            {data.suggestions.map((s, i) => (
-              <li key={i}>
-                <p>{s.text}</p>
-                <span>{new Date(s.timestamp).toLocaleString('fr-FR')}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className={styles.empty}>Aucune suggestion pour le moment.</p>
-        )}
-      </section>
-
-      {/* Actions */}
-      <div className={styles.actions}>
-        <button type="button" onClick={handleExport} className={styles.exportBtn}>
-          <Download size={16} /> Exporter en JSON
-        </button>
+    <div className={styles.dashLayout}>
+      {sidebarOpen && (
         <button
           type="button"
-          onClick={handleReset}
-          className={`${styles.resetBtn} ${confirmReset ? styles.confirmReset : ''}`}
-        >
-          <Trash2 size={16} />
-          {confirmReset ? 'Confirmer la réinitialisation ?' : 'Réinitialiser les données'}
-        </button>
+          className={styles.sidebarBackdrop}
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Fermer le menu"
+        />
+      )}
+
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        <div className={styles.sidebarBrand}>
+          <button
+            type="button"
+            className={styles.sidebarClose}
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fermer"
+          >
+            <X size={20} />
+          </button>
+          <Shield size={22} className={styles.dashLogo} />
+          <div>
+            <strong>G-List Admin</strong>
+            <span>Dashboard</span>
+          </div>
+        </div>
+
+        <nav className={styles.sidebarNav}>
+          {ADMIN_TABS.map((t) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                className={`${styles.sidebarItem} ${adminTab === t.id ? styles.sidebarItemActive : ''}`}
+                onClick={() => {
+                  setAdminTab(t.id);
+                  setSidebarOpen(false);
+                }}
+              >
+                <Icon size={18} aria-hidden="true" />
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      <div className={styles.main}>
+        <header className={styles.dashTopBar}>
+          <div className={styles.dashTopBarLeft}>
+            <button
+              type="button"
+              className={styles.menuBtn}
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Menu"
+            >
+              <Menu size={22} />
+            </button>
+            <div>
+              <h1 className={styles.mainTitle}>{activeTab.label}</h1>
+              <span className={styles.dashBadge}>Administration</span>
+            </div>
+          </div>
+          <div className={styles.dashTopBarRight}>
+            <button type="button" onClick={loadData} className={styles.refreshBtn}>
+              <RotateCw size={14} /> Actualiser
+            </button>
+            <button type="button" onClick={handleLogout} className={styles.logoutBtn}>
+              <LogOut size={14} /> Se déconnecter
+            </button>
+          </div>
+        </header>
+
+        <div className={styles.mainContent}>
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
+
+      {adminTab === 'overview' && <AdminOverview evalStats={evalStats} dateRange={dateRange} />}
+
+      {adminTab === 'pros' && <AdminProfessionals />}
+      {adminTab === 'users' && <AdminUsers dateRange={dateRange} />}
+      {adminTab === 'analytics' && <AdminAnalytics dateRange={dateRange} />}
+      {adminTab === 'map' && <AdminMap />}
+      {adminTab === 'opportunities' && <AdminOpportunities dateRange={dateRange} />}
+      {adminTab === 'content' && <AdminContent />}
+      {adminTab === 'moderation' && <AdminModeration dateRange={dateRange} />}
+      {adminTab === 'notifications' && <AdminNotifications />}
+      {adminTab === 'audit' && <AdminAuditLog dateRange={dateRange} />}
+      {adminTab === 'ia' && <AdminIAInsights dateRange={dateRange} />}
+      {adminTab === 'revenue' && <AdminRevenue dateRange={dateRange} />}
+      {adminTab === 'reports' && <AdminReports dateRange={dateRange} />}
+      {adminTab === 'plans' && <AdminSubscriptionPlans />}
+
+      {adminTab === 'legacy' && (
+        <AdminFeedback
+          data={data}
+          evalStats={evalStats}
+          evaluations={filteredEvaluations}
+          dateRange={dateRange}
+          confirmReset={confirmReset}
+          onExport={handleExport}
+          onReset={handleReset}
+        />
+      )}
+        </div>
       </div>
+
+      <GlistBot
+        mode="admin"
+        onAdminTab={(tabId) => {
+          setAdminTab(tabId);
+          setSidebarOpen(false);
+        }}
+        adminContext={{ dateRange }}
+      />
     </div>
   );
 }

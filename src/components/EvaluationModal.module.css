@@ -97,7 +97,7 @@
   background: #F5F5F0;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-  font-family: 'Poppins', sans-serif;
+  font-family: inherit;
 }
 
 .choiceBtn:hover {
@@ -118,7 +118,7 @@
   border-radius: clamp(8px, 1vw, 10px);
   padding: clamp(10px, 1.2vw, 12px);
   font-size: clamp(13px, 1.1vw, 15px);
-  font-family: 'Poppins', sans-serif;
+  font-family: inherit;
   resize: vertical;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -165,7 +165,7 @@
   cursor: pointer;
   margin-top: 4px;
   transition: background 0.2s ease;
-  font-family: 'Poppins', sans-serif;
+  font-family: inherit;
 }
 
 .submitBtn:hover:not(:disabled) {
@@ -215,7 +215,7 @@
   font-size: clamp(12px, 1vw, 13px);
   cursor: pointer;
   text-decoration: underline;
-  font-family: 'Poppins', sans-serif;
+  font-family: inherit;
 }
 
 .closeLink:hover {

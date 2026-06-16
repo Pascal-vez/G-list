@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin-glist-2026
+Disallow: /espace-pro
+Disallow: /dashboard/
+
+Sitemap: https://g-list.gn/sitemap.xml

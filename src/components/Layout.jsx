@@ -5,12 +5,32 @@ import Footer from './Footer';
 import FeedbackWidget from './FeedbackWidget';
 import EngagementModal from './EngagementModal';
 import EvaluateButton from './EvaluateButton';
+import SkipLink from './SkipLink';
+import CookieBanner from './CookieBanner';
+import GlistBot from './GlistBot';
+import SystemBroadcastBanner from './SystemBroadcastBanner';
 import RouteScrollManager from './RouteScrollManager';
 import styles from './Layout.module.css';
+
+const PERSONAL_PATH_PREFIXES = [
+  '/espace-pro',
+  '/dashboard/visiteur',
+  '/mon-profil',
+  '/mot-de-passe-oublie',
+  '/reinitialiser-mot-de-passe',
+  '/verifier-email',
+];
+
+function isPersonalPage(pathname) {
+  return PERSONAL_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 export default function Layout({ children }) {
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const hideFooter = isPersonalPage(location.pathname);
   const [showFloaters, setShowFloaters] = useState(true);
 
   useEffect(() => {
@@ -45,12 +65,16 @@ export default function Layout({ children }) {
 
   return (
     <div className={styles.layout}>
+      <SkipLink />
       <RouteScrollManager />
       <Header />
-      <main className={styles.main}>{children}</main>
-      <Footer />
+      <SystemBroadcastBanner />
+      <main id="main-content" className={styles.main}>{children}</main>
+      {!hideFooter && <Footer />}
+      <CookieBanner />
       {showFloaters && (
         <>
+          <GlistBot />
           <EvaluateButton />
           <FeedbackWidget />
         </>

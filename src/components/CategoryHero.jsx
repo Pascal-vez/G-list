@@ -51,7 +51,7 @@ export default function CategoryHero({ category, description, count }) {
 
           <div className={styles.textBlock}>
             <p className={styles.eyebrow}>Catégorie · G-List</p>
-            <h1 className={styles.title}>{category.name}</h1>
+            <h1 className={`${styles.title} hero-display`}>{category.name}</h1>
             <p className={styles.description}>{description}</p>
 
             <div className={styles.meta}>

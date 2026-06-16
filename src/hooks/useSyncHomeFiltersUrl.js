@@ -11,20 +11,22 @@ export function buildFilterSearchParams(filters) {
   return params;
 }
 
-export function useSyncHomeFiltersUrl() {
+export function useSyncAnnuaireFiltersUrl(pathname = '/annuaire') {
   const navigate = useNavigate();
 
-  return useCallback((filters, hash = window.location.hash) => {
+  return useCallback((filters) => {
     const params = buildFilterSearchParams(filters);
     const search = params.toString();
 
     navigate(
       {
-        pathname: '/',
+        pathname,
         search: search ? `?${search}` : '',
-        hash,
       },
       { replace: true, preventScrollReset: true },
     );
-  }, [navigate]);
+  }, [navigate, pathname]);
 }
+
+/** @deprecated Utiliser useSyncAnnuaireFiltersUrl */
+export const useSyncHomeFiltersUrl = useSyncAnnuaireFiltersUrl;

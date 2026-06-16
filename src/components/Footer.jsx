@@ -7,6 +7,7 @@ import {
   Phone,
   Mail,
   Clock,
+  ArrowRight,
 } from 'lucide-react';
 import { CATEGORIES, REGIONS } from '../data/constants';
 import { SITE_NAV_LINKS, SITE_INFO_LINKS } from '../data/siteNav';
@@ -17,10 +18,16 @@ import ScrollToTopLink from './ScrollToTopLink';
 import styles from './Footer.module.css';
 
 const SOCIAL_LINKS = [
-  { label: 'Facebook', href: 'https://facebook.com', Icon: Facebook },
-  { label: 'Instagram', href: 'https://instagram.com', Icon: Instagram },
+  { label: 'Facebook', href: 'https://facebook.com/glistgn', Icon: Facebook },
+  { label: 'Instagram', href: 'https://instagram.com/glistgn', Icon: Instagram },
   { label: 'WhatsApp', href: 'https://wa.me/224626419331', Icon: WhatsAppIcon },
-  { label: 'YouTube', href: 'https://youtube.com', Icon: Youtube },
+  { label: 'YouTube', href: 'https://youtube.com/@glistgn', Icon: Youtube },
+];
+
+const LEGAL_FOOTER_LINKS = [
+  { label: 'Confidentialité', to: '/confidentialite' },
+  { label: 'Conditions', to: '/conditions' },
+  { label: 'Admin', to: '/admin-glist-2026' },
 ];
 
 function WhatsAppIcon({ size = 18 }) {
@@ -31,32 +38,15 @@ function WhatsAppIcon({ size = 18 }) {
   );
 }
 
-function openFeedbackWidget() {
-  document.querySelector('button[aria-label="Feedback"]')?.click();
-}
-
 export default function Footer() {
   const topCategories = CATEGORIES.slice(0, 8);
 
   return (
     <footer className={styles.footer}>
-      {/* Zone 1 — CTA */}
-      <div className={styles.ctaBand}>
-        <div className={styles.ctaText}>
-          <h2 className={styles.ctaTitle}>Vous êtes professionnel en Guinée ?</h2>
-          <p className={styles.ctaSubtitle}>
-            Rejoignez G-List et soyez visible par des milliers de clients partout en Guinée.
-          </p>
-        </div>
-        <Link to="/espace-pro" className={styles.ctaBtn}>
-          Rejoindre G-List
-        </Link>
-      </div>
+      <div className={styles.topAccent} aria-hidden="true" />
 
-      {/* Zone 2 — Footer principal */}
       <div className={styles.main}>
         <div className={styles.grid}>
-          {/* Colonne 1 — Brand */}
           <div className={styles.colBrand}>
             <Link to="/" className={styles.logoLink}>
               <Logo />
@@ -76,7 +66,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Icon size={18} />
+                  <Icon size={17} />
                 </a>
               ))}
             </div>
@@ -86,31 +76,34 @@ export default function Footer() {
             </span>
           </div>
 
-          {/* Colonne 2 — Navigation */}
           <nav className={styles.colNav} aria-label="Navigation du site">
             <h3 className={styles.sectionTitle}>Navigation</h3>
             <ul className={styles.linkList}>
               {SITE_NAV_LINKS.map(({ label, to }) => (
                 <li key={label}>
                   <SiteNavLink to={to} className={styles.navLink}>
-                    {label}
+                    <span>{label}</span>
+                    <ArrowRight size={13} className={styles.linkArrow} aria-hidden="true" />
                   </SiteNavLink>
                 </li>
               ))}
             </ul>
-            <h3 className={styles.sectionTitleSub}>Informations</h3>
+          </nav>
+
+          <nav className={styles.colInfo} aria-label="Informations légales">
+            <h3 className={styles.sectionTitle}>Informations</h3>
             <ul className={styles.linkList}>
               {SITE_INFO_LINKS.map(({ label, to }) => (
                 <li key={label}>
                   <Link to={to} className={styles.navLink}>
-                    {label}
+                    <span>{label}</span>
+                    <ArrowRight size={13} className={styles.linkArrow} aria-hidden="true" />
                   </Link>
                 </li>
               ))}
             </ul>
           </nav>
 
-          {/* Colonne 3 — Catégories */}
           <nav className={styles.colCategories} aria-label="Catégories">
             <h3 className={styles.sectionTitle}>Catégories</h3>
             <ul className={styles.linkList}>
@@ -123,82 +116,86 @@ export default function Footer() {
                         className={styles.categoryIcon}
                         style={{ background: colors.bg, color: colors.color }}
                       >
-                        <CategoryIcon id={cat.id} size={14} strokeWidth={2} />
+                        <CategoryIcon id={cat.id} size={13} strokeWidth={2} />
                       </span>
-                      {cat.name}
+                      <span>{cat.name}</span>
                     </ScrollToTopLink>
                   </li>
                 );
               })}
             </ul>
+            <ScrollToTopLink to="/annuaire" className={styles.seeAllLink}>
+              Voir toutes les catégories
+              <ArrowRight size={14} aria-hidden="true" />
+            </ScrollToTopLink>
           </nav>
 
-          {/* Colonne 4 — Contact */}
           <div className={styles.colContact}>
-            <h3 className={styles.sectionTitle}>Contact &amp; Infos</h3>
+            <h3 className={styles.sectionTitle}>Contact</h3>
             <ul className={styles.contactList}>
-              <li>
-                <MapPin size={15} aria-hidden="true" />
-                Conakry, République de Guinée
+              <li className={styles.contactItem}>
+                <span className={styles.contactIcon}><MapPin size={15} aria-hidden="true" /></span>
+                <span>Conakry, République de Guinée</span>
               </li>
-              <li>
-                <Phone size={15} aria-hidden="true" />
-                WhatsApp : +224 626 41 93 31
+              <li className={styles.contactItem}>
+                <span className={styles.contactIcon}><Phone size={15} aria-hidden="true" /></span>
+                <a href="https://wa.me/224626419331" target="_blank" rel="noopener noreferrer">
+                  +224 626 41 93 31
+                </a>
               </li>
-              <li>
-                <Mail size={15} aria-hidden="true" />
-                contact@g-list.gn
+              <li className={styles.contactItem}>
+                <span className={styles.contactIcon}><Mail size={15} aria-hidden="true" /></span>
+                <a href="mailto:contact@g-list.gn">contact@g-list.gn</a>
               </li>
-              <li>
-                <Clock size={15} aria-hidden="true" />
-                Lun – Sam · 8h – 18h
+              <li className={styles.contactItem}>
+                <span className={styles.contactIcon}><Clock size={15} aria-hidden="true" /></span>
+                <span>Lun – Sam · 8h – 18h</span>
               </li>
             </ul>
 
-            <div className={styles.prototypeBlock}>
-              <p className={styles.prototypeTitle}>Prototype</p>
-              <p className={styles.prototypeText}>
-                Version de démonstration à des fins de validation. Les données affichées
-                sont fictives et ne constituent pas un service commercial actif.
-              </p>
+            <div className={styles.ctaGroup}>
+              <Link to="/espace-pro" className={styles.joinLink}>
+                Créer mon espace pro
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+              <Link to="/contact" className={styles.feedbackBtn}>
+                Nous contacter
+              </Link>
             </div>
-
-            <button type="button" className={styles.feedbackBtn} onClick={openFeedbackWidget}>
-              Donner mon avis
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Zone 3 — Régions */}
       <div className={styles.regionsBand}>
-        <span className={styles.regionsLabel}>Régions couvertes :</span>
-        <div className={styles.regionsPills}>
-          {REGIONS.map((region) => (
-            <SiteNavLink
-              key={region}
-              to={`/?region=${encodeURIComponent(region)}#professionals`}
-              className={styles.regionPill}
-            >
-              {region}
-            </SiteNavLink>
-          ))}
+        <div className={styles.regionsInner}>
+          <div className={styles.regionsHead}>
+            <MapPin size={14} aria-hidden="true" />
+            <span className={styles.regionsLabel}>Villes couvertes</span>
+          </div>
+          <div className={styles.regionsScroll}>
+            <div className={styles.regionsPills}>
+              {REGIONS.map((region) => (
+                <SiteNavLink
+                  key={region}
+                  to={`/annuaire?region=${encodeURIComponent(region)}`}
+                  className={styles.regionPill}
+                >
+                  {region}
+                </SiteNavLink>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Zone 4 — Copyright */}
       <div className={styles.copyrightBar}>
         <p className={styles.copyrightText}>
-          G-List © 2026 — Prototype de validation. Toutes les informations sont fictives.
+          © {new Date().getFullYear()} G-List — Annuaire professionnel Guinée
         </p>
         <nav className={styles.legalLinks} aria-label="Liens légaux">
-          <Link to="/a-propos">À propos</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/confidentialite">Confidentialité</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/conditions">Conditions</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/admin-glist-2026">Admin</Link>
+          {LEGAL_FOOTER_LINKS.map(({ label, to }) => (
+            <Link key={label} to={to}>{label}</Link>
+          ))}
         </nav>
       </div>
     </footer>

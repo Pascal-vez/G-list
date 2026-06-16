@@ -5,13 +5,18 @@ import {
   LayoutGrid,
   MapPin,
   UserPlus,
+  User,
   BadgeCheck,
   Briefcase,
   ClipboardList,
-  Shield,
   Info,
   FileText,
   ScrollText,
+  HelpCircle,
+  Mail,
+  Cookie,
+  Scale,
+  ListTree,
 } from 'lucide-react';
 import SiteNavLink from './SiteNavLink';
 import styles from './Header.module.css';
@@ -22,13 +27,18 @@ const DRAWER_ICONS = {
   grid: LayoutGrid,
   map: MapPin,
   userPlus: UserPlus,
+  user: User,
   verified: BadgeCheck,
   briefcase: Briefcase,
   clipboard: ClipboardList,
-  shield: Shield,
   info: Info,
   privacy: FileText,
   terms: ScrollText,
+  help: HelpCircle,
+  mail: Mail,
+  cookie: Cookie,
+  legal: Scale,
+  sitemap: ListTree,
 };
 
 export default function DrawerNavItem({ item, onClose, useScrollNav }) {
@@ -40,7 +50,7 @@ export default function DrawerNavItem({ item, onClose, useScrollNav }) {
         style={{ background: item.accent, color: item.iconColor }}
         aria-hidden="true"
       >
-        {Icon && <Icon size={18} strokeWidth={2.2} />}
+        {Icon && <Icon size={20} strokeWidth={2.25} />}
       </span>
       <span className={styles.drawerLabel}>{item.label}</span>
     </>

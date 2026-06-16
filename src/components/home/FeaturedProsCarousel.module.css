@@ -1,0 +1,68 @@
+.viewport {
+  overflow: hidden;
+  margin: 0 calc(-1 * clamp(20px, 4vw, 60px));
+  padding: 4px 0 8px;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000  clamp(20px, 4vw, 60px),
+    #000  calc(100% - clamp(20px, 4vw, 60px)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000  clamp(20px, 4vw, 60px),
+    #000  calc(100% - clamp(20px, 4vw, 60px)),
+    transparent
+  );
+}
+
+.track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  animation: featuredScroll 250s linear infinite;
+  will-change: transform;
+}
+
+.viewport:hover .track {
+  animation-play-state: paused;
+}
+
+.slide {
+  flex: 0 0 clamp(300px, 32vw, 380px);
+  min-width: 300px;
+}
+
+@keyframes featuredScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .track {
+    animation: none;
+    padding: 0 clamp(20px, 4vw, 60px);
+  }
+
+  .slide {
+    scroll-snap-align: start;
+  }
+}

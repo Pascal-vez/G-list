@@ -1,232 +1,117 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronUp, SearchX } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Zap, ArrowRight } from 'lucide-react';
 import Hero from '../components/Hero';
 import Categories from '../components/Categories';
-import Filters from '../components/Filters';
-import ProCard from '../components/ProCard';
-import LocationBanner from '../components/LocationBanner';
-import professionals from '../data/professionals';
-import { CATEGORIES } from '../data/constants';
-import { filterProfessionals, getCategoryCounts, getRegionCounts, getVerifiedCount } from '../utils/helpers';
-import { sortByDistance } from '../utils/geo';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { useSyncHomeFiltersUrl } from '../hooks/useSyncHomeFiltersUrl';
+import FeaturedProsCarousel from '../components/home/FeaturedProsCarousel';
+import RecentProCard from '../components/home/RecentProCard';
+import HomeStatsBand from '../components/home/HomeStatsBand';
+import { getAllProfessionals } from '../api/professionals';
+import { getCategoryCounts } from '../utils/helpers';
+import { getTotalProfileReviews } from '../utils/storage';
+import { usePageMeta } from '../hooks/usePageMeta';
 import styles from './Home.module.css';
 
-const DEFAULT_FILTERS = {
-  search: '',
-  region: 'all',
-  category: 'all',
-  verified: 'all',
-  minRating: 'all',
-};
-
-function isDefaultFilters(f) {
-  return (
-    !f.search &&
-    f.region === 'all' &&
-    f.category === 'all' &&
-    f.verified === 'all' &&
-    f.minRating === 'all'
-  );
-}
-
-function filtersFromSearchParams(searchParams) {
-  return {
-    ...DEFAULT_FILTERS,
-    search: searchParams.get('search') || '',
-    category: searchParams.get('category') || 'all',
-    region: searchParams.get('region') || 'all',
-    verified: searchParams.get('verified') || 'all',
-    minRating: searchParams.get('rating') || 'all',
-  };
-}
-
 export default function Home() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const routeLocation = useLocation();
-  const syncFiltersUrl = useSyncHomeFiltersUrl();
-
-  const [filters, setFilters] = useState(() => filtersFromSearchParams(searchParams));
-
-  const [hasChosenFilter, setHasChosenFilter] = useState(() => {
-    const search = searchParams.get('search') || '';
-    const region = searchParams.get('region') || 'all';
-    const verified = searchParams.get('verified') || 'all';
-    const minRating = searchParams.get('rating') || 'all';
-    return !!(
-      search
-      || region !== 'all'
-      || verified !== 'all'
-      || minRating !== 'all'
-      || window.location.hash === '#professionals'
-    );
+  usePageMeta({
+    description: 'Trouvez les meilleurs professionnels de Guinée — médecins, artisans, restaurants, techniciens et plus.',
+    path: '/',
   });
 
-  const [resultsVisible, setResultsVisible] = useState(true);
-
-  const { location, error, loading, requestLocation, clearLocation } = useGeolocation();
-
-  useEffect(() => {
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category') || 'all';
-    const region = searchParams.get('region') || 'all';
-    const verified = searchParams.get('verified') || 'all';
-    const minRating = searchParams.get('rating') || 'all';
-
-    if (category !== 'all') {
-      const cat = CATEGORIES.find((c) => c.name === category);
-      if (cat) {
-        const qs = search ? `?search=${encodeURIComponent(search)}` : '';
-        navigate(`/categorie/${cat.id}${qs}`, { replace: true });
-        return;
-      }
-    }
-
-    setFilters((f) => {
-      if (
-        f.search === search
-        && f.category === category
-        && f.region === region
-        && f.verified === verified
-        && f.minRating === minRating
-      ) return f;
-      return { ...f, search, category, region, verified, minRating };
-    });
-
-    if (search || region !== 'all' || verified !== 'all' || minRating !== 'all') {
-      setHasChosenFilter(true);
-    }
-  }, [searchParams, navigate]);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (routeLocation.hash === '#professionals') {
-      setHasChosenFilter(true);
+    const hasAnnuaireQuery =
+      searchParams.get('search')
+      || searchParams.get('region')
+      || searchParams.get('verified')
+      || searchParams.get('rating')
+      || searchParams.get('category');
+
+    if (hasAnnuaireQuery || location.hash === '#professionals') {
+      navigate(`/annuaire${location.search}`, { replace: true });
     }
-  }, [routeLocation.hash]);
+  }, [searchParams, location.hash, location.search, navigate]);
 
-  const categoryCounts = useMemo(() => getCategoryCounts(professionals), []);
-  const regionCounts = useMemo(() => getRegionCounts(professionals), []);
-  const verifiedCount = useMemo(() => getVerifiedCount(professionals), []);
+  const professionals = getAllProfessionals();
+  const categoryCounts = useMemo(() => getCategoryCounts(professionals), [professionals.length]);
 
-  const filtered = useMemo(() => {
-    const results = filterProfessionals(professionals, filters);
-    if (location) {
-      return sortByDistance(results, location.lat, location.lng);
-    }
-    return results;
-  }, [filters, location]);
+  const featuredPros = useMemo(() => {
+    const sponsored = professionals.filter((p) => p.topGList || p.plan === 'premium');
+    const pool = sponsored.length > 0 ? sponsored : professionals;
+    return [...pool].sort((a, b) => b.note - a.note);
+  }, []);
 
-  const handleSearch = (query) => {
-    const next = { ...filters, search: query };
-    setHasChosenFilter(true);
-    setResultsVisible(true);
-    setFilters(next);
-    syncFiltersUrl(next, '#professionals');
-  };
+  const recentPros = useMemo(() => (
+    [...professionals].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 4)
+  ), []);
 
-  const handleFiltersChange = (next) => {
-    setHasChosenFilter(true);
-    setResultsVisible(true);
-    setFilters(next);
-    syncFiltersUrl(next, window.location.hash || '#professionals');
-  };
+  const avgRating = useMemo(() => {
+    if (!professionals.length) return 0;
+    const sum = professionals.reduce((s, p) => s + (p.note || 0), 0);
+    return sum / professionals.length;
+  }, [professionals.length]);
 
-  const handleReset = () => {
-    setFilters(DEFAULT_FILTERS);
-    setHasChosenFilter(false);
-    setResultsVisible(true);
-    navigate({ pathname: '/', hash: '' }, { replace: true });
-  };
+  const reviewStats = useMemo(() => {
+    const catalogReviews = professionals.reduce((s, p) => s + (p.nombreAvis || 0), 0);
+    const userReviews = getTotalProfileReviews();
+    const totalReviews = catalogReviews + userReviews;
+    const topRated = professionals.filter((p) => (p.note || 0) >= 4.5 && (p.nombreAvis || 0) > 0).length;
+    const satisfied = professionals.filter((p) => (p.note || 0) >= 4).length;
+    const satisfiedPct = professionals.length
+      ? Math.round((satisfied / professionals.length) * 100)
+      : 0;
+    return { totalReviews, satisfiedPct, topRated };
+  }, [professionals.length]);
 
   return (
     <>
-      <div className={styles.heroShell}>
-        <Hero onSearch={handleSearch} />
-      </div>
+      <Hero />
 
-      <div className={styles.homeBody}>
-        <div id="categories" className={styles.categoriesWrap}>
-          <Categories categoryCounts={categoryCounts} />
-        </div>
-        <section id="professionals" className={styles.section}>
-        <h2 className={styles.title}>Professionnels disponibles</h2>
-
-        <LocationBanner
-          location={location}
-          loading={loading}
-          error={error}
-          onRequest={requestLocation}
-          onDismiss={clearLocation}
-        />
-
-        <div id="regions">
-        <Filters
-          filters={filters}
-          onChange={handleFiltersChange}
-          onReset={handleReset}
-          categoryCounts={categoryCounts}
-          regionCounts={regionCounts}
-          verifiedCount={verifiedCount}
-        />
-        </div>
-
-        {!hasChosenFilter ? (
-          <div className={styles.prompt}>
-            <p>Sélectionnez une catégorie ou un filtre pour afficher les professionnels.</p>
-          </div>
-        ) : (
-          <>
-            <div className={styles.resultsBar}>
-              <p className={styles.count}>
-                {filtered.length} professionnel{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}
-                {location && ' · triés par proximité'}
-              </p>
-              <button
-                type="button"
-                className={styles.toggleResults}
-                onClick={() => setResultsVisible((v) => !v)}
-                aria-expanded={resultsVisible}
-              >
-                {resultsVisible ? (
-                  <>
-                    <ChevronUp size={18} aria-hidden />
-                    Masquer les résultats
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown size={18} aria-hidden />
-                    Afficher les résultats
-                  </>
-                )}
-              </button>
+      <section className={styles.featuredSection}>
+        <div className={styles.sectionInner}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitleRow}>
+              <Zap size={20} className={styles.sectionIcon} aria-hidden="true" />
+              <h2>Professionnels mis en avant</h2>
+              <span className={styles.sponsoredTag}>Sponsorisé</span>
             </div>
+          </div>
+          <FeaturedProsCarousel pros={featuredPros} />
+        </div>
+      </section>
 
-            {resultsVisible && (
-              filtered.length > 0 ? (
-                <div className={styles.grid}>
-                  {filtered.map((pro) => (
-                    <ProCard key={pro.id} pro={pro} userLocation={location} />
-                  ))}
-                </div>
-              ) : (
-                <div className={styles.empty}>
-                  <SearchX size={40} className={styles.emptyIcon} aria-hidden="true" />
-                  <p>Aucun professionnel trouvé pour ces critères. Essayez d&apos;élargir votre recherche ou de changer de région.</p>
-                  {!isDefaultFilters(filters) && (
-                    <button className={styles.resetLink} onClick={handleReset}>
-                      Réinitialiser les filtres
-                    </button>
-                  )}
-                </div>
-              )
-            )}
-          </>
-        )}
-        </section>
+      <div id="categories" className={styles.categoriesWrap}>
+        <Categories categoryCounts={categoryCounts} layout="horizontal" limit={8} />
       </div>
+
+      <section className={styles.recentSection}>
+        <div className={styles.sectionInner}>
+          <div className={styles.sectionHead}>
+            <h2>Professionnels récemment inscrits</h2>
+            <Link to="/annuaire" className={styles.seeAllBtn}>
+              Voir tous les professionnels
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+          <div className={styles.recentGrid}>
+            {recentPros.map((pro) => (
+              <RecentProCard key={pro.id} pro={pro} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <HomeStatsBand
+        totalPros={professionals.length}
+        totalReviews={reviewStats.totalReviews}
+        avgRating={avgRating}
+        monthlySearches="2 000"
+        satisfiedPct={reviewStats.satisfiedPct}
+        topRatedCount={reviewStats.topRated}
+      />
     </>
   );
 }

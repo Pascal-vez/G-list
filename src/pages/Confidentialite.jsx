@@ -1,58 +1,74 @@
+import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export default function Confidentialite() {
+  usePageMeta({
+    title: 'Politique de confidentialité',
+    description: 'Comment G-List collecte, utilise et protège vos données personnelles.',
+    path: '/confidentialite',
+  });
+
   return (
     <InfoPageLayout
       title="Politique de confidentialité"
-      subtitle="Juin 2026 — Version prototype"
+      subtitle="Dernière mise à jour : juin 2026"
       pageKey="confidentialite"
     >
-      <InfoSection title="Contexte">
+      <InfoSection title="1. Responsable du traitement">
         <p>
-          G-List est actuellement en phase de prototype de validation. Cette politique décrit
-          comment nous traitons les données collectées durant cette phase de test.
+          G-List, annuaire professionnel basé à Conakry (Guinée), est responsable du traitement des données
+          personnelles collectées via le site g-list.gn et l&apos;application associée.
         </p>
       </InfoSection>
 
-      <InfoSection title="Données collectées">
+      <InfoSection title="2. Données collectées">
+        <p>Nous pouvons collecter :</p>
+        <ul>
+          <li>Identité et coordonnées (nom, email, téléphone, WhatsApp)</li>
+          <li>Informations professionnelles (activité, ville, services, horaires)</li>
+          <li>Données de navigation (pages visitées, recherches) si vous acceptez les cookies analytiques</li>
+          <li>Avis, messages, demandes de devis et signalements</li>
+        </ul>
+      </InfoSection>
+
+      <InfoSection title="3. Finalités">
+        <p>Les données sont utilisées pour :</p>
+        <ul>
+          <li>Publier et gérer les fiches professionnelles</li>
+          <li>Mettre en relation visiteurs et professionnels</li>
+          <li>Assurer la modération, la sécurité et le support client</li>
+          <li>Améliorer le service et produire des statistiques agrégées</li>
+          <li>Respecter nos obligations légales</li>
+        </ul>
+      </InfoSection>
+
+      <InfoSection title="4. Base légale & conservation">
         <p>
-          Durant cette phase prototype, G-List collecte uniquement les données que vous fournissez
-          volontairement : nom, profession, région et numéro WhatsApp si vous rejoignez la liste
-          d&apos;attente, vos avis et évaluations sur la plateforme, et vos réponses aux questions
-          de feedback. Aucune donnée de navigation, aucun cookie de tracking, aucune donnée
-          personnelle n&apos;est collectée sans votre consentement explicite.
+          Le traitement repose sur votre consentement, l&apos;exécution du contrat (compte pro) ou notre intérêt légitime
+          (sécurité du service). Les données sont conservées tant que le compte est actif, puis archivées selon les
+          durées légales applicables en République de Guinée.
         </p>
       </InfoSection>
 
-      <InfoSection title="Stockage">
+      <InfoSection title="5. Partage des données">
         <p>
-          Toutes les données de ce prototype sont stockées localement dans votre navigateur via
-          localStorage. Elles ne sont pas transmises à un serveur externe et restent sur votre
-          appareil uniquement.
+          Vos données ne sont pas vendues. Elles peuvent être partagées avec nos sous-traitants techniques (hébergement,
+          paiement mobile) dans la stricte limite de leurs missions. Les fiches professionnelles publiques sont visibles
+          par tous les visiteurs du site.
         </p>
       </InfoSection>
 
-      <InfoSection title="Utilisation">
+      <InfoSection title="6. Vos droits">
         <p>
-          Les données collectées sont utilisées exclusivement pour améliorer le prototype avant
-          le lancement, comprendre les besoins des utilisateurs guinéens, et contacter les inscrits
-          à la liste d&apos;attente lors du lancement officiel. Vos données ne sont jamais vendues,
-          partagées ou transmises à des tiers.
+          Vous disposez d&apos;un droit d&apos;accès, de rectification, de suppression, de limitation et d&apos;opposition.
+          Contact : <a href="mailto:contact@g-list.gn">contact@g-list.gn</a> ou WhatsApp +224 626 41 93 31.
         </p>
       </InfoSection>
 
-      <InfoSection title="Vos droits">
+      <InfoSection title="7. Cookies">
         <p>
-          Vous pouvez à tout moment effacer vos données en vidant le localStorage de votre
-          navigateur, demander la suppression de vos données en nous contactant sur WhatsApp,
-          et retirer votre consentement à tout moment sans justification.
-        </p>
-      </InfoSection>
-
-      <InfoSection title="Évolution">
-        <p>
-          Cette politique sera mise à jour lors du lancement officiel de G-List avec un traitement
-          des données conforme aux réglementations en vigueur en République de Guinée.
+          Consultez notre <Link to="/cookies">politique cookies</Link> pour gérer vos préférences.
         </p>
       </InfoSection>
     </InfoPageLayout>

@@ -1,4 +1,5 @@
 import { CATEGORY_COLORS, CATEGORIES, REGIONS } from '../data/constants';
+import { getOpenStatus } from './horaires';
 
 export function getInitials(name) {
   const parts = name.replace(/^(Dr\.|Pharmacie|Maquis|Restaurant|Salon|Garage|Centre|Prof)\s*/i, '').trim().split(/\s+/);
@@ -21,7 +22,7 @@ export function formatPhone(telephone) {
   return telephone;
 }
 
-export function renderStars(rating, size = 16) {
+export function renderStars(rating) {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   let stars = '';
@@ -64,7 +65,12 @@ export function getVerifiedCount(pros) {
   return pros.filter((p) => p.verifie).length;
 }
 
-export function filterProfessionals(pros, { search, region, category, verified, minRating }) {
+export function filterProfessionals(pros, filters) {
+  const {
+    search, region, category, verified, minRating,
+    categories = [], regions = [], tags = [], plans = [], minRatingSlider = 0,
+  } = filters;
+
   return pros.filter((pro) => {
     if (search) {
       const q = search.toLowerCase();
@@ -76,12 +82,30 @@ export function filterProfessionals(pros, { search, region, category, verified, 
         pro.quartier.toLowerCase().includes(q);
       if (!match) return false;
     }
+    if (regions.length > 0 && !regions.includes(pro.region)) return false;
     if (region && region !== 'all' && pro.region !== region) return false;
+    if (categories.length > 0 && !categories.includes(pro.categorie)) return false;
     if (category && category !== 'all' && pro.categorie !== category) return false;
     if (verified === 'verified' && !pro.verifie) return false;
     if (verified === 'unverified' && pro.verifie) return false;
     if (minRating === '4' && pro.note < 4) return false;
     if (minRating === '4.5' && pro.note < 4.5) return false;
+    if (minRatingSlider > 0 && pro.note < minRatingSlider) return false;
+
+    if (tags.includes('verified') && !pro.verifie) return false;
+    if (tags.includes('top') && !pro.topGList) return false;
+    if (tags.includes('available')) {
+      if (getOpenStatus(pro.horaires)?.status !== 'open') return false;
+    }
+    if (tags.includes('new') && pro.id > 50) return false;
+    if (tags.includes('rated') && pro.note < 4) return false;
+
+    if (plans.length > 0) {
+      const plan = pro.plan || 'free';
+      const matchPlan = plans.includes(plan) || (plans.includes('top') && pro.topGList);
+      if (!matchPlan) return false;
+    }
+
     return true;
   });
 }

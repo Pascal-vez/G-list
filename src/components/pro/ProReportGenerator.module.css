@@ -1,0 +1,389 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #0E1208;
+  color: #fff;
+}
+
+.panelHead h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.panelHead span {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.panelBody {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sectionTitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #F5C518;
+}
+
+.contentHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.formatGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.formatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.05em;
+}
+
+.formatBtn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #E5E5E5;
+  background: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.formatBtn:hover {
+  border-color: #F5C518;
+  color: #1A1A1A;
+}
+
+.formatBtnActive {
+  background: #F5C518;
+  border-color: #F5C518;
+  color: #0E1208;
+}
+
+.selectActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.linkBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.linkBtn:hover {
+  color: #1A1A1A;
+}
+
+.sectionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sectionCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid #EFEFEF;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sectionCard:hover {
+  border-color: #F5C518;
+  background: rgba(245, 197, 24, 0.04);
+}
+
+.sectionCardChecked {
+  border-color: #F5C518;
+  background: rgba(245, 197, 24, 0.08);
+}
+
+.sectionCard input {
+  margin-top: 2px;
+  accent-color: #F5C518;
+}
+
+.sectionCard strong {
+  display: block;
+  font-size: 13px;
+  color: #1A1A1A;
+  margin-bottom: 2px;
+}
+
+.sectionCard span {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.35;
+}
+
+.customGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #444;
+}
+
+.checkRow input {
+  accent-color: #F5C518;
+}
+
+.generateBtn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: #0E1208;
+  color: #F5C518;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.generateBtn:hover {
+  background: #1a2010;
+}
+
+.generateBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.previewBody {
+  padding: 0;
+  max-height: 620px;
+  overflow: auto;
+  background: #F3F3F3;
+}
+
+.previewDoc {
+  margin: 16px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.previewHeader {
+  background: #0E1208;
+  color: #fff;
+  padding: 20px;
+}
+
+.previewLogo {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.previewLogo span {
+  color: #F5C518;
+}
+
+.previewHeader h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.previewHeader p {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.previewKpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 16px;
+  background: #F8F6F0;
+}
+
+.previewKpi {
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #EFEFEF;
+}
+
+.previewKpi label {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.previewKpi strong {
+  font-size: 18px;
+  color: #0E1208;
+}
+
+.previewKpi small {
+  display: block;
+  font-size: 10px;
+  color: #2E7D32;
+  margin-top: 2px;
+}
+
+.previewSection {
+  padding: 14px 16px;
+  border-top: 1px solid #F0F0F0;
+}
+
+.previewSection h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #0E1208;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #F5C518;
+}
+
+.previewRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.previewRow span:first-child {
+  color: #888;
+}
+
+.previewRow span:last-child {
+  font-weight: 600;
+  color: #1A1A1A;
+  text-align: right;
+}
+
+.metaBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.metaPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #F8F6F0;
+  border: 1px solid #EFEFEF;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #555;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .previewBody {
+    max-height: 480px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dateRow,
+  .sectionGrid,
+  .previewKpis {
+    grid-template-columns: 1fr;
+  }
+}

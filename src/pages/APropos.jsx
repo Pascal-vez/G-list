@@ -1,48 +1,65 @@
+import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
+import { usePageMeta } from '../hooks/usePageMeta';
 import styles from '../components/InfoPageLayout.module.css';
 
 const WHATSAPP_URL = 'https://wa.me/224626419331';
 
 export default function APropos() {
+  usePageMeta({
+    title: 'À propos',
+    description: 'Découvrez la mission de G-List — l\'annuaire professionnel de référence en Guinée.',
+    path: '/a-propos',
+  });
+
   return (
     <InfoPageLayout
       title="À propos de G-List"
-      subtitle="L'histoire derrière le projet"
+      subtitle="L'annuaire professionnel de la Guinée"
       pageKey="apropos"
     >
       <InfoSection title="L'idée">
         <p>
           G-List est né d&apos;un constat simple : en Guinée, trouver un professionnel de confiance
           relève souvent du bouche-à-oreille. Un bon médecin, un électricien sérieux, un restaurant
-          de qualité — ces informations existent, mais elles sont éparpillées, inaccessibles,
-          invisibles. G-List a été créé pour changer ça.
+          de qualité — ces informations existent, mais elles sont éparpillées. G-List centralise
+          tout au même endroit.
         </p>
       </InfoSection>
 
       <InfoSection title="Notre mission">
         <p>
-          Connecter chaque guinéen aux meilleurs professionnels de sa région — rapidement,
+          Connecter chaque guinéen aux meilleurs professionnels de sa ville — rapidement,
           simplement, en toute confiance. Que vous soyez à Conakry, Labé, Kankan ou Nzérékoré,
           G-List vous permet de trouver le bon professionnel en quelques secondes et de le
           contacter directement sur WhatsApp.
         </p>
       </InfoSection>
 
-      <InfoSection title="Ce prototype">
-        <p>
-          La version que vous consultez actuellement est un prototype de validation. Toutes les
-          informations affichées sont fictives. L&apos;objectif est de tester le concept auprès
-          des utilisateurs guinéens avant le lancement officiel de la plateforme. Votre avis nous
-          aide à construire la bonne solution pour la Guinée.
-        </p>
+      <InfoSection title="Comment ça marche ?">
+        <div className={styles.cards}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Pour les visiteurs</h3>
+            <p className={styles.cardText}>
+              Recherchez par catégorie, ville ou mot-clé. Consultez les avis, la carte et les
+              horaires. Contactez le pro par WhatsApp ou demandez un devis.
+            </p>
+          </div>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Pour les professionnels</h3>
+            <p className={styles.cardText}>
+              Créez votre espace pro, complétez votre fiche, gérez vos services et vos avis.
+              Passez en Advanced ou Premium pour débloquer analytics, CRM et mini-site.
+            </p>
+          </div>
+        </div>
       </InfoSection>
 
       <InfoSection title="Le créateur">
         <p>
-          G-List est un projet entrepreneurial développé par un étudiant en informatique passionné
-          par l&apos;impact technologique en Afrique de l&apos;Ouest. Le projet est né de la
-          conviction que la technologie peut résoudre des problèmes concrets et quotidiens pour
-          les guinéens.
+          G-List est un projet entrepreneurial développé en Guinée, avec la conviction que la
+          technologie peut résoudre des problèmes concrets et quotidiens pour les citoyens et
+          les entreprises locales.
         </p>
       </InfoSection>
 
@@ -51,22 +68,22 @@ export default function APropos() {
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Confiance</h3>
             <p className={styles.cardText}>
-              Chaque professionnel vérifié porte un badge de validation. Les avis clients sont
-              transparents et authentiques.
+              Profils vérifiés, avis transparents et modération active pour garantir la qualité
+              de l&apos;annuaire.
             </p>
           </div>
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Local d&apos;abord</h3>
             <p className={styles.cardText}>
-              G-List est conçu pour la réalité guinéenne — WhatsApp comme canal principal,
-              interface légère adaptée à la 3G, disponible dans toutes les régions du pays.
+              WhatsApp comme canal principal, interface légère adaptée à la 3G, couverture des
+              14 villes couvertes.
             </p>
           </div>
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Innovation africaine</h3>
             <p className={styles.cardText}>
-              Nous croyons que les meilleures solutions pour l&apos;Afrique viennent d&apos;Afrique.
-              G-List est fait par et pour les guinéens.
+              Une solution pensée par et pour les Guinéens, avec des tarifs en GNF et un support
+              en français.
             </p>
           </div>
         </div>
@@ -74,17 +91,15 @@ export default function APropos() {
 
       <InfoSection title="Contact">
         <div className={styles.contactBlock}>
-          <p>
-            Une question ? Une suggestion ? Contactez-nous directement sur WhatsApp.
-          </p>
-          <a
-            href={WHATSAPP_URL}
-            className={styles.whatsappBtn}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nous contacter sur WhatsApp
-          </a>
+          <p>Une question, un partenariat ou une suggestion ? Écrivez-nous.</p>
+          <div className={styles.contactActions}>
+            <a href={WHATSAPP_URL} className={styles.whatsappBtn} target="_blank" rel="noopener noreferrer">
+              WhatsApp
+            </a>
+            <Link to="/contact" className={styles.whatsappBtn} style={{ background: '#1A1A1A' }}>
+              Formulaire de contact
+            </Link>
+          </div>
         </div>
       </InfoSection>
     </InfoPageLayout>

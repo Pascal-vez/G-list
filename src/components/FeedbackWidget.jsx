@@ -110,7 +110,7 @@ export default function FeedbackWidget() {
         onClick={() => setOpen(!open)}
         aria-label="Feedback"
       >
-        <MessageCircle size={24} />
+        <MessageCircle size={20} strokeWidth={2} />
       </button>
     </div>
   );

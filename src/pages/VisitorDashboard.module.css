@@ -1,0 +1,369 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #F5C518;
+  color: #0E1208;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.email {
+  color: #888;
+  font-size: 14px;
+}
+
+.sub {
+  font-size: 12px;
+  color: #AAA;
+  margin-top: 2px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 2px solid #EFEFEF;
+  margin-bottom: 24px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.tabActive {
+  color: #0E1208;
+  border-bottom-color: #F5C518;
+}
+
+.adminMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.adminMessage {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+}
+
+.adminMessage strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.adminMessage p {
+  margin: 0;
+  font-size: 13px;
+  color: #4B5563;
+  line-height: 1.45;
+}
+
+.adminMessage button {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  color: #9CA3AF;
+  cursor: pointer;
+}
+
+.adminMessagemaintenance { background: #1e293b; color: #f8fafc; border-color: #334155; }
+.adminMessagemaintenance p { color: #cbd5e1; }
+.adminMessagewarning { background: #fef3c7; border-color: #fcd34d; }
+.adminMessageinfo { background: #eff6ff; border-color: #bfdbfe; }
+.adminMessagesuccess { background: #ecfdf5; border-color: #a7f3d0; }
+
+.summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.summaryCard {
+  flex: 1;
+  min-width: 100px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.summaryCard strong {
+  display: block;
+  font-size: 24px;
+  color: #0E1208;
+}
+
+.compactGrid, .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.favWrap {
+  position: relative;
+}
+
+.removeFav {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.historyList, .searchList, .requestList {
+  list-style: none;
+}
+
+.historyList li, .searchList li, .requestList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.date {
+  color: #888;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.reviewBtn, .relaunchBtn {
+  padding: 6px 12px;
+  background: #F5C518;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0E1208;
+}
+
+.clearBtn {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: #FAFAFA;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+}
+
+.status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(245, 197, 24, 0.2);
+}
+
+.settings {
+  max-width: 400px;
+}
+
+.toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #EFEFEF;
+}
+
+.settingRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.security {
+  margin: 24px 0;
+}
+
+.security h3 {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+}
+
+.exportBtn:hover { border-color: #F5C518; }
+
+.simBtn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: #FAFAFA;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: #DC2626;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.authPage {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.authBox {
+  max-width: 400px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.authTabs {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.authTabs button {
+  flex: 1;
+  padding: 8px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 8px;
+  background: #FAFAFA;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.authTabActive {
+  background: #F5C518 !important;
+  border-color: #F5C518 !important;
+  font-weight: 700;
+}
+
+.authError {
+  color: #DC2626;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.forgotLink {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+  text-decoration: underline;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input {
+  padding: 10px 14px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 10px;
+  font-family: inherit;
+}
+
+.backLink {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #888;
+}
+
+.content h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}

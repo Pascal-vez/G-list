@@ -1,0 +1,145 @@
+.card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #EFEFEF;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: #F5C518;
+  box-shadow: 0 6px 20px rgba(245, 197, 24, 0.12);
+}
+
+.sponsored {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(245, 197, 24, 0.15);
+  color: #9A7B00;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 72px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.info {
+  min-width: 0;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.3;
+}
+
+.profession {
+  font-size: 13px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #555;
+}
+
+.star {
+  color: #F5C518;
+  fill: #F5C518;
+}
+
+.rating strong {
+  color: #1A1A1A;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusOn {
+  color: #2e7d32;
+}
+
+.statusOn .statusDot {
+  background: #2e7d32;
+}
+
+.statusOff {
+  color: #888;
+}
+
+.statusOff .statusDot {
+  background: #ccc;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  text-align: center;
+  padding: 11px 16px;
+  margin-top: 4px;
+  border-radius: 50px;
+  background: #F5C518;
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.2s ease;
+}
+
+.cta:hover {
+  background: #D4A800;
+  color: #1A1A1A;
+}

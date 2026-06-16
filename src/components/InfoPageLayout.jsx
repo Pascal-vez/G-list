@@ -39,7 +39,7 @@ export default function InfoPageLayout({ title, subtitle, pageKey = 'apropos', c
         <div className={styles.overlay} aria-hidden="true" />
         <div className={styles.accentBar} aria-hidden="true" />
         <div className={styles.heroInner}>
-          <h1 className={styles.heroTitle}>{title}</h1>
+          <h1 className={`${styles.heroTitle} hero-display`}>{title}</h1>
           <p className={styles.heroSubtitle}>{subtitle}</p>
         </div>
       </header>
