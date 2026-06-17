@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 
 export default function Confidentialite() {
-  usePageMeta({
-    title: 'Politique de confidentialité',
-    description: 'Comment G-List collecte, utilise et protège vos données personnelles.',
-    path: '/confidentialite',
-  });
-
   return (
+    <>
+      <SeoHead
+        titre="Politique de confidentialité"
+        description="Comment G-List collecte, utilise et protège vos données personnelles."
+        url="/confidentialite"
+      />
     <InfoPageLayout
       title="Politique de confidentialité"
       subtitle="Dernière mise à jour : juin 2026"
@@ -72,5 +72,6 @@ export default function Confidentialite() {
         </p>
       </InfoSection>
     </InfoPageLayout>
+    </>
   );
 }

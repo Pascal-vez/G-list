@@ -21,7 +21,7 @@ import { getUnreadCount } from '../utils/notificationInbox';
 import { SAAS_PLATFORM_LEVEL } from '../utils/saasLevel100';
 import { StarDisplay } from '../components/StarRating';
 import { NETWORKS } from '../components/SocialLinks';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import { UPGRADE_CONGRATS } from '../utils/planConfig';
 import DateRangePicker, { defaultDateRange } from '../components/dashboard/DateRangePicker';
 import styles from './ProDashboard.module.css';
@@ -121,13 +121,6 @@ function accountToForm(acc) {
 }
 
 export default function ProDashboard() {
-  usePageMeta({
-    title: 'Espace professionnel',
-    description: 'Gérez votre profil, vos avis et votre visibilité sur G-List.',
-    path: '/espace-pro',
-    noIndex: true,
-  });
-
   const [account, setAccount] = useState(() => getProAccount());
   const [authMode, setAuthMode] = useState('login');
   const [form, setForm] = useState(() => accountToForm(getProAccount()));
@@ -317,6 +310,13 @@ export default function ProDashboard() {
 
   if (!isLoggedIn) {
     return (
+      <>
+        <SeoHead
+          titre="Espace professionnel"
+          description="Gérez votre profil, vos avis et votre visibilité sur G-List."
+          url="/espace-pro"
+          noIndex
+        />
       <div className={styles.authPage}>
         <div className={styles.authVisual} aria-hidden="true">
           <div className={styles.authVisualImg} />
@@ -438,10 +438,18 @@ export default function ProDashboard() {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+      <SeoHead
+        titre="Espace professionnel"
+        description="Gérez votre profil, vos avis et votre visibilité sur G-List."
+        url="/espace-pro"
+        noIndex
+      />
     <div className={styles.dashLayout}>
       {sidebarOpen && <button type="button" className={styles.sidebarBackdrop} onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu" />}
 
@@ -719,5 +727,6 @@ export default function ProDashboard() {
         </div>
       )}
     </div>
+    </>
   );
 }

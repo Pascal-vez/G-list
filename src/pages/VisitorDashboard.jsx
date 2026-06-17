@@ -14,7 +14,7 @@ import { getInitials } from '../utils/helpers';
 import { getActiveBroadcastsForUser, dismissBroadcast } from '../utils/adminBroadcasts';
 import { exportVisitorGdprData } from '../utils/platformEvents';
 import NotificationInbox from '../components/NotificationInbox';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import styles from './VisitorDashboard.module.css';
 
 const TABS = [
@@ -38,13 +38,6 @@ function getRecommendations(history) {
 }
 
 export default function VisitorDashboard() {
-  usePageMeta({
-    title: 'Espace visiteur',
-    description: 'Gérez vos favoris, votre historique et vos demandes de devis sur G-List.',
-    path: '/dashboard/visiteur',
-    noIndex: true,
-  });
-
   const [account, setAccount] = useState(() => getVisitorAccount());
   const [authMode, setAuthMode] = useState('login');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -75,6 +68,13 @@ export default function VisitorDashboard() {
       }
     };
     return (
+      <>
+        <SeoHead
+          titre="Espace visiteur"
+          description="Gérez vos favoris, votre historique et vos demandes de devis sur G-List."
+          url="/dashboard/visiteur"
+          noIndex
+        />
       <div className={styles.authPage}>
         <div className={styles.authBox}>
           <h1>Espace visiteur</h1>
@@ -103,6 +103,7 @@ export default function VisitorDashboard() {
           <Link to="/annuaire" className={styles.backLink}>← Retour à l&apos;annuaire</Link>
         </div>
       </div>
+      </>
     );
   }
 
@@ -127,6 +128,13 @@ export default function VisitorDashboard() {
   const statusLabel = { pending: 'En attente', viewed: 'Vu', replied: 'Répondu' };
 
   return (
+    <>
+      <SeoHead
+        titre="Espace visiteur"
+        description="Gérez vos favoris, votre historique et vos demandes de devis sur G-List."
+        url="/dashboard/visiteur"
+        noIndex
+      />
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.avatar}>{getInitials(`${account.prenom} ${account.nom}`)}</div>
@@ -280,5 +288,6 @@ export default function VisitorDashboard() {
         )}
       </div>
     </div>
+    </>
   );
 }

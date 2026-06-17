@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { KeyRound, CheckCircle, AlertCircle } from 'lucide-react';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import { forgotPassword } from '../api/auth';
 import styles from './AuthPages.module.css';
 
@@ -12,13 +12,6 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-
-  usePageMeta({
-    title: 'Mot de passe oublié',
-    description: 'Réinitialisez votre mot de passe G-List.',
-    path: '/mot-de-passe-oublie',
-    noIndex: true,
-  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,6 +26,13 @@ export default function ForgotPassword() {
   };
 
   return (
+    <>
+      <SeoHead
+        titre="Mot de passe oublié"
+        description="Réinitialisez votre mot de passe G-List."
+        url="/mot-de-passe-oublie"
+        noIndex
+      />
     <div className={styles.page}>
       <div className={styles.box}>
         <h1><KeyRound size={24} /> Mot de passe oublié</h1>
@@ -62,5 +62,6 @@ export default function ForgotPassword() {
         <p className={styles.back}><Link to={userType === 'pro' ? '/espace-pro' : '/dashboard/visiteur'}>← Retour à la connexion</Link></p>
       </div>
     </div>
+    </>
   );
 }

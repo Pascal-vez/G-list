@@ -1,18 +1,18 @@
 import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import styles from '../components/InfoPageLayout.module.css';
 
 const WHATSAPP_URL = 'https://wa.me/224626419331';
 
 export default function APropos() {
-  usePageMeta({
-    title: 'À propos',
-    description: 'Découvrez la mission de G-List — l\'annuaire professionnel de référence en Guinée.',
-    path: '/a-propos',
-  });
-
   return (
+    <>
+      <SeoHead
+        titre="À propos"
+        description="Découvrez la mission de G-List — l'annuaire professionnel de référence en Guinée."
+        url="/a-propos"
+      />
     <InfoPageLayout
       title="À propos de G-List"
       subtitle="L'annuaire professionnel de la Guinée"
@@ -103,5 +103,6 @@ export default function APropos() {
         </div>
       </InfoSection>
     </InfoPageLayout>
+    </>
   );
 }

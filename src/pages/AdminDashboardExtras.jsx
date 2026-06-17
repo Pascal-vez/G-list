@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   Star, ThumbsUp, ThumbsDown, MessageSquare, Lightbulb,
   CheckCircle, HelpCircle, XCircle, Download, Trash2, Search,
-  Send, Power, PowerOff, ScrollText,
+  Send, Power, PowerOff, ScrollText, LogOut, Moon,
+  Bell, Wrench, AlertTriangle, Crown, Users, Radio,
 } from 'lucide-react';
 import { REGIONS, CATEGORIES } from '../data/constants';
 import {
@@ -13,7 +14,9 @@ import {
   adminSetProfessionalPlan,
   getWaitlistEntries, getContactMessages,
   getSubscriptionPlans, saveSubscriptionPlans, getPlanMonthlyPrice,
+  getAdminSettings, saveAdminSettings, isDarkMode, setDarkMode,
 } from '../utils/storage';
+import { apiConfig } from '../api/config';
 import {
   BROADCAST_TYPES, BROADCAST_AUDIENCES,
   getAdminBroadcasts, adminCreateBroadcast, adminToggleBroadcast, adminDeleteBroadcast,
@@ -880,10 +883,10 @@ export function AdminFeedback({
 }
 
 const BROADCAST_PRESETS = [
-  { label: 'Maintenance planifiée', type: 'maintenance', title: 'Maintenance en cours', message: 'G-List est temporairement indisponible pour maintenance. Merci de votre patience.', audience: 'all' },
-  { label: 'Avertissement sécurité', type: 'warning', title: 'Message important', message: 'Veuillez mettre à jour vos informations de connexion et ne jamais partager votre mot de passe.', audience: 'all' },
-  { label: 'Nouveauté Premium', type: 'info', title: 'Nouveautés Premium', message: 'Découvrez le mini-site niveau 77 et les nouvelles fonctionnalités dans votre espace pro.', audience: 'pros_premium' },
-  { label: 'Bienvenue visiteurs', type: 'success', title: 'Bienvenue sur G-List', message: 'Trouvez les meilleurs professionnels de Guinée près de chez vous.', audience: 'visitors' },
+  { label: 'Maintenance planifiée', type: 'maintenance', icon: Wrench, title: 'Maintenance en cours', message: 'G-List est temporairement indisponible pour maintenance. Merci de votre patience.', audience: 'all' },
+  { label: 'Avertissement sécurité', type: 'warning', icon: AlertTriangle, title: 'Message important', message: 'Veuillez mettre à jour vos informations de connexion et ne jamais partager votre mot de passe.', audience: 'all' },
+  { label: 'Nouveauté Premium', type: 'info', icon: Crown, title: 'Nouveautés Premium', message: 'Découvrez le mini-site niveau 77 et les nouvelles fonctionnalités dans votre espace pro.', audience: 'pros_premium' },
+  { label: 'Bienvenue visiteurs', type: 'success', icon: Users, title: 'Bienvenue sur G-List', message: 'Trouvez les meilleurs professionnels de Guinée près de chez vous.', audience: 'visitors' },
 ];
 
 export function AdminNotifications() {
@@ -899,6 +902,8 @@ export function AdminNotifications() {
   });
 
   const recipientEstimate = estimateBroadcastRecipients(form.audience);
+  const activeCount = broadcasts.filter((b) => b.active).length;
+  const pinnedCount = broadcasts.filter((b) => b.pinned).length;
 
   const refresh = () => setBroadcasts(getAdminBroadcasts());
 
@@ -947,37 +952,67 @@ export function AdminNotifications() {
         subtitle="Envoyez des messages à tous les utilisateurs ou à des groupes ciblés"
       />
 
+      <div className={styles.broadcastKpis}>
+        <div className={styles.broadcastKpi}>
+          <span className={styles.broadcastKpiIcon}><Radio size={18} aria-hidden="true" /></span>
+          <div>
+            <strong>{activeCount}</strong>
+            <span>Notification{activeCount > 1 ? 's' : ''} active{activeCount > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div className={styles.broadcastKpi}>
+          <span className={styles.broadcastKpiIcon}><Bell size={18} aria-hidden="true" /></span>
+          <div>
+            <strong>{broadcasts.length}</strong>
+            <span>Envoyée{broadcasts.length > 1 ? 's' : ''} au total</span>
+          </div>
+        </div>
+        <div className={styles.broadcastKpi}>
+          <span className={styles.broadcastKpiIcon}><Users size={18} aria-hidden="true" /></span>
+          <div>
+            <strong>~{recipientEstimate}</strong>
+            <span>Destinataires estimés</span>
+          </div>
+        </div>
+      </div>
+
       <div className={styles.broadcastGrid}>
         <AdminCard title="Nouvelle notification" subtitle="Maintenance, avertissement, info…">
           <div className={styles.presetRow}>
-            {BROADCAST_PRESETS.map((p) => (
-              <button key={p.label} type="button" className={styles.presetBtn} onClick={() => applyPreset(p)}>
-                {p.label}
-              </button>
-            ))}
+            {BROADCAST_PRESETS.map((p) => {
+              const PresetIcon = p.icon;
+              return (
+                <button key={p.label} type="button" className={styles.presetBtn} onClick={() => applyPreset(p)}>
+                  <PresetIcon size={14} aria-hidden="true" />
+                  {p.label}
+                </button>
+              );
+            })}
           </div>
 
           <form className={styles.broadcastForm} onSubmit={handleSubmit}>
-            <label className={styles.planAdminField}>
-              Type
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                {BROADCAST_TYPES.map((t) => (
-                  <option key={t.id} value={t.id}>{t.label} — {t.description}</option>
-                ))}
-              </select>
-            </label>
+            <div className={styles.broadcastFormRow}>
+              <label className={styles.planAdminField}>
+                Type
+                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                  {BROADCAST_TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>{t.label} — {t.description}</option>
+                  ))}
+                </select>
+              </label>
 
-            <label className={styles.planAdminField}>
-              Destinataires
-              <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })}>
-                {BROADCAST_AUDIENCES.map((a) => (
-                  <option key={a.id} value={a.id}>{a.label}</option>
-                ))}
-              </select>
-              <span className={styles.recipientHint}>
-                ~{recipientEstimate} destinataire{recipientEstimate > 1 ? 's' : ''} estimé{recipientEstimate > 1 ? 's' : ''}
-              </span>
-            </label>
+              <label className={styles.planAdminField}>
+                Destinataires
+                <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })}>
+                  {BROADCAST_AUDIENCES.map((a) => (
+                    <option key={a.id} value={a.id}>{a.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <span className={styles.recipientHint}>
+              ~{recipientEstimate} destinataire{recipientEstimate > 1 ? 's' : ''} estimé{recipientEstimate > 1 ? 's' : ''}
+            </span>
 
             <label className={styles.planAdminField}>
               Titre
@@ -1020,15 +1055,18 @@ export function AdminNotifications() {
               Épingler en priorité
             </label>
 
-            <button type="submit" className={styles.planAdminSave}>
+            <button type="submit" className={styles.broadcastSubmit}>
               <Send size={16} /> Envoyer la notification
             </button>
           </form>
         </AdminCard>
 
-        <AdminCard title="Historique" subtitle={`${broadcasts.length} notification${broadcasts.length > 1 ? 's' : ''}`}>
+        <AdminCard title="Historique" subtitle={`${broadcasts.length} notification${broadcasts.length > 1 ? 's' : ''}${pinnedCount ? ` · ${pinnedCount} épinglée${pinnedCount > 1 ? 's' : ''}` : ''}`}>
           {broadcasts.length === 0 ? (
-            <p className={styles.empty}>Aucune notification envoyée pour le moment.</p>
+            <div className={styles.broadcastEmpty}>
+              <Bell size={32} aria-hidden="true" />
+              <p>Aucune notification envoyée pour le moment. Utilisez le formulaire pour diffuser un message.</p>
+            </div>
           ) : (
             <div className={styles.broadcastList}>
               {broadcasts.map((b) => (
@@ -1061,6 +1099,138 @@ export function AdminNotifications() {
           )}
         </AdminCard>
       </div>
+    </div>
+  );
+}
+
+const ADMIN_DEFAULT_TAB_OPTIONS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'pros', label: 'Professionnels' },
+  { id: 'users', label: 'Utilisateurs' },
+  { id: 'analytics', label: 'Analytics' },
+  { id: 'moderation', label: 'Modération' },
+  { id: 'notifications', label: 'Notifications' },
+  { id: 'revenue', label: 'Revenus' },
+  { id: 'plans', label: 'Offres' },
+  { id: 'settings', label: 'Paramètres' },
+];
+
+export function AdminSettings({ onLogout, onExport, onReset, confirmReset }) {
+  const { show, Toast } = useToast();
+  const [prefs, setPrefs] = useState(() => getAdminSettings());
+  const [darkMode, setDarkModeState] = useState(() => isDarkMode());
+
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://g-list.gn';
+  const hashConfigured = Boolean(String(import.meta.env.VITE_ADMIN_HASH || '').trim());
+
+  const handleDefaultTab = (tabId) => {
+    const next = saveAdminSettings({ defaultTab: tabId });
+    setPrefs(next);
+    show('Onglet par défaut enregistré');
+  };
+
+  const toggleDark = () => {
+    const next = !darkMode;
+    setDarkModeState(next);
+    setDarkMode(next);
+    show(next ? 'Mode sombre activé' : 'Mode clair activé');
+  };
+
+  return (
+    <div className={styles.section}>
+      {Toast}
+      <AdminPageHeader
+        title="Paramètres"
+        subtitle="Configuration de la console d'administration G-List"
+      />
+
+      <AdminCard title="Plateforme" subtitle="Informations système">
+        <div className={styles.settingsGrid}>
+          <div className={styles.settingsItem}>
+            <span>Niveau SaaS</span>
+            <strong>{SAAS_PLATFORM_LEVEL} — {getPlatformLevelLabel()}</strong>
+          </div>
+          <div className={styles.settingsItem}>
+            <span>URL du site</span>
+            <strong>{siteUrl}</strong>
+          </div>
+          <div className={styles.settingsItem}>
+            <span>Mode API</span>
+            <strong>{apiConfig.useRemoteApi ? `Distante (${apiConfig.baseUrl})` : 'Local (localStorage)'}</strong>
+          </div>
+          <div className={styles.settingsItem}>
+            <span>Environnement</span>
+            <strong>{import.meta.env.MODE === 'production' ? 'Production' : 'Développement'}</strong>
+          </div>
+        </div>
+      </AdminCard>
+
+      <AdminCard title="Sécurité & session" subtitle="Authentification administrateur">
+        <div className={styles.settingsGrid}>
+          <div className={styles.settingsItem}>
+            <span>Durée de session</span>
+            <strong>1 heure</strong>
+          </div>
+          <div className={styles.settingsItem}>
+            <span>Mot de passe</span>
+            <strong>{hashConfigured ? 'Hash bcrypt (.env)' : 'Mot de passe prototype'}</strong>
+          </div>
+        </div>
+        <p className={styles.settingsHint}>
+          Configurez <code>VITE_ADMIN_HASH</code> dans le fichier <code>.env</code> pour sécuriser l&apos;accès en production.
+        </p>
+        <button type="button" className={styles.settingsLogoutBtn} onClick={onLogout}>
+          <LogOut size={16} /> Se déconnecter
+        </button>
+      </AdminCard>
+
+      <AdminCard title="Préférences" subtitle="Interface et navigation">
+        <div className={styles.settingsToggleRow}>
+          <div>
+            <strong><Moon size={14} aria-hidden="true" /> Mode sombre</strong>
+            <p>Appliquer le thème sombre sur l&apos;ensemble du site.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={darkMode}
+            className={`${styles.settingsSwitch} ${darkMode ? styles.settingsSwitchOn : ''}`}
+            onClick={toggleDark}
+          >
+            <span className={styles.settingsSwitchKnob} />
+          </button>
+        </div>
+        <label className={styles.planAdminField}>
+          Onglet au démarrage
+          <select
+            value={prefs.defaultTab || 'overview'}
+            onChange={(e) => handleDefaultTab(e.target.value)}
+          >
+            {ADMIN_DEFAULT_TAB_OPTIONS.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+        </label>
+      </AdminCard>
+
+      <AdminCard title="Données" subtitle="Export et réinitialisation">
+        <p className={styles.settingsHint}>
+          Exportez toutes les données locales ou réinitialisez la plateforme prototype (action irréversible).
+        </p>
+        <div className={styles.footerActions}>
+          <button type="button" onClick={onExport} className={styles.exportBtn}>
+            <Download size={16} /> Exporter en JSON
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            className={`${styles.resetBtn} ${confirmReset ? styles.confirmReset : ''}`}
+          >
+            <Trash2 size={16} />
+            {confirmReset ? 'Confirmer la réinitialisation ?' : 'Réinitialiser les données'}
+          </button>
+        </div>
+      </AdminCard>
     </div>
   );
 }

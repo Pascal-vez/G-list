@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { Bot, X, Send, Sparkles, ExternalLink, Shield, Zap } from 'lucide-react';
 import { askGlistBot, getBotWelcomeMessage, BOT_QUICK_PROMPTS } from '../utils/glistBotEngine';
@@ -71,9 +72,113 @@ function BotMessage({ message, onNavigate, onAdminTab }) {
   );
 }
 
-export default function GlistBot({ mode = 'public', onAdminTab, adminContext }) {
+function BotPanel({
+  isAdmin, open, onClose, messages, typing, suggestions, bodyRef, inputRef,
+  input, setInput, handleSubmit, sendQuery, onAdminTab,
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      className={`${styles.panel} ${isAdmin ? styles.panelAdminDock : ''}`}
+      role="dialog"
+      aria-label={isAdmin ? 'Assistant G-List Admin' : 'Assistant G-List'}
+    >
+      <header className={`${styles.header} ${isAdmin ? styles.headerAdmin : ''}`}>
+        <div className={styles.headerBrand}>
+          <span className={styles.headerIcon} aria-hidden="true">
+            {isAdmin ? <Shield size={20} /> : <Bot size={20} />}
+          </span>
+          <div>
+            <strong>{isAdmin ? 'G-Bot Admin' : 'G-Bot'}</strong>
+            <span>
+              {isAdmin ? 'Copilote · Données live · 15 onglets' : 'Assistant G-List · Guinée'}
+            </span>
+          </div>
+        </div>
+        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Fermer l'assistant">
+          <X size={18} />
+        </button>
+      </header>
+
+      {isAdmin && (
+        <div className={styles.adminBadge}>
+          <Zap size={12} aria-hidden="true" />
+          Posez une question ou cliquez un raccourci — navigation instantanée vers les onglets admin
+        </div>
+      )}
+
+      <div className={styles.body} ref={bodyRef}>
+        {messages.map((msg) => (
+          <BotMessage
+            key={msg.id}
+            message={msg}
+            onNavigate={onClose}
+            onAdminTab={onAdminTab}
+          />
+        ))}
+        {typing && (
+          <div className={`${styles.message} ${styles.messageBot}`}>
+            <div className={styles.messageAvatar} aria-hidden="true">
+              <Bot size={16} />
+            </div>
+            <div className={`${styles.messageBubble} ${styles.typing}`}>
+              <span /><span /><span />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {suggestions.length > 0 && !typing && (
+        <div className={styles.suggestions}>
+          {suggestions.slice(0, isAdmin ? 5 : 4).map((s) => (
+            <button key={s} type="button" onClick={() => sendQuery(s)}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <input
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={
+            isAdmin
+              ? 'Stats live, MRR, ouvrir modération, doublons…'
+              : 'Ex. plombier à Conakry, tarifs Premium…'
+          }
+          aria-label="Votre question"
+          autoComplete="off"
+        />
+        <button type="submit" disabled={!input.trim() || typing} aria-label="Envoyer">
+          <Send size={18} />
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default function GlistBot({
+  mode = 'public',
+  onAdminTab,
+  adminContext,
+  open: controlledOpen,
+  onOpenChange,
+  hideFab = false,
+}) {
   const isAdmin = mode === 'admin';
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+
+  const setOpen = useCallback((value) => {
+    const next = typeof value === 'function' ? value(open) : value;
+    if (onOpenChange) onOpenChange(next);
+    else setInternalOpen(next);
+  }, [onOpenChange, open]);
+
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -108,6 +213,14 @@ export default function GlistBot({ mode = 'public', onAdminTab, adminContext }) 
       setTimeout(() => inputRef.current?.focus(), 200);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!isAdmin || !open) return undefined;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAdmin, open]);
 
   const closePanel = () => setOpen(false);
 
@@ -146,99 +259,79 @@ export default function GlistBot({ mode = 'public', onAdminTab, adminContext }) 
     sendQuery(input);
   };
 
+  const panelProps = {
+    isAdmin,
+    open,
+    onClose: closePanel,
+    messages,
+    typing,
+    suggestions,
+    bodyRef,
+    inputRef,
+    input,
+    setInput,
+    handleSubmit,
+    sendQuery,
+    onAdminTab,
+  };
+
+  if (isAdmin) {
+    return createPortal(
+      <>
+        {open && (
+          <button
+            type="button"
+            className={styles.adminBackdrop}
+            onClick={closePanel}
+            aria-label="Fermer le copilote"
+          />
+        )}
+        <BotPanel {...panelProps} />
+        {!hideFab && (
+          <button
+            type="button"
+            className={`${styles.fabAdminFixed} ${open ? styles.fabOpen : ''}`}
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label={open ? 'Fermer G-Bot Admin' : 'Ouvrir G-Bot Admin'}
+          >
+            {open ? <X size={22} /> : <Shield size={22} />}
+          </button>
+        )}
+      </>,
+      document.body,
+    );
+  }
+
   return (
-    <div className={`${styles.container} ${isAdmin ? styles.containerAdmin : ''}`}>
-      {open && (
-        <div
-          className={`${styles.panel} ${isAdmin ? styles.panelAdmin : ''}`}
-          role="dialog"
-          aria-label={isAdmin ? 'Assistant G-List Admin' : 'Assistant G-List'}
+    <div className={styles.container}>
+      <BotPanel {...panelProps} />
+      {!hideFab && (
+        <button
+          type="button"
+          className={`${styles.fab} ${open ? styles.fabOpen : ''}`}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? 'Fermer G-Bot' : 'Ouvrir l\'assistant G-List'}
         >
-          <header className={`${styles.header} ${isAdmin ? styles.headerAdmin : ''}`}>
-            <div className={styles.headerBrand}>
-              <span className={styles.headerIcon} aria-hidden="true">
-                {isAdmin ? <Shield size={20} /> : <Bot size={20} />}
-              </span>
-              <div>
-                <strong>{isAdmin ? 'G-Bot Admin' : 'G-Bot'}</strong>
-                <span>
-                  {isAdmin ? 'Mode administrateur · Données live' : 'Assistant G-List · Guinée'}
-                </span>
-              </div>
-            </div>
-            <button type="button" className={styles.closeBtn} onClick={closePanel} aria-label="Fermer l'assistant">
-              <X size={18} />
-            </button>
-          </header>
-
-          {isAdmin && (
-            <div className={styles.adminBadge}>
-              <Zap size={12} aria-hidden="true" />
-              Copilote admin — 15 onglets · KPIs live · liens directs
-            </div>
-          )}
-
-          <div className={styles.body} ref={bodyRef}>
-            {messages.map((msg) => (
-              <BotMessage
-                key={msg.id}
-                message={msg}
-                onNavigate={closePanel}
-                onAdminTab={onAdminTab}
-              />
-            ))}
-            {typing && (
-              <div className={`${styles.message} ${styles.messageBot}`}>
-                <div className={styles.messageAvatar} aria-hidden="true">
-                  <Bot size={16} />
-                </div>
-                <div className={`${styles.messageBubble} ${styles.typing}`}>
-                  <span /><span /><span />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {suggestions.length > 0 && !typing && (
-            <div className={styles.suggestions}>
-              {suggestions.slice(0, isAdmin ? 5 : 4).map((s) => (
-                <button key={s} type="button" onClick={() => sendQuery(s)}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={
-                isAdmin
-                  ? 'Ex. stats live, ouvrir modération, MRR, doublons…'
-                  : 'Ex. plombier à Conakry, tarifs Premium…'
-              }
-              aria-label="Votre question"
-              autoComplete="off"
-            />
-            <button type="submit" disabled={!input.trim() || typing} aria-label="Envoyer">
-              <Send size={18} />
-            </button>
-          </form>
-        </div>
+          {open ? <X size={22} /> : <Sparkles size={22} />}
+        </button>
       )}
-
-      <button
-        type="button"
-        className={`${styles.fab} ${isAdmin ? styles.fabAdmin : ''} ${open ? styles.fabOpen : ''}`}
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-label={open ? 'Fermer G-Bot' : isAdmin ? 'Ouvrir G-Bot Admin' : 'Ouvrir l\'assistant G-List'}
-      >
-        {open ? <X size={22} /> : isAdmin ? <Shield size={22} /> : <Sparkles size={22} />}
-      </button>
     </div>
+  );
+}
+
+/** Bouton compact pour la barre admin */
+export function GlistBotAdminTrigger({ onClick, active }) {
+  return (
+    <button
+      type="button"
+      className={`${styles.adminTopBtn} ${active ? styles.adminTopBtnActive : ''}`}
+      onClick={onClick}
+      aria-pressed={active}
+    >
+      <Shield size={16} aria-hidden="true" />
+      G-Bot Admin
+    </button>
   );
 }

@@ -68,6 +68,7 @@ const KEYS = {
   NOTIFICATION_READ: 'glist_notification_read',
   SYSTEM_NOTIFICATIONS: 'glist_system_notifications',
   SECURITY_SESSIONS: 'glist_security_sessions',
+  ADMIN_SETTINGS: 'glist_admin_settings',
 };
 
 export const PREMIUM_PRICE_GNF = 120000;
@@ -1002,6 +1003,16 @@ export function isDarkMode() {
 export function setDarkMode(enabled) {
   localStorage.setItem(KEYS.DARK_MODE, enabled ? 'true' : 'false');
   document.documentElement.classList.toggle('dark-mode', enabled);
+}
+
+export function getAdminSettings() {
+  return getItem(KEYS.ADMIN_SETTINGS, { defaultTab: 'overview' });
+}
+
+export function saveAdminSettings(partial) {
+  const next = { ...getAdminSettings(), ...partial };
+  setItem(KEYS.ADMIN_SETTINGS, next);
+  return next;
 }
 
 // ── Admin overrides ──

@@ -11,7 +11,7 @@ import {
 import { REGIONS } from '../data/constants';
 import ProfessionSelect, { resolveProfessionValue } from '../components/ProfessionSelect';
 import { submitWaitlist } from '../api/waitlist';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import styles from './Join.module.css';
 
 function Confetti() {
@@ -65,12 +65,6 @@ export default function Join() {
   });
   const [success, setSuccess] = useState(false);
 
-  usePageMeta({
-    title: 'Rejoindre G-List',
-    description: 'Inscrivez-vous sur la liste d\'attente G-List — annuaire professionnel en Guinée.',
-    path: '/rejoindre',
-  });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -85,6 +79,12 @@ export default function Join() {
 
   if (success) {
     return (
+      <>
+        <SeoHead
+          titre="Rejoindre G-List"
+          description="Inscrivez-vous sur la liste d'attente G-List — annuaire professionnel en Guinée."
+          url="/rejoindre"
+        />
       <div className={styles.page}>
         <Confetti />
         <div className={styles.successCard}>
@@ -93,10 +93,17 @@ export default function Join() {
           <p>Nous vous contactons sur WhatsApp au lancement.</p>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+      <SeoHead
+        titre="Rejoindre G-List"
+        description="Inscrivez-vous sur la liste d'attente G-List — annuaire professionnel en Guinée."
+        url="/rejoindre"
+      />
     <div className={styles.page}>
       <div className={styles.container}>
         <h1 className={styles.title}>Vous êtes un professionnel en Guinée ?</h1>
@@ -183,5 +190,6 @@ export default function Join() {
         </form>
       </div>
     </div>
+    </>
   );
 }

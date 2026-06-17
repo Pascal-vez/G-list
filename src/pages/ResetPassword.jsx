@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import { resetPassword } from '../api/auth';
 import styles from './AuthPages.module.css';
 
@@ -12,8 +12,6 @@ export default function ResetPassword() {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
-
-  usePageMeta({ title: 'Réinitialiser le mot de passe', path: '/reinitialiser-mot-de-passe', noIndex: true });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +34,8 @@ export default function ResetPassword() {
   };
 
   return (
+    <>
+      <SeoHead titre="Réinitialiser le mot de passe" url="/reinitialiser-mot-de-passe" noIndex />
     <div className={styles.page}>
       <div className={styles.box}>
         <h1><Lock size={24} /> Nouveau mot de passe</h1>
@@ -52,5 +52,6 @@ export default function ResetPassword() {
         <p className={styles.back}><Link to="/mot-de-passe-oublie">← Nouvelle demande</Link></p>
       </div>
     </div>
+    </>
   );
 }

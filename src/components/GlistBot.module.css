@@ -331,22 +331,36 @@
   }
 }
 
-/* ── Mode admin (dashboard) ── */
-.containerAdmin {
-  bottom: clamp(24px, 3vw, 32px);
-  left: auto;
-  right: clamp(20px, 2.5vw, 28px);
-  z-index: 200;
+/* ── Mode admin (dashboard) — panneau latéral pleine hauteur ── */
+.adminBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  border: none;
+  background: rgba(14, 18, 8, 0.35);
+  cursor: pointer;
+  animation: fadeIn 0.2s ease;
 }
 
-.panelAdmin {
-  width: min(440px, calc(100vw - 40px));
-  max-height: min(620px, calc(100vh - 100px));
+.panelAdminDock {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  width: min(440px, calc(100vw - 24px)) !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  border-left: 1px solid #E5E7EB;
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.15);
+  z-index: 510;
+  animation: slideInRight 0.28s ease;
 }
 
 .headerAdmin {
   background: linear-gradient(135deg, #1a0a2e 0%, #0E1208 50%, #1a2410 100%);
   border-bottom: 1px solid rgba(245, 197, 24, 0.25);
+  flex-shrink: 0;
 }
 
 .headerAdmin .headerIcon {
@@ -356,48 +370,125 @@
 
 .adminBadge {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   background: linear-gradient(90deg, #FFFBEB, #FEF9C3);
   border-bottom: 1px solid rgba(245, 197, 24, 0.3);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1.45;
   color: #92400E;
+  flex-shrink: 0;
 }
 
-.fabAdmin {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #1a0a2e 0%, #0E1208 100%);
-  box-shadow: 0 6px 28px rgba(26, 10, 46, 0.45), 0 0 0 2px rgba(245, 197, 24, 0.35);
+.panelAdminDock .body {
+  flex: 1;
+  min-height: 0;
 }
 
-.fabAdmin:hover {
-  box-shadow: 0 8px 32px rgba(26, 10, 46, 0.5), 0 0 0 3px rgba(245, 197, 24, 0.5);
+.panelAdminDock .suggestions {
+  flex-shrink: 0;
+  padding: 10px 14px;
 }
 
-.panelAdmin .linkChip {
+.panelAdminDock .suggestions button {
+  white-space: normal;
+  text-align: left;
+  line-height: 1.35;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.panelAdminDock .form {
+  flex-shrink: 0;
+}
+
+.panelAdminDock .linkChip {
   background: #F3E8FF;
   border-color: rgba(124, 58, 237, 0.35);
 }
 
-.panelAdmin .linkChip:hover {
+.panelAdminDock .linkChip:hover {
   background: #EDE9FE;
   border-color: #7C3AED;
 }
 
+.fabAdminFixed {
+  position: fixed;
+  bottom: clamp(24px, 3vw, 32px);
+  right: clamp(20px, 2.5vw, 28px);
+  z-index: 520;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #1a0a2e 0%, #0E1208 100%);
+  color: #F5C518;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 28px rgba(26, 10, 46, 0.45), 0 0 0 2px rgba(245, 197, 24, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fabAdminFixed:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 32px rgba(26, 10, 46, 0.5), 0 0 0 3px rgba(245, 197, 24, 0.5);
+}
+
+.adminTopBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  border-radius: 10px;
+  background: #fff;
+  color: #2E7D32;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.adminTopBtn:hover {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.06);
+  box-shadow: 0 2px 12px rgba(76, 175, 80, 0.15);
+}
+
+.adminTopBtnActive {
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  color: #fff;
+  border-color: #2E7D32;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (max-width: 768px) {
-  .containerAdmin {
-    bottom: max(20px, env(safe-area-inset-bottom, 0px));
-    right: 16px;
+  .panelAdminDock {
+    width: 100vw !important;
   }
 
-  .panelAdmin {
-    position: fixed;
-    left: 16px;
+  .fabAdminFixed {
+    bottom: max(20px, env(safe-area-inset-bottom, 0px));
     right: 16px;
-    bottom: calc(max(20px, env(safe-area-inset-bottom, 0px)) + 56px + 12px);
-    width: auto;
   }
 }

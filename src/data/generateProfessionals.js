@@ -1,4 +1,4 @@
-import { REGIONS, CATEGORIES } from './constants';
+import { REGIONS, CATEGORIES } from './constants.js';
 
 const HORAIRES_BY_CATEGORY = {
   Pharmacies: ['Lun-Dim 7h-22h', 'Lun-Sam 7h30-21h'],

@@ -9,8 +9,10 @@ import styles from './DateRangePicker.module.css';
 
 export { defaultDateRange } from '../../utils/dateRange';
 
-export default function DateRangePicker({ value, onChange }) {
+export default function DateRangePicker({ value, onChange, variant = 'default' }) {
   const { startDate, endDate } = value;
+  const barClass = variant === 'green' ? `${styles.bar} ${styles.barGreen}` : styles.bar;
+  const activePresetClass = variant === 'green' ? styles.presetBtnActiveGreen : styles.presetBtnActive;
 
   const handleStart = (nextStart) => {
     if (!nextStart) return;
@@ -34,7 +36,7 @@ export default function DateRangePicker({ value, onChange }) {
   })?.id;
 
   return (
-    <div className={styles.bar}>
+    <div className={barClass}>
       <div className={styles.summary}>
         <Calendar size={18} aria-hidden="true" />
         <div>
@@ -48,7 +50,7 @@ export default function DateRangePicker({ value, onChange }) {
           <button
             key={preset.id}
             type="button"
-            className={`${styles.presetBtn} ${activePreset === preset.id ? styles.presetBtnActive : ''}`}
+            className={`${styles.presetBtn} ${activePreset === preset.id ? activePresetClass : ''}`}
             onClick={() => onChange(applyPreset(preset.id))}
           >
             {preset.label}

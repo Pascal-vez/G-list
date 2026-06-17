@@ -1,7 +1,16 @@
 User-agent: *
 Allow: /
+Allow: /annuaire
+Allow: /profil
+Allow: /categorie
+Allow: /region
+Allow: /secteur
+Disallow: /dashboard
 Disallow: /admin-glist-2026
 Disallow: /espace-pro
-Disallow: /dashboard/
+Disallow: /mon-profil
+Disallow: /mot-de-passe-oublie
+Disallow: /reinitialiser-mot-de-passe
+Disallow: /verifier-email
 
-Sitemap: https://g-list.gn/sitemap.xml
+Sitemap: https://glist.gn/sitemap.xml

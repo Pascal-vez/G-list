@@ -9,15 +9,11 @@ import HomeStatsBand from '../components/home/HomeStatsBand';
 import { getAllProfessionals } from '../api/professionals';
 import { getCategoryCounts } from '../utils/helpers';
 import { getTotalProfileReviews } from '../utils/storage';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
+import { ORGANIZATION_JSON_LD } from '../utils/seoConfig';
 import styles from './Home.module.css';
 
 export default function Home() {
-  usePageMeta({
-    description: 'Trouvez les meilleurs professionnels de Guinée — médecins, artisans, restaurants, techniciens et plus.',
-    path: '/',
-  });
-
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -68,6 +64,12 @@ export default function Home() {
 
   return (
     <>
+      <SeoHead
+        titre="Accueil"
+        description="L'annuaire professionnel de référence en Guinée. Trouvez des professionnels et commerces dans les 14 régions du pays, contact direct via WhatsApp."
+        url="/"
+        jsonLd={ORGANIZATION_JSON_LD}
+      />
       <Hero />
 
       <section className={styles.featuredSection}>

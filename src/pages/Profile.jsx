@@ -15,7 +15,8 @@ import {
 } from '../utils/proEnhancements';
 import { addViewHistory } from '../utils/storage';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
+import { SEO_DEFAULT_IMAGE, toAbsoluteUrl } from '../utils/seoConfig';
 import { sortByDistance } from '../utils/geo';
 import StarRating, { StarDisplay } from '../components/StarRating';
 import ShareButton from '../components/ShareButton';
@@ -81,7 +82,8 @@ export default function Profile() {
     '@type': 'LocalBusiness',
     name: pro.nom,
     description: pro.description,
-    telephone: pro.telephone,
+    telephone: pro.whatsapp || pro.telephone,
+    image: toAbsoluteUrl(SEO_DEFAULT_IMAGE),
     address: {
       '@type': 'PostalAddress',
       addressLocality: pro.quartier,
@@ -95,14 +97,6 @@ export default function Profile() {
     } : undefined,
   } : null;
 
-  usePageMeta({
-    title: pro?.nom,
-    description: pro ? `${pro.profession} à ${pro.region} — ${pro.description?.slice(0, 120)}` : undefined,
-    path: pro ? `/profil/${pro.id}` : undefined,
-    type: 'profile',
-    jsonLd,
-  });
-
   useEffect(() => {
     if (!pro) return;
     incrementProView(pro.id);
@@ -112,6 +106,7 @@ export default function Profile() {
   if (!pro) {
     return (
       <div className={styles.notFound}>
+        <SeoHead titre="Professionnel introuvable" url={`/profil/${id}`} noIndex />
         <h1>Professionnel introuvable</h1>
         <Link to="/" className="btn-primary">← Retour à la liste</Link>
       </div>
@@ -150,6 +145,14 @@ export default function Profile() {
 
   return (
     <div className={styles.page}>
+      <SeoHead
+        titre={`${pro.nom} — ${pro.profession} à ${pro.region}`}
+        description={pro.description
+          || `${pro.nom}, ${pro.profession} basé à ${pro.region}. Contactez directement via WhatsApp sur G-List.`}
+        url={`/profil/${pro.id}`}
+        type="profile"
+        jsonLd={jsonLd}
+      />
       <Link to="/" className={styles.back}><ArrowLeft size={18} /> Retour à la liste</Link>
 
       <header className={styles.hero}>

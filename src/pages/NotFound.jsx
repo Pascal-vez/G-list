@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Home, Search } from 'lucide-react';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import styles from './NotFound.module.css';
 
 export default function NotFound() {
-  usePageMeta({
-    title: 'Page introuvable',
-    description: 'La page demandée n\'existe pas sur G-List.',
-    path: '/404',
-    noIndex: true,
-  });
-
   return (
+    <>
+      <SeoHead
+        titre="Page introuvable"
+        description="La page demandée n'existe pas sur G-List."
+        url="/404"
+        noIndex
+      />
     <div className={styles.page}>
       <span className={styles.code}>404</span>
       <h1>Page introuvable</h1>
@@ -21,5 +21,6 @@ export default function NotFound() {
         <Link to="/annuaire" className={styles.secondary}><Search size={18} /> Annuaire</Link>
       </div>
     </div>
+    </>
   );
 }

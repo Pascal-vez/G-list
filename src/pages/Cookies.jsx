@@ -1,14 +1,14 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 
 export default function Cookies() {
-  usePageMeta({
-    title: 'Politique cookies',
-    description: 'Politique d\'utilisation des cookies sur G-List.',
-    path: '/cookies',
-  });
-
   return (
+    <>
+      <SeoHead
+        titre="Politique cookies"
+        description="Politique d'utilisation des cookies sur G-List."
+        url="/cookies"
+      />
     <InfoPageLayout title="Politique cookies" subtitle="Dernière mise à jour : juin 2026" pageKey="confidentialite">
       <InfoSection title="Qu'est-ce qu'un cookie ?">
         <p>
@@ -41,5 +41,6 @@ export default function Cookies() {
         </p>
       </InfoSection>
     </InfoPageLayout>
+    </>
   );
 }

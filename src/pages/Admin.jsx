@@ -6,7 +6,7 @@ import {
   MessageSquare, Bell,
   Users, Lightbulb,
   LayoutDashboard, UserCircle, BarChart3, Map,
-  FileText, FileBarChart, ShieldAlert, Sparkles, Wallet, Crown, Menu, X, ScrollText,
+  FileText, FileBarChart, ShieldAlert, Sparkles, Wallet, Crown, Menu, X, ScrollText, Settings,
 } from 'lucide-react';
 import {
   getItem,
@@ -14,6 +14,7 @@ import {
   resetAllData,
   getTotalProfileReviews,
   getEvaluations,
+  getAdminSettings,
   KEYS,
 } from '../utils/storage';
 import {
@@ -23,14 +24,14 @@ import {
   formatCountdown,
 } from '../utils/adminAuth';
 import DateRangePicker, { defaultDateRange } from '../components/dashboard/DateRangePicker';
-import GlistBot from '../components/GlistBot';
+import GlistBot, { GlistBotAdminTrigger } from '../components/GlistBot';
 import { filterByDateRange } from '../utils/dateRange';
 import styles from './Admin.module.css';
 import {
   AdminOverview, AdminProfessionals, AdminUsers, AdminAnalytics,
   AdminMap, AdminOpportunities, AdminContent, AdminModeration,
   AdminIAInsights, AdminRevenue, AdminReports, AdminSubscriptionPlans, AdminFeedback,
-  AdminNotifications, AdminAuditLog,
+  AdminNotifications, AdminAuditLog, AdminSettings,
 } from './AdminDashboardExtras';
 
 const ADMIN_TABS = [
@@ -49,6 +50,7 @@ const ADMIN_TABS = [
   { id: 'reports', label: 'Rapports', icon: FileBarChart },
   { id: 'plans', label: 'Offres', icon: Crown },
   { id: 'legacy', label: 'Feedback', icon: MessageSquare },
+  { id: 'settings', label: 'Paramètres', icon: Settings },
 ];
 
 /** Bcrypt hash from .env — quotes required in .env so $ chars are not stripped */
@@ -288,8 +290,9 @@ export default function Admin() {
   const [data, setData] = useState(null);
   const [evaluations, setEvaluations] = useState([]);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [adminTab, setAdminTab] = useState('overview');
+  const [adminTab, setAdminTab] = useState(() => getAdminSettings().defaultTab || 'overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [botOpen, setBotOpen] = useState(false);
   const [dateRange, setDateRange] = useState(defaultDateRange);
 
   const filteredEvaluations = useMemo(
@@ -431,6 +434,7 @@ export default function Admin() {
             </div>
           </div>
           <div className={styles.dashTopBarRight}>
+            <GlistBotAdminTrigger onClick={() => setBotOpen((v) => !v)} active={botOpen} />
             <button type="button" onClick={loadData} className={styles.refreshBtn}>
               <RotateCw size={14} /> Actualiser
             </button>
@@ -441,7 +445,9 @@ export default function Admin() {
         </header>
 
         <div className={styles.mainContent}>
-        <DateRangePicker value={dateRange} onChange={setDateRange} />
+        {adminTab !== 'settings' && (
+          <DateRangePicker value={dateRange} onChange={setDateRange} variant="green" />
+        )}
 
       {adminTab === 'overview' && <AdminOverview evalStats={evalStats} dateRange={dateRange} />}
 
@@ -470,11 +476,23 @@ export default function Admin() {
           onReset={handleReset}
         />
       )}
+
+      {adminTab === 'settings' && (
+        <AdminSettings
+          onLogout={handleLogout}
+          onExport={handleExport}
+          onReset={handleReset}
+          confirmReset={confirmReset}
+        />
+      )}
         </div>
       </div>
 
       <GlistBot
         mode="admin"
+        open={botOpen}
+        onOpenChange={setBotOpen}
+        hideFab
         onAdminTab={(tabId) => {
           setAdminTab(tabId);
           setSidebarOpen(false);

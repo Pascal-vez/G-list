@@ -666,13 +666,14 @@
 }
 
 .sidebarItemActive {
-  background: #0E1208;
-  color: #F5C518;
+  background: rgba(76, 175, 80, 0.12);
+  color: #2E7D32;
+  font-weight: 600;
 }
 
 .sidebarItemActive:hover {
-  background: #1a2010;
-  color: #F5C518;
+  background: rgba(76, 175, 80, 0.18);
+  color: #1B5E20;
 }
 
 .main {
@@ -725,7 +726,7 @@
 }
 
 .dashLogo {
-  color: #F5C518;
+  color: #4CAF50;
 }
 
 .dashTitle {

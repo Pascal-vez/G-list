@@ -46,7 +46,9 @@ function AppRoutes() {
 
         <Route path="/" element={<GatedLayout><Home /></GatedLayout>} />
         <Route path="/categorie/:id" element={<GatedLayout><CategoryPage /></GatedLayout>} />
+        <Route path="/secteur/:id" element={<GatedLayout><CategoryPage /></GatedLayout>} />
         <Route path="/annuaire" element={<GatedLayout><Annuaire /></GatedLayout>} />
+        <Route path="/region/:nomRegion" element={<GatedLayout><Annuaire /></GatedLayout>} />
         <Route path="/profil/:id" element={<GatedLayout><Profile /></GatedLayout>} />
         <Route path="/rejoindre" element={<Navigate to="/espace-pro" replace />} />
         <Route path="/a-propos" element={<GatedLayout><APropos /></GatedLayout>} />

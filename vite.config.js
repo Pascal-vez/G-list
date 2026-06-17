@@ -1,7 +1,10 @@
-import os from 'node:os'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import qrcode from 'qrcode-terminal'
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import qrcode from 'qrcode-terminal';
+import os from 'node:os';
 
 function getNetworkIp() {
   const nets = os.networkInterfaces()
@@ -34,9 +37,22 @@ function qrcodePlugin() {
   }
 }
 
+function sitemapPlugin() {
+  return {
+    name: 'generate-sitemap',
+    apply: 'build',
+    async closeBundle() {
+      const { genererSitemap } = await import('./src/utils/generateSitemap.js');
+      const xml = genererSitemap();
+      const out = join(dirname(fileURLToPath(import.meta.url)), 'public', 'sitemap.xml');
+      writeFileSync(out, xml, 'utf8');
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), qrcodePlugin()],
+  plugins: [react(), qrcodePlugin(), sitemapPlugin()],
   server: {
     host: true,
   },

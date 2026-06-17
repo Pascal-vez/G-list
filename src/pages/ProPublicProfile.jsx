@@ -4,7 +4,7 @@ import { MapPin, Phone, Clock, MessageCircle, Star, BadgeCheck, ArrowLeft, Eye, 
 import { getProAccount, getProReviews, getProAverageRating, isPremiumActive, incrementProProfileViews, getMinisiteSlugForPro } from '../utils/storage';
 import { getMinisitePublicPath } from '../utils/minisite';
 import { getInitials, getAvatarColor, formatWhatsAppLink } from '../utils/helpers';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import { StarDisplay } from '../components/StarRating';
 import SocialLinks from '../components/SocialLinks';
 import OpenStatusBadge from '../components/OpenStatusBadge';
@@ -14,25 +14,24 @@ export default function ProPublicProfile() {
   const account = getProAccount();
   const premium = account && isPremiumActive(account);
 
-  usePageMeta({
-    title: account ? account.nom : 'Mon profil public',
-    description: account
-      ? `${account.profession} à ${account.region} — profil professionnel G-List`
-      : 'Votre page publique sur G-List',
-    path: '/mon-profil',
-    noIndex: true,
-  });
-
   useEffect(() => {
     if (account) incrementProProfileViews();
   }, [account]);
 
   if (!account) {
     return (
+      <>
+        <SeoHead
+          titre="Mon profil public"
+          description="Votre page publique sur G-List"
+          url="/mon-profil"
+          noIndex
+        />
       <div className={styles.empty}>
         <p>Aucun profil pro trouvé.</p>
         <Link to="/espace-pro" className="btn-primary">Créer mon espace</Link>
       </div>
+      </>
     );
   }
 
@@ -41,6 +40,13 @@ export default function ProPublicProfile() {
   const minisiteSlug = premium ? getMinisiteSlugForPro(account.id, account) : null;
 
   return (
+    <>
+      <SeoHead
+        titre={account.nom}
+        description={`${account.profession} à ${account.region} — profil professionnel G-List`}
+        url="/mon-profil"
+        noIndex
+      />
     <div className={styles.page}>
       <div className={styles.hero}>
         <Link to="/espace-pro" className={styles.back}>
@@ -179,5 +185,6 @@ export default function ProPublicProfile() {
         )}
       </div>
     </div>
+    </>
   );
 }

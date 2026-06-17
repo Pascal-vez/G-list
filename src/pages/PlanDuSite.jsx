@@ -1,16 +1,10 @@
 import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import { CATEGORIES, REGIONS } from '../data/constants';
 import { SITE_NAV_LINKS, SITE_INFO_LINKS, DRAWER_EXTRA_ITEMS } from '../data/siteNav';
 
 export default function PlanDuSite() {
-  usePageMeta({
-    title: 'Plan du site',
-    description: 'Plan du site G-List — toutes les pages et catégories.',
-    path: '/plan-du-site',
-  });
-
   const pages = [
     ...SITE_NAV_LINKS,
     ...DRAWER_EXTRA_ITEMS.filter((i) => i.label !== 'Admin'),
@@ -24,6 +18,12 @@ export default function PlanDuSite() {
   ];
 
   return (
+    <>
+      <SeoHead
+        titre="Plan du site"
+        description="Plan du site G-List — toutes les pages et catégories."
+        url="/plan-du-site"
+      />
     <InfoPageLayout title="Plan du site" subtitle="Navigation complète" pageKey="apropos">
       <InfoSection title="Pages principales">
         <ul>
@@ -47,5 +47,6 @@ export default function PlanDuSite() {
         </ul>
       </InfoSection>
     </InfoPageLayout>
+    </>
   );
 }

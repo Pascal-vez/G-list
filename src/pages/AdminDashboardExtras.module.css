@@ -137,7 +137,7 @@
 
 .filters select:focus {
   outline: none;
-  border-color: #F5C518;
+  border-color: #4CAF50;
 }
 
 .searchWrap {
@@ -173,7 +173,7 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: #F5C518;
+  border-color: #4CAF50;
   background: #fff;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .table tbody tr:hover {
-  background: #FFFBEB;
+  background: #F0FDF4;
 }
 
 .table tbody tr:last-child td {
@@ -244,14 +244,14 @@
 .planAdminSave {
   font-size: 12px;
   padding: 7px 12px;
-  background: #0E1208;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
   border: none;
   border-radius: 8px;
-  color: #F5C518;
+  color: #fff;
   cursor: pointer;
   font-family: inherit;
   font-weight: 600;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .btnPrimary:hover,
@@ -261,7 +261,8 @@
 .genBtns button:hover,
 .copyBtn:hover,
 .planAdminSave:hover {
-  background: #1a2010;
+  background: linear-gradient(135deg, #43A047 0%, #1B5E20 100%);
+  box-shadow: 0 4px 14px rgba(76, 175, 80, 0.25);
 }
 
 .btnSecondary {
@@ -277,8 +278,8 @@
 }
 
 .btnSecondary:hover {
-  border-color: #F5C518;
-  color: #0E1208;
+  border-color: #4CAF50;
+  color: #2E7D32;
 }
 
 .btnMuted {
@@ -515,7 +516,7 @@
 .regionBar {
   height: 4px;
   margin-top: 8px;
-  background: linear-gradient(90deg, #F5C518, #D4A800);
+  background: linear-gradient(90deg, #4CAF50, #2E7D32);
   border-radius: 4px;
   max-width: 100%;
 }
@@ -605,8 +606,8 @@
 }
 
 .toggleActive {
-  background: #0E1208 !important;
-  color: #F5C518 !important;
+  background: #4CAF50 !important;
+  color: #fff !important;
 }
 
 .hint {
@@ -689,9 +690,11 @@
 }
 
 .planAdminField input:focus,
-.planAdminField textarea:focus {
+.planAdminField textarea:focus,
+.planAdminField select:focus {
   outline: none;
-  border-color: #F5C518;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.12);
 }
 
 .planAdminHint {
@@ -906,20 +909,62 @@
   right: 24px;
   z-index: 9999;
   padding: 12px 20px;
-  background: #0E1208;
-  border: 1px solid #F5C518;
+  background: #fff;
+  border: 1px solid rgba(76, 175, 80, 0.35);
   border-radius: 10px;
-  color: #F5C518;
+  color: #2E7D32;
   font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.15);
   animation: adminFadeIn 0.25s ease;
 }
 
 /* ── Broadcast notifications ── */
+.broadcastKpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.broadcastKpi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.broadcastKpiIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+  flex-shrink: 0;
+}
+
+.broadcastKpi strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A1A;
+  line-height: 1.1;
+}
+
+.broadcastKpi span {
+  font-size: 12px;
+  color: #6B7280;
+}
+
 .broadcastGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 20px;
   align-items: start;
 }
@@ -930,15 +975,24 @@
   gap: 4px;
 }
 
+.broadcastFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .presetRow {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .presetBtn {
-  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid #E5E7EB;
   background: #F9FAFB;
@@ -946,17 +1000,24 @@
   font-weight: 600;
   color: #374151;
   cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 .presetBtn:hover {
-  border-color: #F5C518;
-  background: #FFFBEB;
+  border-color: #4CAF50;
+  background: #F0FDF4;
+  color: #2E7D32;
 }
 
 .recipientHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  font-weight: 500;
-  color: #15803D;
+  font-weight: 600;
+  color: #2E7D32;
+  margin-top: 4px;
 }
 
 .broadcastCheck {
@@ -965,22 +1026,82 @@
   gap: 8px;
   font-size: 13px;
   color: #374151;
-  margin: 8px 0 12px;
+  margin: 8px 0 16px;
+  padding: 10px 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border: 1px solid #F3F4F6;
+}
+
+.broadcastSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.22);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.broadcastSubmit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3);
+}
+
+.broadcastEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #9CA3AF;
+  background: #F9FAFB;
+  border-radius: 12px;
+  border: 1px dashed #E5E7EB;
+}
+
+.broadcastEmpty svg {
+  color: #4CAF50;
+  opacity: 0.5;
+}
+
+.broadcastEmpty p {
+  margin: 0;
+  font-size: 13px;
+  max-width: 28ch;
+  line-height: 1.5;
 }
 
 .broadcastList {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 520px;
+  max-height: 560px;
   overflow-y: auto;
+  padding-right: 4px;
 }
 
 .broadcastItem {
   padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid #E5E7EB;
-  background: #F9FAFB;
+  background: #fff;
+  transition: box-shadow 0.15s ease;
+}
+
+.broadcastItem:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
 .broadcastItem strong {
@@ -1108,6 +1229,14 @@
     grid-template-columns: 1fr;
   }
 
+  .broadcastKpis {
+    grid-template-columns: 1fr;
+  }
+
+  .broadcastFormRow {
+    grid-template-columns: 1fr;
+  }
+
   .mapCard {
     grid-template-columns: 1fr;
   }
@@ -1117,4 +1246,124 @@
     width: 100%;
     text-align: center;
   }
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settingsItem {
+  padding: 14px;
+  background: #F9FAFB;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+}
+
+.settingsItem span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #6B7280;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.settingsItem strong {
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+}
+
+.settingsHint {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 14px 0 0;
+  line-height: 1.5;
+}
+
+.settingsHint code {
+  font-size: 12px;
+  background: #F3F4F6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.settingsLogoutBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1.5px solid #DC2626;
+  color: #DC2626;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settingsLogoutBtn:hover {
+  background: #FEF2F2;
+}
+
+.settingsToggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.settingsToggleRow strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.settingsToggleRow p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.settingsSwitch {
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: #D1D5DB;
+  padding: 2px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.settingsSwitchOn {
+  background: #16A34A;
+}
+
+.settingsSwitchKnob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+
+.settingsSwitchOn .settingsSwitchKnob {
+  transform: translateX(20px);
 }

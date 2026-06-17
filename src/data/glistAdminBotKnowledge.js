@@ -35,6 +35,7 @@ export const ADMIN_TABS_BOT = [
   { id: 'reports', label: 'Rapports', keywords: ['rapports admin', 'export rapport', 'generer rapport'] },
   { id: 'plans', label: 'Offres', keywords: ['offres', 'plans', 'prix abonnement', 'tarifs admin', 'subscription'] },
   { id: 'legacy', label: 'Feedback', keywords: ['feedback', 'evaluations', 'suggestions utilisateurs', 'votes'] },
+  { id: 'settings', label: 'Paramètres', keywords: ['parametres', 'settings', 'configuration', 'config admin', 'preferences admin'] },
 ];
 
 function liveStatsAnswer(ctx) {

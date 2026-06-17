@@ -1,18 +1,11 @@
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 import { submitContact } from '../api/contact';
 import styles from './Contact.module.css';
 
 export default function Contact() {
-  usePageMeta({
-    title: 'Contact',
-    description: 'Contactez l\'équipe G-List — support, partenariats et questions générales.',
-    path: '/contact',
-    pageKey: 'contact',
-  });
-
   const [form, setForm] = useState({ nom: '', email: '', sujet: '', message: '' });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
@@ -30,6 +23,12 @@ export default function Contact() {
   };
 
   return (
+    <>
+      <SeoHead
+        titre="Contact"
+        description="Contactez l'équipe G-List — support, partenariats et questions générales."
+        url="/contact"
+      />
     <InfoPageLayout title="Contact" subtitle="Nous sommes à votre écoute" pageKey="apropos">
       <div className={styles.grid}>
         <div className={styles.info}>
@@ -56,5 +55,6 @@ export default function Contact() {
         </div>
       </div>
     </InfoPageLayout>
+    </>
   );
 }

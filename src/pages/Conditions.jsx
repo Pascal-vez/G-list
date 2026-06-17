@@ -1,14 +1,14 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 
 export default function Conditions() {
-  usePageMeta({
-    title: 'Conditions d\'utilisation',
-    description: 'Conditions générales d\'utilisation de la plateforme G-List.',
-    path: '/conditions',
-  });
-
   return (
+    <>
+      <SeoHead
+        titre="Conditions d'utilisation"
+        description="Conditions générales d'utilisation de la plateforme G-List."
+        url="/conditions"
+      />
     <InfoPageLayout
       title="Conditions d'utilisation"
       subtitle="Dernière mise à jour : juin 2026"
@@ -63,5 +63,6 @@ export default function Conditions() {
         </p>
       </InfoSection>
     </InfoPageLayout>
+    </>
   );
 }

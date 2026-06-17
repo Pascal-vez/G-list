@@ -1,14 +1,14 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { usePageMeta } from '../hooks/usePageMeta';
+import SeoHead from '../components/SEO/SeoHead';
 
 export default function MentionsLegales() {
-  usePageMeta({
-    title: 'Mentions légales',
-    description: 'Mentions légales du site G-List.',
-    path: '/mentions-legales',
-  });
-
   return (
+    <>
+      <SeoHead
+        titre="Mentions légales"
+        description="Mentions légales du site G-List."
+        url="/mentions-legales"
+      />
     <InfoPageLayout title="Mentions légales" subtitle="Informations légales" pageKey="conditions">
       <InfoSection title="Éditeur du site">
         <p>
@@ -41,5 +41,6 @@ export default function MentionsLegales() {
         </p>
       </InfoSection>
     </InfoPageLayout>
+    </>
   );
 }
