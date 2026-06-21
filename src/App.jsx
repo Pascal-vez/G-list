@@ -25,7 +25,9 @@ import Admin from './pages/Admin';
 import ProDashboard from './pages/ProDashboard';
 import ProPublicProfile from './pages/ProPublicProfile';
 import VisitorDashboard from './pages/VisitorDashboard';
+import DashboardRoute from './components/dashboard/DashboardRoute';
 import { EvaluationProvider } from './context/EvaluationContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { hasVisited, markVisited } from './utils/storage';
 
 function GatedLayout({ children }) {
@@ -46,9 +48,7 @@ function AppRoutes() {
 
         <Route path="/" element={<GatedLayout><Home /></GatedLayout>} />
         <Route path="/categorie/:id" element={<GatedLayout><CategoryPage /></GatedLayout>} />
-        <Route path="/secteur/:id" element={<GatedLayout><CategoryPage /></GatedLayout>} />
         <Route path="/annuaire" element={<GatedLayout><Annuaire /></GatedLayout>} />
-        <Route path="/region/:nomRegion" element={<GatedLayout><Annuaire /></GatedLayout>} />
         <Route path="/profil/:id" element={<GatedLayout><Profile /></GatedLayout>} />
         <Route path="/rejoindre" element={<Navigate to="/espace-pro" replace />} />
         <Route path="/a-propos" element={<GatedLayout><APropos /></GatedLayout>} />
@@ -59,13 +59,13 @@ function AppRoutes() {
         <Route path="/contact" element={<GatedLayout><Contact /></GatedLayout>} />
         <Route path="/faq" element={<GatedLayout><FAQ /></GatedLayout>} />
         <Route path="/plan-du-site" element={<GatedLayout><PlanDuSite /></GatedLayout>} />
-        <Route path="/espace-pro" element={<GatedLayout><ProDashboard /></GatedLayout>} />
-        <Route path="/dashboard/visiteur" element={<GatedLayout><VisitorDashboard /></GatedLayout>} />
+        <Route path="/espace-pro" element={<GatedLayout><DashboardRoute><ProDashboard /></DashboardRoute></GatedLayout>} />
+        <Route path="/dashboard/visiteur" element={<GatedLayout><DashboardRoute><VisitorDashboard /></DashboardRoute></GatedLayout>} />
         <Route path="/mon-profil" element={<GatedLayout><ProPublicProfile /></GatedLayout>} />
         <Route path="/mot-de-passe-oublie" element={<GatedLayout><ForgotPassword /></GatedLayout>} />
         <Route path="/reinitialiser-mot-de-passe/:token" element={<GatedLayout><ResetPassword /></GatedLayout>} />
         <Route path="/verifier-email/:token" element={<GatedLayout><VerifyEmail /></GatedLayout>} />
-        <Route path="/admin-glist-2026" element={<Admin />} />
+        <Route path="/admin-glist-2026" element={<DashboardRoute><Admin /></DashboardRoute>} />
         <Route path="*" element={<GatedLayout><NotFound /></GatedLayout>} />
       </Routes>
     </BrowserRouter>
@@ -91,8 +91,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <EvaluationProvider>
-      <AppShell />
-    </EvaluationProvider>
+    <ThemeProvider>
+      <EvaluationProvider>
+        <AppShell />
+      </EvaluationProvider>
+    </ThemeProvider>
   );
 }

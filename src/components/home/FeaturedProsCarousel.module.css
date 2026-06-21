@@ -26,6 +26,12 @@
   will-change: transform;
 }
 
+.trackStatic {
+  animation: none;
+  width: 100%;
+  justify-content: center;
+}
+
 .viewport:hover .track {
   animation-play-state: paused;
 }

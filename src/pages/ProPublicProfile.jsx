@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Clock, MessageCircle, Star, BadgeCheck, ArrowLeft, Eye, Globe } from 'lucide-react';
-import { getProAccount, getProReviews, getProAverageRating, isPremiumActive, incrementProProfileViews, getMinisiteSlugForPro } from '../utils/storage';
+import { getProAccount, incrementProProfileViews, getMinisiteSlugForPro, getProPlanLevel } from '../utils/storage';
+import { useProReviews } from '../hooks/useProReviews';
 import { getMinisitePublicPath } from '../utils/minisite';
 import { getInitials, getAvatarColor, formatWhatsAppLink } from '../utils/helpers';
-import SeoHead from '../components/SEO/SeoHead';
+import { usePageMeta } from '../hooks/usePageMeta';
 import { StarDisplay } from '../components/StarRating';
 import SocialLinks from '../components/SocialLinks';
 import OpenStatusBadge from '../components/OpenStatusBadge';
@@ -12,7 +13,22 @@ import styles from './ProPublicProfile.module.css';
 
 export default function ProPublicProfile() {
   const account = getProAccount();
-  const premium = account && isPremiumActive(account);
+  const { reviews } = useProReviews(account?.id);
+  const avgRating = reviews.length
+    ? reviews.reduce((s, r) => s + r.note, 0) / reviews.length
+    : 0;
+  const plan = account ? getProPlanLevel(account) : 'free';
+  const isPremium = plan === 'premium';
+  const isPaid = plan === 'advanced' || isPremium;
+
+  usePageMeta({
+    title: account ? account.nom : 'Mon profil public',
+    description: account
+      ? `${account.profession} à ${account.region} — profil professionnel G-List`
+      : 'Votre page publique sur G-List',
+    path: '/mon-profil',
+    noIndex: true,
+  });
 
   useEffect(() => {
     if (account) incrementProProfileViews();
@@ -20,33 +36,16 @@ export default function ProPublicProfile() {
 
   if (!account) {
     return (
-      <>
-        <SeoHead
-          titre="Mon profil public"
-          description="Votre page publique sur G-List"
-          url="/mon-profil"
-          noIndex
-        />
       <div className={styles.empty}>
         <p>Aucun profil pro trouvé.</p>
         <Link to="/espace-pro" className="btn-primary">Créer mon espace</Link>
       </div>
-      </>
     );
   }
 
-  const reviews = getProReviews(account.id);
-  const avgRating = getProAverageRating(account.id);
-  const minisiteSlug = premium ? getMinisiteSlugForPro(account.id, account) : null;
+  const minisiteSlug = isPremium ? getMinisiteSlugForPro(account.id, account) : null;
 
   return (
-    <>
-      <SeoHead
-        titre={account.nom}
-        description={`${account.profession} à ${account.region} — profil professionnel G-List`}
-        url="/mon-profil"
-        noIndex
-      />
     <div className={styles.page}>
       <div className={styles.hero}>
         <Link to="/espace-pro" className={styles.back}>
@@ -63,7 +62,7 @@ export default function ProPublicProfile() {
           <div>
             <div className={styles.nameRow}>
               <h1 className="hero-display">{account.nom}</h1>
-              {premium && (
+              {isPaid && (
                 <span className="badge-verified verified">
                   <BadgeCheck size={14} />
                   Vérifié
@@ -90,7 +89,7 @@ export default function ProPublicProfile() {
           </div>
         </div>
 
-        {premium && account.social && (
+        {isPaid && account.social && (
           <div className={styles.socialWrap}>
             <SocialLinks social={account.social} size="lg" />
           </div>
@@ -108,7 +107,7 @@ export default function ProPublicProfile() {
           </Link>
         )}
 
-        {premium && account.profileViews != null && (
+        {isPaid && account.profileViews != null && (
           <div className={styles.statBar}>
             <Eye size={16} />
             {account.profileViews} visites sur votre profil
@@ -185,6 +184,5 @@ export default function ProPublicProfile() {
         )}
       </div>
     </div>
-    </>
   );
 }

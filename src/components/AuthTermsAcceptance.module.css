@@ -1,0 +1,45 @@
+.terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin: 4px 0 10px;
+}
+
+.terms input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: #16A34A;
+  cursor: pointer;
+}
+
+.terms a {
+  color: #16A34A;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.terms a:hover {
+  color: #15803D;
+}
+
+.termsOnDark {
+  color: rgba(200, 225, 245, 0.85);
+}
+
+.termsOnDark a {
+  color: #4ADE80;
+}
+
+.termsOnDark a:hover {
+  color: #86EFAC;
+}
+
+.termsOnDark input {
+  accent-color: #4ADE80;
+}

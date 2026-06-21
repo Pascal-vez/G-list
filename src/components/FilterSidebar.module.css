@@ -1,7 +1,7 @@
 .filterBar {
   width: 100%;
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px 20px;
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
@@ -84,7 +84,7 @@
   padding: 9px 14px;
   border: 1.5px solid #E5E5E5;
   border-radius: 10px;
-  background: #FAFAFA;
+  background: var(--input-bg);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -123,7 +123,7 @@
 }
 
 .groupTab:hover {
-  background: #FAFAFA;
+  background: var(--input-bg);
 }
 
 .groupTabActive {
@@ -211,7 +211,7 @@
   padding: 6px 12px;
   border-radius: 20px;
   border: 1.5px solid #E5E5E5;
-  background: #FAFAFA;
+  background: var(--input-bg);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -242,7 +242,7 @@
   padding: 6px 12px;
   border-radius: 20px;
   border: 1.5px solid #E5E5E5;
-  background: #FAFAFA;
+  background: var(--input-bg);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -317,7 +317,7 @@
   }
 
   .drawer {
-    background: #fff;
+    background: var(--bg-card);
     width: 100%;
     max-height: 85vh;
     border-radius: 16px 16px 0 0;

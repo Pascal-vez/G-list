@@ -167,6 +167,9 @@ export const CATEGORY_COLORS = {
 
 export const DEFAULT_HORAIRES = 'Lun-Sam 8h-18h';
 
+/** Email professionnel officiel G-List */
+export const SITE_CONTACT_EMAIL = 'contactglist224@gmail.com';
+
 export const DEFAULT_AVIS = [
   { prenom: 'Mariam', note: 5, commentaire: 'Excellent service, très professionnel. Je recommande vivement !', date: '2026-03-15' },
   { prenom: 'Ousmane', note: 4, commentaire: 'Bon travail, ponctuel et à l\'écoute. Petit délai d\'attente mais satisfait.', date: '2026-02-28' },

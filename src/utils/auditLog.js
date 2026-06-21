@@ -11,6 +11,7 @@ export const AUDIT_ACTIONS = {
   ADMIN_RESET_DATA: 'admin.reset_data',
   PRO_UPGRADE: 'pro.upgrade',
   PRO_CANCEL: 'pro.cancel',
+  PRO_REGISTER: 'pro.register',
   PRO_PROFILE_SAVE: 'pro.profile_save',
   PRO_DELETE_ACCOUNT: 'pro.delete_account',
   PRO_MINISITE_PUBLISH: 'pro.minisite_publish',

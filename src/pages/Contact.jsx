@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
 import SeoHead from '../components/SEO/SeoHead';
 import { submitContact } from '../api/contact';
+import { SITE_CONTACT_EMAIL } from '../data/constants';
 import styles from './Contact.module.css';
 
 export default function Contact() {
@@ -36,7 +37,7 @@ export default function Contact() {
             <ul className={styles.list}>
               <li><MapPin size={16} /> Conakry, République de Guinée</li>
               <li><Phone size={16} /> <a href="https://wa.me/224626419331">+224 626 41 93 31 (WhatsApp)</a></li>
-              <li><Mail size={16} /> <a href="mailto:contact@g-list.gn">contact@g-list.gn</a></li>
+              <li><Mail size={16} /> <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a></li>
             </ul>
             <p className={styles.hours}>Lun – Sam · 8h – 18h (GMT)</p>
           </InfoSection>

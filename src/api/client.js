@@ -30,7 +30,10 @@ export async function apiRequest(path, options = {}) {
     try {
       body = JSON.parse(text);
     } catch {
-      throw new ApiError('Réponse serveur invalide', response.status, text);
+      const hint = response.status === 404
+        ? 'Route API introuvable — redémarrez le backend (npm run dev dans backend/).'
+        : 'Réponse serveur invalide';
+      throw new ApiError(hint, response.status, text);
     }
   }
 

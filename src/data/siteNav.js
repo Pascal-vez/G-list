@@ -9,6 +9,13 @@ export const SITE_NAV_LINKS = [
 export const SITE_NAV_MAIN_LINKS = SITE_NAV_LINKS.slice(0, 3);
 export const SITE_NAV_MORE_LINKS = SITE_NAV_LINKS.slice(3);
 
+export const DRAWER_MOBILE_ITEMS = [
+  { label: 'Accueil', to: '/', iconKey: 'home' },
+  { label: 'Annuaire', to: '/annuaire', iconKey: 'book' },
+  { label: 'Catégories', to: '/#categories', iconKey: 'grid' },
+  { label: 'Contact', to: '/contact', iconKey: 'mail' },
+];
+
 export const DRAWER_NAV_ITEMS = [
   { label: 'Accueil', to: '/', iconKey: 'home', accent: 'rgba(245, 197, 24, 0.18)', iconColor: '#F5C518' },
   { label: 'Annuaire', to: '/annuaire', iconKey: 'book', accent: 'rgba(92, 158, 255, 0.18)', iconColor: '#5C9EFF' },

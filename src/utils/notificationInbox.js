@@ -60,3 +60,9 @@ export function pushSystemNotification(userKey, { type = 'info', title, message 
   setItem(KEYS.SYSTEM_NOTIFICATIONS, all);
   return entry;
 }
+
+/** Notification in-app pour un compte pro (clé `pro:{id}`) */
+export function notifyProInbox(proId, payload) {
+  if (!proId) return null;
+  return pushSystemNotification(`pro:${proId}`, payload);
+}

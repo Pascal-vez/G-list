@@ -130,16 +130,25 @@
   margin: 0;
 }
 
+.draftNotice {
+  padding: 8px 16px;
+  background: rgba(245, 197, 24, 0.12);
+  color: #8B6914;
+  font-size: 13px;
+  margin: 0;
+  border-bottom: 1px solid rgba(245, 197, 24, 0.25);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 220px 1fr 320px;
   gap: 0;
-  border: 1px solid #EFEFEF;
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 12px 12px;
   overflow: hidden;
   min-height: 520px;
-  background: #fff;
+  background: var(--bg-primary);
 }
 
 @media (max-width: 1100px) {
@@ -153,8 +162,8 @@
 }
 
 .sidebar {
-  background: #F8F6F0;
-  border-right: 1px solid #EFEFEF;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
   padding: 14px;
   overflow-y: auto;
   max-height: 70vh;
@@ -192,10 +201,10 @@
   right: 0;
   z-index: 50;
   margin-top: 4px;
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px var(--shadow-color);
   min-width: 200px;
   max-height: 280px;
   overflow-y: auto;
@@ -211,9 +220,10 @@
   font-size: 13px;
   cursor: pointer;
   font-family: inherit;
+  color: var(--text-primary);
 }
 
-.addMenu button:hover { background: #F8F6F0; }
+.addMenu button:hover { background: var(--hover-bg); }
 
 .sectionList {
   list-style: none;
@@ -233,13 +243,14 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid transparent;
   user-select: none;
+  color: var(--text-primary);
 }
 
-.sectionItem:hover { border-color: #E5E5E5; }
-.sectionItemActive { border-color: #F5C518 !important; background: #FFFDF5; }
+.sectionItem:hover { border-color: var(--border-color); }
+.sectionItemActive { border-color: var(--or-principal) !important; background: var(--or-clair); }
 .sectionHidden { opacity: 0.45; }
 
 .grip { color: #CCC; cursor: grab; flex-shrink: 0; }
@@ -266,14 +277,15 @@
   padding: 20px;
   overflow-y: auto;
   max-height: 70vh;
+  background: var(--bg-primary);
 }
 
 .editorHead {
   margin-bottom: 16px;
 }
 
-.editorHead h3 { font-size: 16px; margin-bottom: 4px; }
-.editorHead p { font-size: 13px; color: #888; margin-bottom: 10px; }
+.editorHead h3 { font-size: 16px; margin-bottom: 4px; color: var(--text-primary); }
+.editorHead p { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
 
 .deleteSectionBtn {
   display: inline-flex;
@@ -301,7 +313,7 @@
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  color: #888;
+  color: var(--text-muted);
   letter-spacing: 0.03em;
 }
 
@@ -314,15 +326,18 @@
 .input, .textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .input:focus, .textarea:focus {
   outline: none;
-  border-color: #F5C518;
+  border-color: var(--or-principal);
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .textarea { resize: vertical; min-height: 60px; }
@@ -337,9 +352,9 @@
 
 .repeatCard {
   padding: 14px;
-  background: #F8F6F0;
+  background: var(--bg-secondary);
   border-radius: 10px;
-  border: 1px solid #EFEFEF;
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -366,14 +381,15 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: #fff;
-  border: 1.5px dashed #CCC;
+  background: var(--bg-card);
+  border: 1.5px dashed var(--border-color);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
   align-self: flex-start;
+  color: var(--text-secondary);
 }
 
 .dropZone {
@@ -385,20 +401,27 @@
   gap: 8px;
   min-height: 100px;
   padding: 20px;
-  border: 2px dashed #CCC;
+  border: 2px dashed var(--border-color);
   border-radius: 12px;
-  background: #FAFAFA;
-  color: #888;
-  font-size: 13px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.dropZoneActive {
-  border-color: #F5C518;
-  background: #FFFDF5;
+.dropZone:hover {
+  border-color: var(--or-principal);
+  background: var(--hover-bg);
 }
 
-.dropZone svg { color: #F5C518; }
+.dropZone svg {
+  color: var(--text-muted);
+}
+
+.dropZoneActive {
+  border-color: var(--or-principal);
+  background: var(--or-clair);
+}
 
 .dropLabel {
   position: absolute;
@@ -455,9 +478,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: #F8F6F0;
+  background: var(--bg-secondary);
   border-radius: 8px;
   font-size: 13px;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .fileList button {
@@ -468,8 +493,8 @@
 }
 
 .previewPane {
-  border-left: 1px solid #EFEFEF;
-  background: #f0f0f0;
+  border-left: 1px solid var(--border-color);
+  background: var(--bg-secondary);
   padding: 12px;
   overflow: hidden;
   display: flex;
@@ -479,7 +504,7 @@
 .previewPane h3 {
   font-size: 12px;
   font-weight: 700;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -489,8 +514,8 @@
   flex: 1;
   overflow-y: auto;
   border-radius: 8px;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 2px solid var(--border-color);
+  background: var(--bg-secondary);
   transform-origin: top center;
   font-size: 11px;
 }
@@ -499,7 +524,7 @@
   zoom: 0.55;
 }
 
-.hint { font-size: 13px; color: #888; }
+.hint { font-size: 13px; color: var(--text-muted); }
 
 .levelBadge {
   display: inline-block;
@@ -518,11 +543,11 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: #F8F6F0;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-top: none;
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
   min-width: 0;
 }
 
@@ -542,18 +567,46 @@
 
 .templateBtn {
   padding: 5px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 20px;
-  background: #fff;
+  background: var(--bg-card);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  font-family: inherit;
-  flex-shrink: 0;
-  white-space: nowrap;
+  color: var(--text-secondary);
 }
 
-.templateBtn:hover { border-color: #F5C518; }
+.previewToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.deviceToggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.deviceToggle button {
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+}
+
+.deviceActive { background: var(--bg-card) !important; color: var(--text-primary) !important; box-shadow: 0 1px 4px var(--shadow-color); }
+
+.templateBtn:hover { border-color: var(--or-principal); }
 .templateBtnActive { background: #0E1208; color: #F5C518; border-color: #0E1208; }
 
 .templateRow svg { color: #F5C518; flex-shrink: 0; }
@@ -576,7 +629,7 @@
   display: flex;
   gap: 4px;
   margin-bottom: 16px;
-  border-bottom: 1px solid #EFEFEF;
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 8px;
   flex-wrap: wrap;
 }
@@ -645,33 +698,6 @@
   flex-direction: column;
   gap: 6px;
 }
-
-.previewToolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.deviceToggle {
-  display: flex;
-  gap: 4px;
-  background: #e8e8e8;
-  border-radius: 8px;
-  padding: 3px;
-}
-
-.deviceToggle button {
-  padding: 6px 10px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #888;
-  display: flex;
-}
-
-.deviceActive { background: #fff !important; color: #0E1208 !important; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
 .previewMobile {
   max-width: 375px;

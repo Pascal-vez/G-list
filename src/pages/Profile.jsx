@@ -2,21 +2,22 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   MessageCircle, ArrowLeft, Phone, Clock, MapPin, Star, Heart,
-  CheckCircle, X, Eye, BadgeCheck, Flag, Map, Globe,
+  CheckCircle, X, Eye, BadgeCheck, Flag, Map, Globe, FileText,
 } from 'lucide-react';
-import { getProfessionalById } from '../api/professionals';
+import { useProfessionalById } from '../hooks/useProfessionalById';
+import { useProReviews } from '../hooks/useProReviews';
 import { getInitials, getAvatarColor, formatWhatsAppLink, formatDate } from '../utils/helpers';
 import {
-  getProReviews, addProReview, incrementProView, incrementWhatsAppClick,
-  toggleFavorite, isFavorite, addQuoteRequest, getReviewResponse, getVisitorAccount,
+  toggleFavorite, isFavorite, addQuoteRequest, getVisitorAccount,
 } from '../utils/storage';
+import { postReview, trackProfileView, trackWhatsAppClick } from '../api/reviews';
+import { invalidateProfessionalsCache } from '../api/professionals';
 import {
   getPlanBadgeLabel, getGalleryLimit, generatePlaceholderPhotos,
 } from '../utils/proEnhancements';
 import { addViewHistory } from '../utils/storage';
 import { useGeolocation } from '../hooks/useGeolocation';
-import SeoHead from '../components/SEO/SeoHead';
-import { SEO_DEFAULT_IMAGE, toAbsoluteUrl } from '../utils/seoConfig';
+import { usePageMeta } from '../hooks/usePageMeta';
 import { sortByDistance } from '../utils/geo';
 import StarRating, { StarDisplay } from '../components/StarRating';
 import ShareButton from '../components/ShareButton';
@@ -24,7 +25,10 @@ import ReportModal from '../components/ReportModal';
 import MapModal from '../components/MapModal';
 import OpenStatusBadge from '../components/OpenStatusBadge';
 import SocialLinks from '../components/SocialLinks';
-import { getMinisiteSlugForPro } from '../utils/storage';
+import { getMinisiteSlugForPro, getProPlanLevel } from '../utils/storage';
+import { useSupabase } from '../lib/supabaseClient';
+import { fetchPublishedMinisiteSlug } from '../api/supabaseMinisite';
+import { getMinisitePublicPath } from '../utils/minisite';
 import styles from './Profile.module.css';
 
 const TABS = [
@@ -58,9 +62,9 @@ function RatingBars({ reviews }) {
 
 export default function Profile() {
   const { id } = useParams();
-  const pro = getProfessionalById(id);
+  const { pro, loading } = useProfessionalById(id);
+  const { reviews, reload: reloadReviews } = useProReviews(id);
   const [tab, setTab] = useState('about');
-  const [reviews, setReviews] = useState(() => getProReviews(id));
   const [form, setForm] = useState({ prenom: '', note: 0, commentaire: '' });
   const [submitted, setSubmitted] = useState(false);
   const [fav, setFav] = useState(() => isFavorite(id));
@@ -69,7 +73,23 @@ export default function Profile() {
   const [quoteSent, setQuoteSent] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [minisiteSlug, setMinisiteSlug] = useState(null);
   const { location } = useGeolocation();
+
+  const effectivePlan = pro ? getProPlanLevel(pro) : 'free';
+  const isPremium = effectivePlan === 'premium';
+
+  useEffect(() => {
+    if (!pro || !isPremium) {
+      setMinisiteSlug(null);
+      return;
+    }
+    if (useSupabase) {
+      fetchPublishedMinisiteSlug(pro.id).then((slug) => setMinisiteSlug(slug || null));
+      return;
+    }
+    setMinisiteSlug(getMinisiteSlugForPro(pro.id));
+  }, [pro?.id, isPremium]);
 
   const proWithDistance = useMemo(() => {
     if (!pro || !location) return pro;
@@ -82,8 +102,7 @@ export default function Profile() {
     '@type': 'LocalBusiness',
     name: pro.nom,
     description: pro.description,
-    telephone: pro.whatsapp || pro.telephone,
-    image: toAbsoluteUrl(SEO_DEFAULT_IMAGE),
+    telephone: pro.telephone,
     address: {
       '@type': 'PostalAddress',
       addressLocality: pro.quartier,
@@ -97,42 +116,65 @@ export default function Profile() {
     } : undefined,
   } : null;
 
+  usePageMeta({
+    title: pro?.nom,
+    description: pro ? `${pro.profession} à ${pro.region} — ${pro.description?.slice(0, 120)}` : undefined,
+    path: pro ? `/profil/${pro.id}` : undefined,
+    type: 'profile',
+    jsonLd,
+  });
+
   useEffect(() => {
     if (!pro) return;
-    incrementProView(pro.id);
+    trackProfileView(pro.id);
     addViewHistory({ id: pro.id, nom: pro.nom, categorie: pro.categorie });
   }, [pro, id]);
+
+  if (loading) {
+    return (
+      <div className={styles.notFound}>
+        <p>Chargement du profil…</p>
+      </div>
+    );
+  }
 
   if (!pro) {
     return (
       <div className={styles.notFound}>
-        <SeoHead titre="Professionnel introuvable" url={`/profil/${id}`} noIndex />
         <h1>Professionnel introuvable</h1>
         <Link to="/" className="btn-primary">← Retour à la liste</Link>
       </div>
     );
   }
 
-  const allReviews = [...reviews, ...pro.avis];
-  const planLabel = getPlanBadgeLabel(pro.plan, pro.topGList);
-  const galleryCount = getGalleryLimit(pro.plan);
+  const allReviews = reviews;
+  const planLabel = getPlanBadgeLabel(effectivePlan, pro.topGList);
+  const isAdvancedOrPremium = effectivePlan === 'advanced' || isPremium;
+  const galleryCount = getGalleryLimit(effectivePlan);
   const photos = generatePlaceholderPhotos(pro, galleryCount);
-  const canRespond = pro.plan === 'advanced' || pro.plan === 'premium';
-  const minisiteSlug = pro.plan === 'premium' ? getMinisiteSlugForPro(pro.id) : null;
+  const canRespond = isAdvancedOrPremium;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.prenom || !form.note || !form.commentaire) return;
-    const review = { prenom: form.prenom, note: form.note, commentaire: form.commentaire, date: new Date().toISOString().split('T')[0], id: Date.now() };
-    addProReview(id, review);
-    setReviews([review, ...reviews]);
-    setForm({ prenom: '', note: 0, commentaire: '' });
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    try {
+      await postReview(id, {
+        prenom: form.prenom,
+        note: form.note,
+        commentaire: form.commentaire,
+      });
+      await reloadReviews();
+      invalidateProfessionalsCache();
+      setForm({ prenom: '', note: 0, commentaire: '' });
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch {
+      setSubmitted(false);
+    }
   };
 
   const handleWhatsApp = () => {
-    incrementWhatsAppClick(pro.id);
+    trackWhatsAppClick(pro.id);
   };
 
   const handleQuote = (e) => {
@@ -145,14 +187,6 @@ export default function Profile() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        titre={`${pro.nom} — ${pro.profession} à ${pro.region}`}
-        description={pro.description
-          || `${pro.nom}, ${pro.profession} basé à ${pro.region}. Contactez directement via WhatsApp sur G-List.`}
-        url={`/profil/${pro.id}`}
-        type="profile"
-        jsonLd={jsonLd}
-      />
       <Link to="/" className={styles.back}><ArrowLeft size={18} /> Retour à la liste</Link>
 
       <header className={styles.hero}>
@@ -167,9 +201,10 @@ export default function Profile() {
               {pro.verifie && (
                 <span className={styles.verifiedBadge}><BadgeCheck size={16} /> Vérifié</span>
               )}
-              <span className={styles.planBadge}>{planLabel}</span>
+              <span className={`${styles.planBadge} ${effectivePlan === 'premium' ? styles.planBadgePremium : effectivePlan === 'advanced' ? styles.planBadgeAdvanced : ''}`}>{planLabel}</span>
             </div>
             <p className={styles.profession}>{pro.profession}</p>
+            {pro.slogan && <p className={styles.slogan}>{pro.slogan}</p>}
             <OpenStatusBadge horaires={pro.horaires} />
             <div className={styles.ratingLine}>
               <Star size={16} className={styles.starIcon} />
@@ -183,16 +218,26 @@ export default function Profile() {
                   <Globe size={18} /> Visiter le site
                 </Link>
               )}
+              {isPremium && (
+                <button type="button" className={styles.quoteBtn} onClick={() => setTab('contact')}>
+                  <FileText size={18} /> Demande de devis
+                </button>
+              )}
               <a href={formatWhatsAppLink(pro.telephone)} target="_blank" rel="noopener noreferrer" className={styles.whatsappBtn} onClick={handleWhatsApp}>
                 <MessageCircle size={18} /> WhatsApp
               </a>
-              <a href={`tel:${pro.telephone.replace(/\s/g, '')}`} className={styles.phoneBtn}>
+              <a href={`tel:${(pro.telephone || '').replace(/\s/g, '')}`} className={styles.phoneBtn}>
                 <Phone size={18} /> Appeler
               </a>
               <button type="button" className={styles.mapBtn} onClick={() => setShowMap(true)}>
                 <Map size={18} /> Carte
               </button>
-              <ShareButton title={pro.nom} text={`${pro.profession} sur G-List`} url={`${window.location.origin}/profil/${pro.id}`} />
+              <ShareButton
+                className={styles.shareBtn}
+                title={pro.nom}
+                text={`${pro.profession} sur G-List`}
+                url={`${window.location.origin}/profil/${pro.id}`}
+              />
               <button type="button" className={styles.reportBtn} onClick={() => setShowReport(true)}>
                 <Flag size={16} /> Signaler
               </button>
@@ -240,11 +285,11 @@ export default function Profile() {
         {tab === 'services' && (
           <section>
             <div className={styles.servicesList}>
-              {(pro.services || []).slice(0, pro.plan === 'free' ? 3 : undefined).map((s, i) => (
+              {(pro.services || []).slice(0, effectivePlan === 'free' ? 3 : undefined).map((s, i) => (
                 <div key={i} className={styles.serviceCard}>
                   <h3>{s.nom}</h3>
                   <p>{s.description}</p>
-                  {(pro.plan === 'premium') && <span className={styles.servicePrice}>{s.prix}</span>}
+                  {(effectivePlan === 'premium') && <span className={styles.servicePrice}>{s.prix}</span>}
                 </div>
               ))}
             </div>
@@ -282,10 +327,10 @@ export default function Profile() {
                   </div>
                   <p>{avis.commentaire}</p>
                   <span className={styles.reviewDate}>{formatDate(avis.date)}</span>
-                  {canRespond && getReviewResponse(pro.id, avis.id || i) && (
+                  {canRespond && avis.response && (
                     <div className={styles.proResponse}>
                       <strong>Réponse du pro :</strong>
-                      <p>{getReviewResponse(pro.id, avis.id || i).text}</p>
+                      <p>{avis.response.text}</p>
                     </div>
                   )}
                 </div>
@@ -307,7 +352,7 @@ export default function Profile() {
         {tab === 'contact' && (
           <section>
             <div className={styles.contactInfo}>
-              <p><Phone size={16} /> <a href={`tel:${pro.telephone.replace(/\s/g, '')}`}>{pro.telephone}</a></p>
+              <p><Phone size={16} /> {pro.telephone ? <a href={`tel:${pro.telephone.replace(/\s/g, '')}`}>{pro.telephone}</a> : '—'}</p>
               {pro.email && <p><MessageCircle size={16} /> <a href={`mailto:${pro.email}`}>{pro.email}</a></p>}
               <p><MapPin size={16} /> {pro.region} — {pro.quartier}</p>
               <p><Clock size={16} /> {pro.horaires}</p>
@@ -318,7 +363,7 @@ export default function Profile() {
             <a href={formatWhatsAppLink(pro.telephone)} target="_blank" rel="noopener noreferrer" className={styles.whatsappLarge} onClick={handleWhatsApp}>
               <MessageCircle size={22} /> Contacter sur WhatsApp
             </a>
-            {pro.plan === 'premium' && (
+            {isPremium && (
               <div className={styles.quoteForm}>
                 <h3>Demande de devis</h3>
                 {quoteSent && <p className={styles.success}><CheckCircle size={16} /> Demande envoyée !</p>}

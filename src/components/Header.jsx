@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Briefcase, ChevronDown, User } from 'lucide-react';
+import { Menu, X, Briefcase, ChevronDown, User, UserPlus } from 'lucide-react';
 import Logo from './Logo';
 import { getUserType } from '../utils/storage';
-import { SITE_NAV_MAIN_LINKS, SITE_NAV_MORE_LINKS, DRAWER_NAV_ITEMS, DRAWER_EXTRA_ITEMS, SITE_INFO_LINKS } from '../data/siteNav';
+import { SITE_NAV_MAIN_LINKS, SITE_NAV_MORE_LINKS, DRAWER_MOBILE_ITEMS, SITE_INFO_LINKS } from '../data/siteNav';
 import SiteNavLink from './SiteNavLink';
 import DrawerNavItem from './DrawerNavItem';
+import ThemeToggle from './ThemeToggle';
 import styles from './Header.module.css';
 
 export default function Header() {
@@ -13,6 +14,12 @@ export default function Header() {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const userType = getUserType();
+
+  const accountDrawerItem = userType === 'visiteur'
+    ? { label: 'Mon espace', to: '/dashboard/visiteur', iconKey: 'user' }
+    : userType === 'pro'
+      ? { label: 'Mon espace', to: '/espace-pro', iconKey: 'briefcase' }
+      : { label: "S'inscrire", to: '/espace-pro?register=1', iconKey: 'userPlus' };
 
   return (
     <>
@@ -48,6 +55,7 @@ export default function Header() {
         </nav>
 
         <div className={styles.actions}>
+          <ThemeToggle onDark className={styles.headerThemeToggle} />
           {userType === 'pro' ? (
             <Link to="/espace-pro" className={styles.joinBtn}>
               <Briefcase size={16} strokeWidth={2} aria-hidden="true" />
@@ -59,9 +67,9 @@ export default function Header() {
               Mon espace
             </Link>
           ) : (
-            <Link to="/espace-pro" className={styles.joinBtn}>
-              <Briefcase size={16} strokeWidth={2} aria-hidden="true" />
-              Espace pro
+            <Link to="/espace-pro?register=1" className={styles.joinBtn}>
+              <UserPlus size={16} strokeWidth={2} aria-hidden="true" />
+              S&apos;inscrire
             </Link>
           )}
           <button
@@ -81,8 +89,7 @@ export default function Header() {
             <button type="button" className={styles.drawerClose} onClick={() => setDrawerOpen(false)} aria-label="Fermer">
               <X size={26} strokeWidth={2.25} />
             </button>
-            <p className={styles.drawerHeading}>Navigation</p>
-            {DRAWER_NAV_ITEMS.map((item) => (
+            {DRAWER_MOBILE_ITEMS.map((item) => (
               <DrawerNavItem
                 key={item.label}
                 item={item}
@@ -91,25 +98,12 @@ export default function Header() {
               />
             ))}
             <div className={styles.drawerDivider} />
-            <p className={styles.drawerHeading}>Compte</p>
-            {DRAWER_EXTRA_ITEMS.map((item) => (
-              <DrawerNavItem
-                key={item.label}
-                item={item}
-                onClose={() => setDrawerOpen(false)}
-                useScrollNav={false}
-              />
-            ))}
-            <div className={styles.drawerDivider} />
-            <p className={styles.drawerHeading}>Informations</p>
-            {SITE_INFO_LINKS.map((item) => (
-              <DrawerNavItem
-                key={item.label}
-                item={item}
-                onClose={() => setDrawerOpen(false)}
-                useScrollNav={false}
-              />
-            ))}
+            <ThemeToggle variant="ligne" onDark className={styles.drawerTheme} />
+            <DrawerNavItem
+              item={accountDrawerItem}
+              onClose={() => setDrawerOpen(false)}
+              useScrollNav={false}
+            />
           </nav>
         </div>
       )}

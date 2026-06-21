@@ -1,4 +1,4 @@
-import { CATEGORIES, REGIONS, CATEGORY_DESCRIPTIONS } from './constants';
+import { CATEGORIES, REGIONS, CATEGORY_DESCRIPTIONS, SITE_CONTACT_EMAIL } from './constants';
 import { FAQ_ITEMS } from './glistFaq';
 import { DEFAULT_SUBSCRIPTION_PLANS, ANNUAL_PAID_MONTHS } from '../utils/planConfig';
 
@@ -138,6 +138,13 @@ export const BOT_KNOWLEDGE = [
     priority: 3,
     answer: 'L\'espace visiteur permet de sauvegarder vos favoris, retrouver vos recherches et gérer votre profil.',
     links: [{ label: 'Espace visiteur', path: '/dashboard/visiteur' }],
+  },
+  {
+    id: 'contact-team',
+    keywords: ['nous contacter', 'contacter g-list', 'contacter g list', 'support', 'assistance', 'aide', 'email', 'equipe', 'équipe'],
+    priority: 2,
+    answer: `Pour joindre l'équipe G-List : email ${SITE_CONTACT_EMAIL}, WhatsApp +224 626 41 93 31, ou le formulaire sur la page Contact.`,
+    links: [{ label: 'Contact', path: '/contact' }],
   },
   {
     id: 'contact-pro',

@@ -1,0 +1,109 @@
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: var(--hover-bg);
+}
+
+.iconBtnOnDark {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.iconBtnOnDark:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F5C518;
+}
+
+.rowOnDark {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rowOnDark .rowLabel {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.rowOnDark .rowIcon {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.rowIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--hover-bg);
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.row:hover {
+  filter: brightness(0.98);
+}
+
+.rowLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rowLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--border-color);
+  position: relative;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.switchOn {
+  background: var(--or-principal);
+}
+
+.switchKnob {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: left 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.switchKnobOn {
+  left: 18px;
+}

@@ -4,6 +4,8 @@ import {
 } from 'lucide-react';
 import { formatWhatsAppLink } from '../../utils/helpers';
 import { FONT_PRESETS, getSectionNavLabel, parseVideoEmbed, getSitePages, getPageSections, t } from '../../utils/minisite';
+import { resolveMinisiteTheme } from '../../utils/minisiteSections';
+import { useTheme } from '../../context/ThemeContext';
 import TrackingScripts from './TrackingScripts';
 import { addMinisiteFormSubmission, addMinisiteNewsletterSignup } from '../../utils/storage';
 import {
@@ -493,6 +495,7 @@ function renderSection(section, pro, theme, ctx) {
 }
 
 export default function MinisiteRenderer({ site, pro, preview = false, initialPageId = 'home' }) {
+  const { theme: appTheme } = useTheme();
   const pages = useMemo(() => getSitePages(site), [site]);
   const [activePageId, setActivePageId] = useState(initialPageId);
   const [showPopup, setShowPopup] = useState(false);
@@ -512,18 +515,13 @@ export default function MinisiteRenderer({ site, pro, preview = false, initialPa
     setShowPopup(false);
   };
 
-  const theme = {
-    primaryColor: '#C9A227',
-    accentColor: '#1A1A1A',
-    backgroundColor: '#fff',
-    fontPreset: 'modern',
-    darkMode: false,
-    animateSections: site.settings?.animateSections !== false,
+  const theme = useMemo(() => resolveMinisiteTheme({
     ...site.theme,
-  };
+    animateSections: site.settings?.animateSections !== false,
+  }, appTheme), [site.theme, site.settings?.animateSections, appTheme]);
   const fontFamily = FONT_PRESETS[theme.fontPreset]?.family || FONT_PRESETS.modern.family;
   const radius = theme.borderRadius === 'large' ? '16px' : theme.borderRadius === 'small' ? '6px' : '12px';
-  const isDark = theme.darkMode || theme.backgroundColor === '#0E1208';
+  const isDark = theme.darkMode || theme.backgroundColor === '#0E1208' || theme.backgroundColor === '#0F0F0F';
 
   const sections = getPageSections(site, activePageId);
   const siteForNav = { ...site, sections };
@@ -547,6 +545,9 @@ export default function MinisiteRenderer({ site, pro, preview = false, initialPa
         '--ms-primary': theme.primaryColor,
         '--ms-accent': theme.accentColor,
         '--ms-bg': theme.backgroundColor,
+        '--ms-surface': isDark ? '#1C1C1C' : '#FAFAFA',
+        '--ms-border': isDark ? '#333333' : '#EEEEEE',
+        '--ms-text-secondary': isDark ? '#A8A8A8' : '#555555',
         '--ms-font': fontFamily,
         '--ms-radius': radius,
       }}

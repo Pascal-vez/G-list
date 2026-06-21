@@ -1,4 +1,12 @@
-import { normalizeMinisite, slugify } from './minisite';
+import { normalizeMinisite, slugify, syncSitePages } from './minisite';
+import { useSupabase } from '../lib/supabaseClient';
+import { saveMinisiteRemote, formatMinisiteSaveError, purgeProfessionalCloudOnAccountDelete } from '../api/supabaseMinisite';
+import { upsertProfessionalProfileToSupabase } from '../api/supabaseProfessionals';
+import { invalidateProfessionalsCache } from '../api/professionalsStore';
+import { apiConfig } from '../api/config';
+import { apiRequest } from '../api/client';
+
+const MINISITE_PREVIEW_PREFIX = 'glist_minisite_preview_';
 import {
   mergeSubscriptionPlans,
   getPlanMonthlyPriceFromPlans,
@@ -9,6 +17,8 @@ import {
   BILLING_CYCLE_MONTHLY,
   BILLING_CYCLE_ANNUAL,
 } from './planConfig';
+import { upsertAdminOverrideByLegacy } from '../api/supabaseAdmin';
+import { isAbonnementActif } from './plans';
 
 export {
   ANNUAL_PAID_MONTHS,
@@ -24,6 +34,7 @@ const KEYS = {
   USER_TYPE: 'glist_user_type',
   PRO_ACCOUNT: 'glist_pro_account',
   PRO_ACCOUNTS: 'glist_pro_accounts',
+  DELETED_ACCOUNTS: 'glist_deleted_pro_accounts',
   PRO_REVIEWS: 'glist_pro_reviews',
   FEEDBACK_VOTED: 'glist_feedback_voted',
   FEEDBACK_THUMBS_UP: 'glist_feedback_thumbs_up',
@@ -45,6 +56,7 @@ const KEYS = {
   QUOTE_REQUESTS: 'glist_quote_requests',
   CRM_PROSPECTS: 'glist_crm_prospects',
   MINISITE: 'glist_minisite',
+  MINISITE_PUBLISHED: 'glist_minisite_published',
   MINISITE_ANALYTICS: 'glist_minisite_analytics',
   MINISITE_FORMS: 'glist_minisite_forms',
   PRO_SERVICES: 'glist_pro_services',
@@ -68,7 +80,6 @@ const KEYS = {
   NOTIFICATION_READ: 'glist_notification_read',
   SYSTEM_NOTIFICATIONS: 'glist_system_notifications',
   SECURITY_SESSIONS: 'glist_security_sessions',
-  ADMIN_SETTINGS: 'glist_admin_settings',
 };
 
 export const PREMIUM_PRICE_GNF = 120000;
@@ -134,11 +145,128 @@ function saveAllProAccountsRegistry(registry) {
   setItem(KEYS.PRO_ACCOUNTS, registry);
 }
 
+function getDeletedAccountsRegistry() {
+  return getItem(KEYS.DELETED_ACCOUNTS, {});
+}
+
+function markAccountDeleted(email, proId) {
+  const deleted = getDeletedAccountsRegistry();
+  deleted[normalizeEmail(email)] = { proId, deletedAt: new Date().toISOString() };
+  setItem(KEYS.DELETED_ACCOUNTS, deleted);
+}
+
+function clearAccountDeletedTombstone(email) {
+  const deleted = getDeletedAccountsRegistry();
+  delete deleted[normalizeEmail(email)];
+  setItem(KEYS.DELETED_ACCOUNTS, deleted);
+}
+
+/** Retire du registre les comptes marqués supprimés (fantômes). */
+function sanitizeDeletedRegistryEntries() {
+  const deleted = getDeletedAccountsRegistry();
+  const registry = getAllProAccountsRegistry();
+  let dirty = false;
+  for (const email of Object.keys(deleted)) {
+    if (registry[email]) {
+      delete registry[email];
+      dirty = true;
+    }
+  }
+  if (dirty) saveAllProAccountsRegistry(registry);
+}
+
+function purgeLocalAbonnementForPro(proId, email) {
+  const list = getItem('glist_demandes_abonnement', []);
+  if (!list.length) return;
+  const normalized = email ? normalizeEmail(email) : '';
+  const next = list.filter(
+    (d) => String(d.legacy_pro_id) !== String(proId)
+      && (!normalized || normalizeEmail(d.pro_email || '') !== normalized),
+  );
+  if (next.length !== list.length) setItem('glist_demandes_abonnement', next);
+}
+
+function purgeLocalProDataById(proId, email = null) {
+  if (proId == null) return;
+  removeProIdFromStore(KEYS.PRO_REVIEWS, proId);
+  localStorage.removeItem(KEYS.PROFILE_REVIEWS);
+  removeProIdFromStore(KEYS.PRO_STATS, proId);
+  removeProIdFromStore(KEYS.QUOTE_REQUESTS, proId);
+  removeProIdFromStore(KEYS.CRM_PROSPECTS, proId);
+  removeProIdFromStore(KEYS.MINISITE, proId);
+  removeProIdFromStore(KEYS.MINISITE_PUBLISHED, proId);
+  removeProIdFromStore(KEYS.MINISITE_ANALYTICS, proId);
+  removeProIdFromStore(KEYS.MINISITE_FORMS, proId);
+  removeProIdFromStore(KEYS.PRO_SERVICES, proId);
+  removeProIdFromStore(KEYS.PRO_PHOTOS, proId);
+  removeProIdFromStore(KEYS.ADMIN_OVERRIDES, proId);
+  removeProIdFromStore(KEYS.PRO_PLAN, proId);
+  removeProIdFromStore(KEYS.PRO_ALERT_SETTINGS, proId);
+  removeProIdFromStore(KEYS.BILLING_HISTORY, proId);
+  removeReviewResponsesForPro(proId);
+  purgeLocalAbonnementForPro(proId, email);
+  clearMinisitePreview(proId);
+}
+
+export function isAccountDeleted(email) {
+  return Boolean(getDeletedAccountsRegistry()[normalizeEmail(email)]);
+}
+
+/** Finalise une suppression locale incomplète (annuaire / session fantôme). */
+export function tombstoneDeletedProAccount(email, proId) {
+  const normalized = normalizeEmail(email);
+  markAccountDeleted(normalized, proId);
+  const registry = getAllProAccountsRegistry();
+  if (registry[normalized]) {
+    delete registry[normalized];
+    saveAllProAccountsRegistry(registry);
+  }
+  if (proId != null) purgeLocalProDataById(proId, normalized);
+  const session = getProAccount();
+  if (
+    (session?.email && normalizeEmail(session.email) === normalized)
+    || String(session?.id) === String(proId)
+  ) {
+    logoutProAccount();
+  }
+  notifyAccountsChanged();
+}
+
+/**
+ * Libère un email pro bloqué (compte fantôme après suppression ratée).
+ */
+export async function releaseProEmailForNewSignup(email) {
+  const normalized = normalizeEmail(email);
+  const registry = getAllProAccountsRegistry();
+  const acc = registry[normalized];
+  const tombstone = getDeletedAccountsRegistry()[normalized];
+  const proId = acc?.id ?? tombstone?.proId;
+
+  if (proId != null) {
+    await purgeProfessionalCloudOnAccountDelete({ legacyProId: proId, email: normalized }).catch(() => {});
+    purgeLocalProDataById(proId, normalized);
+  }
+
+  delete registry[normalized];
+  saveAllProAccountsRegistry(registry);
+  clearAccountDeletedTombstone(normalized);
+  if (getProAccount()?.email && normalizeEmail(getProAccount().email) === normalized) {
+    logoutProAccount();
+  }
+  notifyAccountsChanged();
+  return { ok: true, email: normalized };
+}
+
 function migrateLegacyAccount() {
+  sanitizeDeletedRegistryEntries();
   const session = getItem(KEYS.PRO_ACCOUNT, null);
   if (!session?.email) return;
-  const registry = getAllProAccountsRegistry();
   const email = normalizeEmail(session.email);
+  if (isAccountDeleted(email)) {
+    localStorage.removeItem(KEYS.PRO_ACCOUNT);
+    return;
+  }
+  const registry = getAllProAccountsRegistry();
   if (!registry[email]) {
     registry[email] = {
       ...session,
@@ -158,13 +286,26 @@ export function saveProAccount(account) {
       saveAllProAccountsRegistry(registry);
     }
   }
+  syncProfessionalToCloud(account).then(() => invalidateProfessionalsCache()).catch(() => {});
 }
 
-export function loginProAccount(email, password) {
+export async function loginProAccount(email, password) {
   migrateLegacyAccount();
+  const normalized = normalizeEmail(email);
+  if (isAccountDeleted(normalized)) return null;
   const registry = getAllProAccountsRegistry();
-  const acc = registry[normalizeEmail(email)];
-  if (!acc || acc.password !== password) return null;
+  const acc = registry[normalized];
+  if (!acc) return null;
+
+  const localOk = acc.password === password;
+  const remoteOk = !localOk && await verifyProPasswordRemote(normalized, password);
+  if (!localOk && !remoteOk) return null;
+
+  if (remoteOk) {
+    registry[normalized].password = password;
+    saveAllProAccountsRegistry(registry);
+  }
+
   const { password: _pw, ...session } = acc;
   saveProAccount(session);
   setUserType('pro');
@@ -201,62 +342,243 @@ function removeReviewResponsesForPro(proId) {
   setItem(KEYS.REVIEW_RESPONSES, next);
 }
 
-/** Supprime définitivement un compte pro et toutes ses données locales. */
-export function deleteProAccount(email, password) {
+function notifyAccountsChanged() {
+  window.dispatchEvent(new CustomEvent('glist-accounts-changed'));
+  if (useSupabase) {
+    invalidateProfessionalsCache().catch(() => {});
+  }
+}
+
+async function syncProfessionalToCloud(account) {
+  if (!useSupabase || !account?.id) return;
+  await upsertProfessionalProfileToSupabase(account).catch(() => {});
+}
+
+async function verifyProPasswordRemote(email, password) {
+  if (!apiConfig.useRemoteApi) return false;
+  try {
+    const res = await apiRequest('/auth/verify-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    return res?.ok === true;
+  } catch {
+    return false;
+  }
+}
+
+export function updateProPasswordInRegistry(email, password) {
   migrateLegacyAccount();
   const registry = getAllProAccountsRegistry();
   const normalized = normalizeEmail(email);
+  if (!registry[normalized]) return false;
+  registry[normalized].password = password;
+  saveAllProAccountsRegistry(registry);
+  return true;
+}
+
+async function deleteRemoteUser(email, password, retries = 2) {
+  if (!apiConfig.useRemoteApi) return { ok: true, deleted: false };
+  for (let i = 0; i < retries; i += 1) {
+    try {
+      const res = await apiRequest('/auth/delete-account', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      return { ok: true, deleted: res?.deleted === true || res?.ok === true };
+    } catch {
+      if (i === retries - 1) return { ok: false };
+    }
+  }
+  return { ok: false };
+}
+
+async function purgeCloudAndBackendOnDelete({ proId, slug, email, password }) {
+  const [cloudResult, backendResult] = await Promise.all([
+    proId != null || slug || email
+      ? purgeProfessionalCloudOnAccountDelete({ legacyProId: proId, slug, email })
+      : Promise.resolve({ ok: true, deleted: false }),
+    deleteRemoteUser(email, password),
+  ]);
+  return { cloudResult, backendResult };
+}
+
+function getMinisiteSlugBeforeDelete(proId) {
+  const id = String(proId);
+  const draft = getItem(KEYS.MINISITE, {})[id] || getItem(KEYS.MINISITE, {})[proId];
+  const published = getItem(KEYS.MINISITE_PUBLISHED, {})[id] || getItem(KEYS.MINISITE_PUBLISHED, {})[proId];
+  return draft?.slug || published?.slug || null;
+}
+
+function clearMinisitePreview(proId) {
+  try {
+    sessionStorage.removeItem(`${MINISITE_PREVIEW_PREFIX}${minisiteStorageKey(proId)}`);
+  } catch {
+    /* ignore */
+  }
+}
+
+async function purgeProfessionalFromCloud(proId, slugHint = null, emailHint = null) {
+  return purgeProfessionalCloudOnAccountDelete({
+    legacyProId: proId,
+    slug: slugHint,
+    email: emailHint,
+  });
+}
+
+async function checkRemoteEmailExists(email) {
+  if (!apiConfig.useRemoteApi) return false;
+  try {
+    const res = await apiRequest(`/auth/email-exists?email=${encodeURIComponent(email)}`);
+    return res?.exists === true;
+  } catch {
+    return false;
+  }
+}
+
+async function registerRemoteUser(email, password) {
+  if (!apiConfig.useRemoteApi) return { ok: true };
+  try {
+    await apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, userType: 'pro' }),
+    });
+    return { ok: true };
+  } catch (err) {
+    if (err?.status === 409) return { ok: false, exists: true };
+    return { ok: false };
+  }
+}
+
+async function ensureRemoteUser(email, password) {
+  const first = await registerRemoteUser(email, password);
+  if (first.ok) return first;
+  if (first.exists) {
+    const removed = await deleteRemoteUser(email, password);
+    if (removed.ok) return registerRemoteUser(email, password);
+  }
+  return first;
+}
+
+/** Supprime définitivement un compte pro et toutes ses données (local, backend, Supabase). */
+export async function deleteProAccount(email, password) {
+  migrateLegacyAccount();
+  sanitizeDeletedRegistryEntries();
+  const normalized = normalizeEmail(email);
+  const registry = getAllProAccountsRegistry();
   const acc = registry[normalized];
 
-  if (!acc) return { ok: false, error: 'NOT_FOUND' };
-  if (acc.password !== password) return { ok: false, error: 'PASSWORD_INVALID' };
+  if (!acc && isAccountDeleted(normalized)) {
+    await deleteRemoteUser(normalized, password);
+    return { ok: true, alreadyDeleted: true };
+  }
 
-  const proId = acc.id;
+  if (!acc) {
+    const remoteOnly = await verifyProPasswordRemote(normalized, password);
+    if (!remoteOnly) return { ok: false, error: 'NOT_FOUND' };
+  }
+
+  const passwordOk = acc
+    ? (acc.password === password || await verifyProPasswordRemote(normalized, password))
+    : await verifyProPasswordRemote(normalized, password);
+  if (!passwordOk) return { ok: false, error: 'PASSWORD_INVALID' };
+
+  const proId = acc?.id ?? getDeletedAccountsRegistry()[normalized]?.proId;
+  const minisiteSlug = proId != null ? getMinisiteSlugBeforeDelete(proId) : null;
+  const accountEmail = acc?.email || normalized;
+
+  // ── Phase 1 : suppression locale immédiate (annuaire / session) ──
   delete registry[normalized];
   saveAllProAccountsRegistry(registry);
+  markAccountDeleted(normalized, proId ?? null);
 
-  removeProIdFromStore(KEYS.PRO_REVIEWS, proId);
-  localStorage.removeItem(KEYS.PROFILE_REVIEWS);
-  removeProIdFromStore(KEYS.PRO_STATS, proId);
-  removeProIdFromStore(KEYS.QUOTE_REQUESTS, proId);
-  removeProIdFromStore(KEYS.CRM_PROSPECTS, proId);
-  removeProIdFromStore(KEYS.MINISITE, proId);
-  removeProIdFromStore(KEYS.PRO_SERVICES, proId);
-  removeProIdFromStore(KEYS.PRO_PHOTOS, proId);
-  removeProIdFromStore(KEYS.ADMIN_OVERRIDES, proId);
-  removeProIdFromStore(KEYS.PRO_PLAN, proId);
-  removeReviewResponsesForPro(proId);
+  if (proId != null) purgeLocalProDataById(proId, accountEmail);
 
   const session = getProAccount();
-  if (session?.email && normalizeEmail(session.email) === normalized) {
+  if (
+    (session?.email && normalizeEmail(session.email) === normalized)
+    || (proId != null && String(session?.id) === String(proId))
+  ) {
     logoutProAccount();
   }
 
+  notifyAccountsChanged();
+
+  // ── Phase 2 : backend + Supabase en parallèle ──
+  const { cloudResult, backendResult } = await purgeCloudAndBackendOnDelete({
+    proId,
+    slug: minisiteSlug,
+    email: accountEmail,
+    password,
+  });
+
   import('./platformEvents.js').then((m) => m.onProDelete(proId, email)).catch(() => {});
-  return { ok: true };
+
+  return {
+    ok: true,
+    cloudDeleted: cloudResult?.deleted === true,
+    backendDeleted: backendResult?.deleted === true || backendResult?.ok === true,
+    partial: Boolean(
+      useSupabase && cloudResult?.reason && !cloudResult?.deleted,
+    ),
+  };
 }
 
 export function isEmailRegistered(email) {
   migrateLegacyAccount();
-  return !!getAllProAccountsRegistry()[normalizeEmail(email)];
+  const normalized = normalizeEmail(email);
+  if (isAccountDeleted(normalized)) return false;
+  return !!getAllProAccountsRegistry()[normalized];
 }
 
 const DEFAULT_SOCIAL = { facebook: '', instagram: '', tiktok: '', linkedin: '', portfolio: '', website: '' };
 
-const DEMO_REVIEWS = [
-  { id: 1, prenom: 'Mariam', note: 5, commentaire: 'Service impeccable, très professionnel. Je recommande !', date: '2026-04-10' },
-  { id: 2, prenom: 'Ousmane', note: 4, commentaire: 'Bon travail, ponctuel et à l\'écoute du client.', date: '2026-03-22' },
-  { id: 3, prenom: 'Aminata', note: 5, commentaire: 'Excellent rapport qualité-prix. Très satisfaite.', date: '2026-02-15' },
-];
-
 export function createProAccount(data) {
+  return createProAccountAsync(data);
+}
+
+/** Crée un compte pro — libère l'email si le compte avait été supprimé. */
+export async function createProAccountAsync(data) {
+  migrateLegacyAccount();
+  sanitizeDeletedRegistryEntries();
+
   const email = normalizeEmail(data.email || '');
   if (!email) throw new Error('EMAIL_REQUIRED');
   if (!data.password) throw new Error('PASSWORD_REQUIRED');
   if (data.password.length < 6) throw new Error('PASSWORD_TOO_SHORT');
 
   const registry = getAllProAccountsRegistry();
-  if (registry[email]) throw new Error('EMAIL_EXISTS');
+  const existing = registry[email];
+
+  if (existing) {
+    if (isAccountDeleted(email)) {
+      purgeLocalProDataById(existing.id, email);
+      delete registry[email];
+    } else {
+      const remoteExists = await checkRemoteEmailExists(email);
+      if (!remoteExists) {
+        purgeLocalProDataById(existing.id, email);
+        delete registry[email];
+      } else {
+        const pwOk = existing.password === data.password
+          || await verifyProPasswordRemote(email, data.password);
+        if (pwOk) throw new Error('EMAIL_EXISTS_LOGIN_INSTEAD');
+        throw new Error('EMAIL_EXISTS');
+      }
+    }
+  }
+
+  if (isAccountDeleted(email)) {
+    const tombstone = getDeletedAccountsRegistry()[email];
+    if (tombstone?.proId != null) {
+      await purgeProfessionalCloudOnAccountDelete({
+        legacyProId: tombstone.proId,
+        email,
+      }).catch(() => {});
+      purgeLocalProDataById(tombstone.proId, email);
+    }
+    clearAccountDeletedTombstone(email);
+  }
 
   const id = Date.now();
   const account = {
@@ -275,7 +597,7 @@ export function createProAccount(data) {
     specialites: [],
     services: [],
     social: { ...DEFAULT_SOCIAL },
-    profileViews: Math.floor(Math.random() * 40) + 12,
+    profileViews: 0,
     premium: false,
     plan: 'free',
     premiumSince: null,
@@ -288,8 +610,13 @@ export function createProAccount(data) {
   saveAllProAccountsRegistry(registry);
 
   saveProAccount(account);
-  setProReviews(id, DEMO_REVIEWS);
   setUserType('pro');
+  import('./platformEvents.js').then((m) => m.onProRegister(id, email)).catch(() => {});
+
+  await ensureRemoteUser(email, data.password).catch(() => {});
+  await syncProfessionalToCloud(account);
+
+  notifyAccountsChanged();
   return account;
 }
 
@@ -387,6 +714,7 @@ export function subscribePremium() {
   expires.setMonth(expires.getMonth() + 1);
   const updated = {
     ...account,
+    plan: 'premium',
     premium: true,
     premiumSince: now.toISOString(),
     premiumExpires: expires.toISOString(),
@@ -413,7 +741,12 @@ export function unsubscribePremium() {
 }
 
 export function isPremiumActive(account) {
-  if (!account?.premium) return false;
+  if (!account) return false;
+  if (isAbonnementActif(account)) {
+    const plan = account.plan || (account.premium ? 'premium' : 'free');
+    return plan === 'premium';
+  }
+  if (!account.premium) return false;
   if (!account.premiumExpires) return true;
   return new Date(account.premiumExpires) > new Date();
 }
@@ -659,11 +992,19 @@ export function setProStats(proId, stats) {
 }
 
 export function incrementProView(proId) {
+  if (useSupabase) {
+    import('../api/supabaseReviews.js').then((m) => m.recordProfileEvent(proId, 'profile_view')).catch(() => {});
+    return;
+  }
   const stats = getProStats(proId);
   setProStats(proId, { ...stats, views: (stats.views || 0) + 1 });
 }
 
 export function incrementWhatsAppClick(proId) {
+  if (useSupabase) {
+    import('../api/supabaseReviews.js').then((m) => m.recordProfileEvent(proId, 'whatsapp_click')).catch(() => {});
+    return;
+  }
   const stats = getProStats(proId);
   setProStats(proId, { ...stats, whatsappClicks: (stats.whatsappClicks || 0) + 1 });
 }
@@ -762,31 +1103,208 @@ export function moveCrmProspect(proId, prospectId, column) {
 
 // ── Mini-site ──
 
+function minisiteStorageKey(proId) {
+  return String(proId);
+}
+
+function isPublishedFlag(value) {
+  return value === true || value === 'true';
+}
+
+export function findMinisiteRecord(proId) {
+  const all = getItem(KEYS.MINISITE, {});
+  const key = minisiteStorageKey(proId);
+  if (all[key]) return all[key];
+  const numeric = Number(proId);
+  if (all[numeric] != null) return all[numeric];
+  if (all[proId] != null) return all[proId];
+  return null;
+}
+
+function getRawMinisiteRecord(proId) {
+  return findMinisiteRecord(proId);
+}
+
+function saveMinisitePublishedIndex(proId, published, slug) {
+  const all = getItem(KEYS.MINISITE_PUBLISHED, {});
+  const key = minisiteStorageKey(proId);
+  const normalizedSlug = slugify(slug || '');
+  if (isPublishedFlag(published) && normalizedSlug) {
+    all[key] = { published: true, slug: normalizedSlug, updatedAt: new Date().toISOString() };
+  } else {
+    delete all[key];
+    delete all[Number(proId)];
+    delete all[proId];
+  }
+  setItem(KEYS.MINISITE_PUBLISHED, all);
+}
+
+function getMinisitePublishedIndex(proId) {
+  const all = getItem(KEYS.MINISITE_PUBLISHED, {});
+  const key = minisiteStorageKey(proId);
+  return all[key] ?? all[Number(proId)] ?? all[proId] ?? null;
+}
+
+/** Reconstruit l'index public à partir des mini-sites déjà sauvegardés (migration). */
+export function rebuildMinisitePublishedIndex() {
+  const sites = getItem(KEYS.MINISITE, {});
+  Object.entries(sites).forEach(([id, data]) => {
+    if (isPublishedFlag(data?.published) && data?.slug) {
+      saveMinisitePublishedIndex(id, true, data.slug);
+    }
+  });
+}
+
+/** Vrai uniquement si le pro a explicitement publié son mini-site. */
+export function isMinisitePublished(proId) {
+  const indexed = getMinisitePublishedIndex(proId);
+  if (indexed?.published === true) return true;
+  const raw = findMinisiteRecord(proId);
+  return isPublishedFlag(raw?.published);
+}
+
+export function cacheMinisitePreview(proId, site) {
+  try {
+    sessionStorage.setItem(
+      `${MINISITE_PREVIEW_PREFIX}${minisiteStorageKey(proId)}`,
+      JSON.stringify(syncSitePages(site)),
+    );
+  } catch {
+    /* quota — aperçu retombera sur localStorage */
+  }
+}
+
+export function getCachedMinisitePreview(proId) {
+  try {
+    const raw = sessionStorage.getItem(`${MINISITE_PREVIEW_PREFIX}${minisiteStorageKey(proId)}`);
+    return raw ? syncSitePages(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Brouillon local — toujours écrit, même en mode Supabase (retour éditeur / aperçu). */
+function saveMinisiteLocalDraft(proId, settings) {
+  const all = getItem(KEYS.MINISITE, {});
+  const key = minisiteStorageKey(proId);
+  const payload = syncSitePages({
+    ...settings,
+    published: settings?.published === true,
+  });
+  all[key] = payload;
+  delete all[Number(proId)];
+  delete all[proId];
+  try {
+    setItem(KEYS.MINISITE, all);
+  } catch {
+    /* quota */
+  }
+  return payload;
+}
+
+/** Charge l'état le plus récent pour l'éditeur (session → local → défaut compte). */
+export function loadMinisiteForEditor(proId, account = null) {
+  const cached = getCachedMinisitePreview(proId);
+  if (cached) return syncSitePages(cached);
+  return syncSitePages(getMinisite(proId, account));
+}
+
+export function hasMinisiteLocalDraft(proId) {
+  return !!getRawMinisiteRecord(proId) || !!getCachedMinisitePreview(proId);
+}
+
 export function getMinisite(proId, account = null) {
-  const all = getItem(KEYS.MINISITE, {});
-  const raw = all[proId];
-  const acc = account || getAllProAccountsList().find((a) => a.id === proId) || null;
-  return normalizeMinisite(raw, acc);
+  const key = minisiteStorageKey(proId);
+  const raw = getRawMinisiteRecord(proId);
+  const acc = account || getAllProAccountsList().find((a) => String(a.id) === key) || null;
+  const site = normalizeMinisite(raw, acc);
+  return site ? syncSitePages(site) : site;
 }
 
-export function saveMinisite(proId, settings, account = null) {
-  const all = getItem(KEYS.MINISITE, {});
-  const current = getMinisite(proId, account);
-  all[proId] = { ...current, ...settings };
-  setItem(KEYS.MINISITE, all);
+/** Sauvegarde locale (mode prototype sans Supabase). */
+export function saveMinisite(proId, settings) {
+  const payload = saveMinisiteLocalDraft(proId, settings);
+
+  if (useSupabase) {
+    return payload;
+  }
+
+  saveMinisitePublishedIndex(proId, payload.published, payload.slug);
+  cacheMinisitePreview(proId, payload);
+  return payload;
 }
 
-export function getMinisiteSlugForPro(proId, account = null) {
-  const site = getMinisite(proId, account);
-  if (!site?.published || !site.slug) return null;
-  return site.slug;
+/** Sauvegarde production — Supabase obligatoire si configuré. */
+export async function saveMinisiteAsync(proId, settings, account = null) {
+  const payload = syncSitePages({
+    ...settings,
+    published: settings?.published === true,
+  });
+
+  saveMinisiteLocalDraft(proId, payload);
+  cacheMinisitePreview(proId, payload);
+
+  if (useSupabase) {
+    const res = await saveMinisiteRemote(proId, payload, account);
+    if (!res.ok) {
+      throw new Error(formatMinisiteSaveError(res.reason));
+    }
+    if (payload.published) {
+      saveMinisitePublishedIndex(proId, true, payload.slug);
+    } else {
+      saveMinisitePublishedIndex(proId, false, payload.slug);
+    }
+    return res.payload;
+  }
+
+  saveMinisitePublishedIndex(proId, payload.published, payload.slug);
+  return payload;
+}
+
+/** Slug public si le mini-site est publié (index léger + données complètes). */
+export function getMinisiteSlugForPro(proId) {
+  const indexed = getMinisitePublishedIndex(proId);
+  if (indexed?.published === true && indexed.slug) {
+    return indexed.slug;
+  }
+
+  const raw = findMinisiteRecord(proId);
+  if (raw && isPublishedFlag(raw.published)) {
+    const slug = slugify(raw.slug || '');
+    if (slug) {
+      saveMinisitePublishedIndex(proId, true, slug);
+      return slug;
+    }
+  }
+  return null;
+}
+
+/** Trouve l'id pro à partir d'un slug publié. */
+export function findProIdByPublishedMinisiteSlug(slug) {
+  const normalized = slugify(slug || '');
+  if (!normalized) return null;
+
+  const index = getItem(KEYS.MINISITE_PUBLISHED, {});
+  const fromIndex = Object.entries(index).find(([, meta]) => meta.slug === normalized);
+  if (fromIndex) return fromIndex[0];
+
+  const sites = getItem(KEYS.MINISITE, {});
+  const fromSites = Object.entries(sites).find(([, data]) => (
+    isPublishedFlag(data?.published) && slugify(data.slug || '') === normalized
+  ));
+  if (fromSites) {
+    saveMinisitePublishedIndex(fromSites[0], true, fromSites[1].slug);
+    return fromSites[0];
+  }
+  return null;
 }
 
 export function isSlugAvailable(slug, excludeProId = null) {
   const normalized = slugify(slug);
   const all = getItem(KEYS.MINISITE, {});
+  const excludeKey = excludeProId != null ? minisiteStorageKey(excludeProId) : null;
   return !Object.entries(all).some(([id, data]) => {
-    if (excludeProId && id === excludeProId) return false;
+    if (excludeKey && (id === excludeKey || id === String(excludeProId))) return false;
     const s = normalizeMinisite(data, null);
     return s?.slug === normalized;
   });
@@ -873,8 +1391,12 @@ export function saveProPhotos(proId, photos) {
 
 export function getProPlanLevel(account) {
   if (!account) return 'free';
-  if (account.plan) return account.plan;
-  if (account.premium && isPremiumActive(account)) return 'premium';
+  const adminPlan = getAdminPlanForPro(account.id);
+  if (adminPlan) return adminPlan;
+  if (isAbonnementActif(account)) {
+    if (account.plan && account.plan !== 'free') return account.plan;
+    if (account.premium) return 'premium';
+  }
   return 'free';
 }
 
@@ -997,22 +1519,17 @@ export function saveVisitorSettings(settings) {
 }
 
 export function isDarkMode() {
+  const theme = localStorage.getItem('glist_theme');
+  if (theme) return theme === 'dark';
   return localStorage.getItem(KEYS.DARK_MODE) === 'true';
 }
 
 export function setDarkMode(enabled) {
+  const theme = enabled ? 'dark' : 'light';
   localStorage.setItem(KEYS.DARK_MODE, enabled ? 'true' : 'false');
+  localStorage.setItem('glist_theme', theme);
+  document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.classList.toggle('dark-mode', enabled);
-}
-
-export function getAdminSettings() {
-  return getItem(KEYS.ADMIN_SETTINGS, { defaultTab: 'overview' });
-}
-
-export function saveAdminSettings(partial) {
-  const next = { ...getAdminSettings(), ...partial };
-  setItem(KEYS.ADMIN_SETTINGS, next);
-  return next;
 }
 
 // ── Admin overrides ──
@@ -1029,41 +1546,58 @@ export function setAdminOverride(proId, overrides) {
 
 export function adminVerifyProfessional(proId) {
   setAdminOverride(proId, { verifie: true, disabled: false, hidden: false });
+  if (useSupabase) {
+    upsertAdminOverrideByLegacy(proId, { verifie: true, disabled: false, hidden: false }).catch(() => {});
+  }
 }
 
 export function adminDisableProfessional(proId) {
   setAdminOverride(proId, { disabled: true, verifie: false });
+  if (useSupabase) {
+    upsertAdminOverrideByLegacy(proId, { disabled: true, verifie: false }).catch(() => {});
+  }
 }
 
 export function adminFlagDuplicate(proId) {
   setAdminOverride(proId, { flaggedDuplicate: true });
+  if (useSupabase) {
+    upsertAdminOverrideByLegacy(proId, { flaggedDuplicate: true }).catch(() => {});
+  }
 }
 
 export function adminHideProfessional(proId) {
   setAdminOverride(proId, { hidden: true, disabled: true });
+  if (useSupabase) {
+    upsertAdminOverrideByLegacy(proId, { hidden: true, disabled: true }).catch(() => {});
+  }
 }
 
 export function adminMergeDuplicate(keepId, removeId) {
   setAdminOverride(removeId, { hidden: true, mergedInto: keepId });
   setAdminOverride(keepId, { verifie: true, flaggedDuplicate: false });
+  if (useSupabase) {
+    upsertAdminOverrideByLegacy(removeId, { hidden: true }).catch(() => {});
+    upsertAdminOverrideByLegacy(keepId, { verifie: true, flaggedDuplicate: false }).catch(() => {});
+  }
 }
 
-function updateProAccountById(proId, patch) {
+export function updateProAccountById(proId, patch) {
   const registry = getAllProAccountsRegistry();
-  let updated = false;
+  let updatedAccount = null;
   Object.entries(registry).forEach(([email, acc]) => {
-    if (acc.id === proId) {
-      registry[email] = { ...acc, ...patch };
-      updated = true;
+    if (String(acc.id) === String(proId)) {
+      updatedAccount = { ...acc, ...patch };
+      registry[email] = updatedAccount;
     }
   });
-  if (updated) saveAllProAccountsRegistry(registry);
+  if (updatedAccount) saveAllProAccountsRegistry(registry);
 
   const session = getProAccount();
-  if (session?.id === proId) {
-    saveProAccount({ ...session, ...patch });
+  if (session && String(session.id) === String(proId)) {
+    updatedAccount = { ...session, ...patch };
+    saveProAccount(updatedAccount);
   }
-  return updated;
+  return updatedAccount;
 }
 
 export function getAdminPlanOverrides() {
@@ -1120,7 +1654,10 @@ export function getContactMessages() {
 
 export function getAllProAccountsList() {
   migrateLegacyAccount();
-  return Object.values(getAllProAccountsRegistry()).map(stripPassword);
+  const deleted = getDeletedAccountsRegistry();
+  return Object.entries(getAllProAccountsRegistry())
+    .filter(([email]) => !deleted[email])
+    .map(([, acc]) => stripPassword(acc));
 }
 
 // ── Cookies ──

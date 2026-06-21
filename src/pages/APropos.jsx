@@ -1,18 +1,19 @@
 import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import SeoHead from '../components/SEO/SeoHead';
+import { SITE_CONTACT_EMAIL } from '../data/constants';
+import { usePageMeta } from '../hooks/usePageMeta';
 import styles from '../components/InfoPageLayout.module.css';
 
 const WHATSAPP_URL = 'https://wa.me/224626419331';
 
 export default function APropos() {
+  usePageMeta({
+    title: 'À propos',
+    description: 'Découvrez la mission de G-List — l\'annuaire professionnel de référence en Guinée.',
+    path: '/a-propos',
+  });
+
   return (
-    <>
-      <SeoHead
-        titre="À propos"
-        description="Découvrez la mission de G-List — l'annuaire professionnel de référence en Guinée."
-        url="/a-propos"
-      />
     <InfoPageLayout
       title="À propos de G-List"
       subtitle="L'annuaire professionnel de la Guinée"
@@ -91,7 +92,9 @@ export default function APropos() {
 
       <InfoSection title="Contact">
         <div className={styles.contactBlock}>
-          <p>Une question, un partenariat ou une suggestion ? Écrivez-nous.</p>
+          <p>Une question, un partenariat ou une suggestion ? Écrivez-nous à{' '}
+            <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>.
+          </p>
           <div className={styles.contactActions}>
             <a href={WHATSAPP_URL} className={styles.whatsappBtn} target="_blank" rel="noopener noreferrer">
               WhatsApp
@@ -103,6 +106,5 @@ export default function APropos() {
         </div>
       </InfoSection>
     </InfoPageLayout>
-    </>
   );
 }

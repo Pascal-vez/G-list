@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, SearchX } from 'lucide-react';
 import Filters from '../components/FilterSidebar';
 import ProCard from '../components/ProCard';
 import LocationBanner from '../components/LocationBanner';
-import { getAllProfessionals } from '../api/professionals';
+import { useProfessionalsList } from '../hooks/useProfessionalsList';
 import { CATEGORIES } from '../data/constants';
 import { filterProfessionals, getCategoryCounts, getRegionCounts } from '../utils/helpers';
 import { sortByDistance } from '../utils/geo';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useSyncAnnuaireFiltersUrl } from '../hooks/useSyncHomeFiltersUrl';
 import { addSearchHistory } from '../utils/storage';
-import SeoHead from '../components/SEO/SeoHead';
+import { usePageMeta } from '../hooks/usePageMeta';
 import {
   DEFAULT_ANNUAIRE_FILTERS,
   isDefaultAnnuaireFilters,
@@ -21,7 +21,12 @@ import SearchBar from '../components/SearchBar';
 import styles from './Annuaire.module.css';
 
 export default function Annuaire() {
-  const { nomRegion } = useParams();
+  usePageMeta({
+    title: 'Annuaire',
+    description: 'Parcourez tous les professionnels de Guinée — filtrez par catégorie, ville, note et plus.',
+    path: '/annuaire',
+  });
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const syncFiltersUrl = useSyncAnnuaireFiltersUrl();
@@ -30,15 +35,6 @@ export default function Annuaire() {
   const [searchInput, setSearchInput] = useState(() => searchParams.get('search') || '');
 
   const { location, error, loading, requestLocation, clearLocation } = useGeolocation();
-
-  const regionFromRoute = nomRegion ? decodeURIComponent(nomRegion) : null;
-  const activeRegion = regionFromRoute
-    || (filters.region !== 'all' ? filters.region : null);
-
-  useEffect(() => {
-    if (!regionFromRoute) return;
-    setFilters((f) => ({ ...f, region: regionFromRoute }));
-  }, [regionFromRoute]);
 
   useEffect(() => {
     const search = searchParams.get('search') || '';
@@ -69,7 +65,7 @@ export default function Annuaire() {
     });
   }, [searchParams, navigate]);
 
-  const professionals = getAllProfessionals();
+  const professionals = useProfessionalsList();
   const categoryCounts = useMemo(() => getCategoryCounts(professionals), [professionals.length]);
   const regionCounts = useMemo(() => getRegionCounts(professionals), [professionals.length]);
 
@@ -79,7 +75,7 @@ export default function Annuaire() {
       return sortByDistance(results, location.lat, location.lng);
     }
     return results;
-  }, [filters, location]);
+  }, [filters, location, professionals]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -104,19 +100,6 @@ export default function Annuaire() {
 
   return (
     <div className={styles.page}>
-      {activeRegion ? (
-        <SeoHead
-          titre={`Professionnels à ${activeRegion}`}
-          description={`Découvrez tous les professionnels et commerces référencés à ${activeRegion} sur G-List, l'annuaire de la Guinée.`}
-          url={regionFromRoute ? `/region/${encodeURIComponent(activeRegion)}` : `/annuaire?region=${encodeURIComponent(activeRegion)}`}
-        />
-      ) : (
-        <SeoHead
-          titre="Annuaire des professionnels"
-          description="Parcourez les professionnels et structures référencés sur G-List par région, secteur d'activité et spécialité en Guinée."
-          url="/annuaire"
-        />
-      )}
       <header className={styles.hero}>
         <div className={styles.heroInner}>
           <p className={styles.eyebrow}>G-List · Guinée</p>

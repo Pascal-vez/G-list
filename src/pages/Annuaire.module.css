@@ -74,7 +74,7 @@
 .empty {
   text-align: center;
   padding: clamp(32px, 4vw, 48px) clamp(16px, 2vw, 20px);
-  color: #555555;
+  color: var(--text-secondary);
 }
 
 .emptyIcon {
@@ -85,7 +85,7 @@
 
 .resetLink {
   margin-top: 12px;
-  color: #555555;
+  color: var(--text-secondary);
   text-decoration: underline;
   font-size: 14px;
   background: none;
@@ -95,7 +95,7 @@
 }
 
 .resetLink:hover {
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 @media (max-width: 640px) {

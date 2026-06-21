@@ -3,11 +3,10 @@ import styles from './Logo.module.css';
 export default function Logo({ className = '' }) {
   return (
     <img
-      src="/images/logo.svg"
+      src="/images/logo.png"
       alt="G-List"
       className={`${styles.logo} ${className}`}
-      height={80}
-      onError={(e) => { e.currentTarget.src = '/favicon.svg'; }}
+      height={42}
       decoding="async"
     />
   );

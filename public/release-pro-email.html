@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>G-List — Libérer un email pro</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 3rem auto; padding: 0 1rem; }
+    .ok { color: #16a34a; }
+    .err { color: #dc2626; }
+    a { color: #ca8a04; }
+  </style>
+</head>
+<body>
+  <h1>Libérer un email pro</h1>
+  <p id="status">Traitement…</p>
+  <p id="detail"></p>
+  <p><a href="/espace-pro">→ Espace pro (créer un compte)</a></p>
+  <script>
+    (function () {
+      const email = (new URLSearchParams(location.search).get('email') || 'pascalvezely@gmail.com').trim().toLowerCase();
+      const PRO_KEYS = [
+        'glist_pro_reviews', 'glist_pro_stats', 'glist_quote_requests', 'glist_crm_prospects',
+        'glist_minisite', 'glist_minisite_published', 'glist_minisite_analytics', 'glist_minisite_forms',
+        'glist_pro_services', 'glist_pro_photos', 'glist_admin_overrides', 'glist_pro_plan',
+        'glist_pro_alert_settings', 'glist_billing_history',
+      ];
+
+      function getJson(key, fb) {
+        try {
+          const v = localStorage.getItem(key);
+          return v ? JSON.parse(v) : fb;
+        } catch { return fb; }
+      }
+
+      function removeProId(key, proId) {
+        const all = getJson(key, {});
+        const id = String(proId);
+        if (all[id] !== undefined || all[proId] !== undefined) {
+          delete all[id];
+          delete all[proId];
+          localStorage.setItem(key, JSON.stringify(all));
+        }
+      }
+
+      const registry = getJson('glist_pro_accounts', {});
+      const deleted = getJson('glist_deleted_pro_accounts', {});
+      const acc = registry[email];
+      const tomb = deleted[email];
+      const proId = acc?.id ?? tomb?.proId;
+
+      if (acc) delete registry[email];
+      delete deleted[email];
+      localStorage.setItem('glist_pro_accounts', JSON.stringify(registry));
+      localStorage.setItem('glist_deleted_pro_accounts', JSON.stringify(deleted));
+
+      if (proId != null) {
+        PRO_KEYS.forEach((k) => removeProId(k, proId));
+        localStorage.removeItem('glist_profile_reviews');
+        const responses = getJson('glist_review_responses', {});
+        const prefix = proId + '-';
+        const next = Object.fromEntries(Object.entries(responses).filter(([k]) => !k.startsWith(prefix)));
+        localStorage.setItem('glist_review_responses', JSON.stringify(next));
+        const demandes = getJson('glist_demandes_abonnement', []);
+        localStorage.setItem('glist_demandes_abonnement', JSON.stringify(
+          demandes.filter((d) => String(d.legacy_pro_id) !== String(proId) && (d.pro_email || '').toLowerCase() !== email)
+        ));
+        try {
+          sessionStorage.removeItem('glist_minisite_preview_' + proId);
+        } catch (_) {}
+      }
+
+      const session = getJson('glist_pro_account', null);
+      if (session?.email && session.email.toLowerCase() === email) {
+        localStorage.removeItem('glist_pro_account');
+        localStorage.removeItem('glist_user_type');
+      }
+
+      window.dispatchEvent(new CustomEvent('glist-accounts-changed'));
+
+      const hadLocal = Boolean(acc || tomb || proId);
+      document.getElementById('status').innerHTML = hadLocal
+        ? '<span class="ok">✓ Email <strong>' + email + '</strong> libéré dans ce navigateur.</span>'
+        : '<span class="ok">✓ Aucune trace locale pour <strong>' + email + '</strong> (déjà propre).</span>';
+      document.getElementById('detail').textContent = proId
+        ? 'Profil local #' + proId + ' effacé. Pascal peut se réinscrire.'
+        : 'Vous pouvez créer un nouveau compte avec cet email.';
+    })();
+  </script>
+</body>
+</html>

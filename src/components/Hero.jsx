@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../data/constants';
-import { getAllProfessionals } from '../api/professionals';
+import { useProfessionalsList } from '../hooks/useProfessionalsList';
 import SearchBar from './SearchBar';
 import styles from './Hero.module.css';
 
@@ -10,7 +10,8 @@ const QUICK_CATEGORIES = ['sante', 'juridique', 'restaurants', 'plomberie', 'coi
 export default function Hero() {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const proCount = getAllProfessionals().length;
+  const professionals = useProfessionalsList();
+  const proCount = professionals.length;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,6 +26,11 @@ export default function Hero() {
 
   return (
     <section className={styles.hero}>
+      <div className={styles.auroraBackground} aria-hidden="true">
+        <div className={`${styles.auroraShape} ${styles.shape1}`} />
+        <div className={`${styles.auroraShape} ${styles.shape2}`} />
+        <div className={`${styles.auroraShape} ${styles.shape3}`} />
+      </div>
       <div className={styles.inner}>
         <h1 className={`${styles.title} hero-display`}>
           <span className={styles.titleLine1}>Trouvez</span>

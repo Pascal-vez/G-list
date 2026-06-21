@@ -1,0 +1,40 @@
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(245, 197, 24, 0.18), rgba(255, 184, 0, 0.1));
+  border: 1px solid rgba(245, 197, 24, 0.45);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(245, 197, 24, 0.12);
+}
+
+.toast p {
+  margin: 0;
+  flex: 1;
+}
+
+.icon {
+  color: #F5C518;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.close {
+  flex-shrink: 0;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.close:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}

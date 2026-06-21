@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Check, Calendar, Award, Quote, Play, Pause } from 'lucide-react';
 import { formatWhatsAppLink } from '../../utils/helpers';
+import PasswordInput from '../PasswordInput';
 import styles from './MinisiteRenderer.module.css';
 
 export function ShopSection({ section, theme, SectionWrap, pro, onAddToCart }) {
@@ -278,7 +279,12 @@ export function SitePasswordGate({ site, onUnlock }) {
       <form onSubmit={tryUnlock}>
         <h2>Site protégé</h2>
         <p>Entrez le mot de passe pour accéder à ce site.</p>
-        <input type="password" value={pw} onChange={(e) => { setPw(e.target.value); setErr(false); }} placeholder="Mot de passe" />
+        <PasswordInput
+          value={pw}
+          onChange={(e) => { setPw(e.target.value); setErr(false); }}
+          placeholder="Mot de passe"
+          autoComplete="current-password"
+        />
         {err && <p className={styles.passwordErr}>Mot de passe incorrect</p>}
         <button type="submit">Accéder</button>
       </form>

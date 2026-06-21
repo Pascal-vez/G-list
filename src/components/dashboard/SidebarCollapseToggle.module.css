@@ -1,0 +1,39 @@
+.sidebarCollapseToggle {
+  position: absolute;
+  top: 80px;
+  right: -18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: 0;
+  transition: transform 0.3s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebarCollapseToggle:hover {
+  background: var(--hover-bg);
+  box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+.chevron {
+  color: var(--text-primary);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.chevronCollapsed {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 768px) {
+  .sidebarCollapseToggle {
+    display: none;
+  }
+}

@@ -1,8 +1,8 @@
 .band {
   position: relative;
-  background: #fff;
-  border-top: 1px solid #EFEFEF;
-  border-bottom: 1px solid #EFEFEF;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   padding: clamp(40px, 5vw, 56px) clamp(20px, 4vw, 60px) clamp(44px, 5vw, 60px);
   font-family: inherit;
 }
@@ -15,7 +15,6 @@
   gap: clamp(28px, 4vw, 36px);
 }
 
-/* ── Header ── */
 .head {
   text-align: center;
   max-width: 520px;
@@ -28,9 +27,9 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: 50px;
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.22);
-  color: #2E7D32;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 12px;
@@ -40,7 +39,7 @@
   margin: 0 0 8px;
   font-size: clamp(18px, 2vw, 24px);
   font-weight: 700;
-  color: #1A1A1A;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -48,11 +47,10 @@
   margin: 0;
   font-size: 14px;
   font-weight: 400;
-  color: #888;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
-/* ── Stats grid ── */
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -66,16 +64,16 @@
   text-align: center;
   gap: 14px;
   padding: clamp(20px, 2.5vw, 28px) clamp(14px, 2vw, 20px);
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px var(--shadow-color);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 10px 28px var(--shadow-color);
   border-color: rgba(76, 175, 80, 0.28);
 }
 
@@ -87,8 +85,8 @@
   height: 44px;
   border-radius: 12px;
   flex-shrink: 0;
-  background: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
+  background: var(--or-clair);
+  color: var(--or-principal);
 }
 
 .cardBody {
@@ -101,7 +99,7 @@
 .value {
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 700;
-  color: #1A1A1A;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
@@ -114,27 +112,26 @@
 .label {
   font-size: 13px;
   font-weight: 400;
-  color: #888;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .hint {
   font-size: 12px;
   font-weight: 400;
-  color: #aaa;
+  color: var(--text-muted);
   line-height: 1.4;
   margin-top: 2px;
 }
 
-/* ── Trust bar ── */
 .trustBar {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   padding: 18px 24px;
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   max-width: 480px;
   margin: 0 auto;
@@ -145,7 +142,7 @@
   width: 100%;
   height: 6px;
   border-radius: 50px;
-  background: #F0F0F0;
+  background: var(--bg-secondary);
   overflow: hidden;
 }
 
@@ -160,16 +157,15 @@
   margin: 0;
   font-size: 13px;
   font-weight: 400;
-  color: #888;
+  color: var(--text-secondary);
   text-align: center;
 }
 
 .trustText strong {
-  color: #2E7D32;
+  color: #4CAF50;
   font-weight: 700;
 }
 
-/* ── Responsive ── */
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);

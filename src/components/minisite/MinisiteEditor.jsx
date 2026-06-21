@@ -8,22 +8,25 @@ import {
 } from 'lucide-react';
 import {
   SECTION_TYPES, createSection, reorderSections, slugify,
-  getMinisitePublicUrl, MINISITE_LEVEL, SITE_TEMPLATES, FONT_PRESETS,
+  getMinisitePublicUrl, SITE_TEMPLATES, FONT_PRESETS,
   applyTemplate, duplicateSection, getSitePages, syncSitePages,
   updatePageInSite, addPageToSite, removePageFromSite,
-  exportMinisiteJson, importMinisiteJson, THEME_PRESETS, LEVEL_CHANGELOG,
-  getAllSiteTemplates, LEVEL_MILESTONES, generateAIContent, createSiteSnapshot,
+  exportMinisiteJson, importMinisiteJson, THEME_PRESETS,
+  getAllSiteTemplates, generateAIContent, createSiteSnapshot,
 } from '../../utils/minisite';
-import { saveMinisite, isSlugAvailable, getMinisite, getMinisiteAnalytics, getMinisiteFormSubmissions } from '../../utils/storage';
+import { saveMinisite, saveMinisiteAsync, isSlugAvailable, getMinisiteAnalytics, getMinisiteFormSubmissions, cacheMinisitePreview, loadMinisiteForEditor, hasMinisiteLocalDraft } from '../../utils/storage';
+import { useSupabase } from '../../lib/supabaseClient';
+import { fetchMinisiteFromSupabase } from '../../api/supabaseMinisite';
 import MinisiteRenderer from './MinisiteRenderer';
+import PasswordInput from '../PasswordInput';
 import { SectionEditor, SectionStyleEditor, DropZone } from './MinisiteSectionEditors';
 import styles from './MinisiteEditor.module.css';
 
 export default function MinisiteEditor({ account }) {
   const navigate = useNavigate();
-  const [site, setSite] = useState(() => syncSitePages(getMinisite(account.id, account)));
+  const [site, setSite] = useState(() => loadMinisiteForEditor(account.id, account));
   const [activePageId, setActivePageId] = useState('home');
-  const [activeId, setActiveId] = useState(() => getSitePages(syncSitePages(getMinisite(account.id, account)))[0]?.sections[0]?.id);
+  const [activeId, setActiveId] = useState(() => getSitePages(loadMinisiteForEditor(account.id, account))[0]?.sections[0]?.id);
   const [editorTab, setEditorTab] = useState('content');
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -32,6 +35,7 @@ export default function MinisiteEditor({ account }) {
   const [slugError, setSlugError] = useState('');
   const [previewDevice, setPreviewDevice] = useState('desktop');
   const [templateApplied, setTemplateApplied] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   const pages = getSitePages(site);
   const activePage = pages.find((p) => p.id === activePageId) || pages[0];
@@ -54,12 +58,34 @@ export default function MinisiteEditor({ account }) {
     }
   }, [sections, activeId]);
 
-  const persist = (nextSite) => {
+  useEffect(() => {
+    if (!useSupabase || hasMinisiteLocalDraft(account.id)) return;
+
+    let cancelled = false;
+    fetchMinisiteFromSupabase(account.id, account).then((remote) => {
+      if (cancelled || !remote) return;
+      const synced = syncSitePages(remote);
+      setSite(synced);
+      cacheMinisitePreview(account.id, synced);
+      const firstSection = getSitePages(synced)[0]?.sections[0]?.id;
+      if (firstSection) setActiveId(firstSection);
+    });
+    return () => { cancelled = true; };
+  }, [account.id]);
+
+  const persist = async (nextSite) => {
     const synced = syncSitePages(nextSite);
-    saveMinisite(account.id, synced, account);
-    setSite(synced);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      setSaveError('');
+      const saved = await saveMinisiteAsync(account.id, synced, account);
+      setSite(saved);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      return saved;
+    } catch (err) {
+      setSaveError(err.message || 'Erreur de sauvegarde');
+      throw err;
+    }
   };
 
   const updateSite = (patch) => setSite((prev) => syncSitePages({ ...prev, ...patch }));
@@ -78,11 +104,38 @@ export default function MinisiteEditor({ account }) {
     updateSite({ slug: s });
   };
 
-  const handleSave = () => { if (!slugError) persist(site); };
-  const handlePreview = () => { persist(site); navigate('/espace-pro/apercu-minisite'); };
+  const handleSave = () => {
+    if (!slugError) persist(syncSitePages(site));
+  };
+
+  const handlePreview = async () => {
+    const synced = syncSitePages(site);
+    cacheMinisitePreview(account.id, synced);
+    try {
+      await persist(synced);
+    } catch {
+      /* saveError affiché — l'aperçu reste accessible via le cache local */
+    }
+    navigate('/espace-pro/apercu-minisite');
+  };
+
+  const handlePublishToggle = async () => {
+    const prev = site;
+    const next = syncSitePages({ ...site, published: !site.published });
+    setSite(next);
+    cacheMinisitePreview(account.id, next);
+    try {
+      await persist(next);
+    } catch {
+      setSite(prev);
+    }
+  };
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(publicUrl);
+    const url = site.published
+      ? publicUrl
+      : `${window.location.origin}/espace-pro/apercu-minisite`;
+    await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -149,18 +202,18 @@ export default function MinisiteEditor({ account }) {
           <Globe size={18} aria-hidden="true" />
           <div>
             <strong>Studio mini-site</strong>
-            <span className={styles.levelBadge}>Niveau {site.level || MINISITE_LEVEL}</span>
-            <span className={styles.levelHintUltra}>Enterprise</span>
           </div>
         </div>
         <div className={styles.toolbarCenter}>
           <span className={styles.urlPrefix}>glist.gn/pro/</span>
           <input value={site.slug} onChange={(e) => handleSlugChange(e.target.value)} className={styles.slugInput} />
           <button type="button" onClick={handleCopyLink} className={styles.iconBtn} title="Copier">{copied ? <Check size={16} /> : <Copy size={16} />}</button>
-          <a href={publicUrl} target="_blank" rel="noopener noreferrer" className={styles.iconBtn} title="Ouvrir"><ExternalLink size={16} /></a>
+          {site.published && (
+            <a href={publicUrl} target="_blank" rel="noopener noreferrer" className={styles.iconBtn} title="Ouvrir le site public"><ExternalLink size={16} /></a>
+          )}
         </div>
         <div className={styles.toolbarRight}>
-          <button type="button" className={styles.publishToggle} onClick={() => updateSite({ published: !site.published })}>
+          <button type="button" className={styles.publishToggle} onClick={handlePublishToggle}>
             {site.published ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
             {site.published ? 'Publié' : 'Brouillon'}
           </button>
@@ -170,6 +223,12 @@ export default function MinisiteEditor({ account }) {
       </div>
 
       {slugError && <p className={styles.slugError}>{slugError}</p>}
+      {!site.published && (
+        <p className={styles.draftNotice}>
+          Brouillon — le bouton « Visiter le site » n&apos;apparaît sur votre profil public qu&apos;après publication.
+        </p>
+      )}
+      {saveError && <p className={styles.slugError}>{saveError}</p>}
 
       <div className={styles.templateRow}>
         <Sparkles size={16} aria-hidden="true" />
@@ -427,14 +486,6 @@ export default function MinisiteEditor({ account }) {
                   }} />
                 </label>
               </div>
-              <h4>Niveaux Ultra (jusqu&apos;au 77)</h4>
-              <ul className={styles.levelList}>
-                {Object.entries(LEVEL_MILESTONES).map(([lvl, desc]) => (
-                  <li key={lvl} className={Number(lvl) <= (site.level || MINISITE_LEVEL) ? styles.levelUnlocked : ''}>
-                    <strong>Niv. {lvl}</strong> — {desc}
-                  </li>
-                ))}
-              </ul>
               <h4>QR Code du site</h4>
               <p className={styles.hint}>Partagez votre mini-site facilement : <a href={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(publicUrl)}`} target="_blank" rel="noopener noreferrer"><QrCode size={14} /> Télécharger QR</a></p>
               <h4>Sécurité page</h4>
@@ -444,7 +495,14 @@ export default function MinisiteEditor({ account }) {
               </label>
               {site.security?.passwordEnabled && (
                 <label className={styles.field}><span>Mot de passe visiteur</span>
-                  <input type="text" value={site.security?.password || ''} onChange={(e) => updateSite({ security: { ...site.security, password: e.target.value } })} className={styles.input} placeholder="mot-de-passe" />
+                  <PasswordInput
+                    inLabel
+                    value={site.security?.password || ''}
+                    onChange={(e) => updateSite({ security: { ...site.security, password: e.target.value } })}
+                    className={styles.input}
+                    placeholder="mot-de-passe"
+                    autoComplete="new-password"
+                  />
                 </label>
               )}
               <label className={styles.toggleField}>
@@ -503,14 +561,14 @@ export default function MinisiteEditor({ account }) {
               <label className={styles.field}><span>Hotjar ID</span>
                 <input value={site.integrations?.hotjarId || ''} onChange={(e) => updateSite({ integrations: { ...site.integrations, hotjarId: e.target.value } })} className={styles.input} placeholder="Optional" />
               </label>
-              <p className={styles.hint}>Les IDs sont injectés automatiquement sur le site public (niveau 100).</p>
+              <p className={styles.hint}>Les IDs sont injectés automatiquement sur le site public.</p>
             </div>
           )}
         </main>
 
         <aside className={styles.previewPane}>
           <div className={styles.previewToolbar}>
-            <h3>Aperçu live</h3>
+            <h3>Aperçu du rendu public</h3>
             <div className={styles.deviceToggle}>
               <button type="button" className={previewDevice === 'desktop' ? styles.deviceActive : ''} onClick={() => setPreviewDevice('desktop')} title="Desktop"><Monitor size={14} /></button>
               <button type="button" className={previewDevice === 'mobile' ? styles.deviceActive : ''} onClick={() => setPreviewDevice('mobile')} title="Mobile"><Smartphone size={14} /></button>

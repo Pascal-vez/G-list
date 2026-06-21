@@ -14,7 +14,9 @@ export function getAvatarColor(category) {
 }
 
 export function formatWhatsAppLink(telephone) {
-  const digits = telephone.replace(/\D/g, '');
+  if (!telephone) return '#';
+  const digits = String(telephone).replace(/\D/g, '');
+  if (!digits) return '#';
   return `https://wa.me/${digits}`;
 }
 

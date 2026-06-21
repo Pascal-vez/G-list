@@ -1,3 +1,5 @@
+import { SITE_CONTACT_EMAIL } from './constants';
+
 export const FAQ_ITEMS = [
   {
     q: 'Qu\'est-ce que G-List ?',
@@ -26,6 +28,10 @@ export const FAQ_ITEMS = [
   {
     q: 'Comment signaler un profil ?',
     a: 'Sur chaque fiche professionnelle, utilisez le bouton « Signaler » pour nous alerter en cas d\'informations incorrectes ou de contenu inapproprié.',
+  },
+  {
+    q: 'Comment contacter l\'équipe G-List ?',
+    a: `Écrivez-nous à ${SITE_CONTACT_EMAIL}, via WhatsApp (+224 626 41 93 31) ou le formulaire sur la page Contact.`,
   },
   {
     q: 'Mes données sont-elles protégées ?',

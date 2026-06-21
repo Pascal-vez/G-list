@@ -45,12 +45,8 @@ export default function DrawerNavItem({ item, onClose, useScrollNav }) {
   const Icon = DRAWER_ICONS[item.iconKey];
   const content = (
     <>
-      <span
-        className={styles.drawerIcon}
-        style={{ background: item.accent, color: item.iconColor }}
-        aria-hidden="true"
-      >
-        {Icon && <Icon size={20} strokeWidth={2.25} />}
+      <span className={styles.drawerIcon} aria-hidden="true">
+        {Icon && <Icon size={20} strokeWidth={2} />}
       </span>
       <span className={styles.drawerLabel}>{item.label}</span>
     </>

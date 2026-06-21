@@ -1,4 +1,5 @@
 import { getAllProfessionalsIncludingHidden } from '../api/professionals';
+import { useSupabase } from '../lib/supabaseClient';
 import { CATEGORIES, REGIONS } from '../data/constants';
 import {
   getItem, KEYS, getSearchHistory, getReports, getAllProAccountsList,
@@ -28,14 +29,22 @@ function periodScale(dateRange) {
 }
 
 export function getProsWithAdminState() {
-  const overrides = getAdminOverrides();
+  const overrides = useSupabase ? {} : getAdminOverrides();
   return getAllProfessionalsIncludingHidden().map((p) => {
     const o = overrides[p.id] || {};
+    const hidden = o.hidden ?? p.hidden ?? false;
+    const disabled = o.disabled ?? p.disabled ?? false;
+    const flaggedDuplicate = o.flaggedDuplicate ?? p.flagged_duplicate ?? false;
+    const verifie = o.verifie ?? p.verifie;
     return {
       ...p,
       ...o,
-      verifie: o.verifie ?? p.verifie,
-      adminStatus: o.hidden ? 'masqué' : o.disabled ? 'désactivé' : o.flaggedDuplicate ? 'doublon' : p.verifie ? 'vérifié' : 'actif',
+      hidden,
+      disabled,
+      flaggedDuplicate,
+      verifie,
+      vues: p.vues ?? p.profileViews ?? 0,
+      adminStatus: hidden ? 'masqué' : disabled ? 'désactivé' : flaggedDuplicate ? 'doublon' : verifie ? 'vérifié' : 'actif',
     };
   });
 }

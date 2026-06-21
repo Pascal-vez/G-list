@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { KeyRound, CheckCircle, AlertCircle } from 'lucide-react';
 import SeoHead from '../components/SEO/SeoHead';
 import { forgotPassword } from '../api/auth';
+import { apiConfig } from '../api/config';
 import styles from './AuthPages.module.css';
 
 export default function ForgotPassword() {
@@ -12,17 +13,25 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setResult(null);
-    const res = await forgotPassword(email, userType);
-    if (!res.ok) {
-      setError(res.message);
-      return;
+    setLoading(true);
+    try {
+      const res = await forgotPassword(email.trim(), userType);
+      if (!res.ok) {
+        setError(res.message || 'Une erreur est survenue.');
+        return;
+      }
+      setResult(res);
+    } catch (err) {
+      setError(err.message || 'Une erreur est survenue.');
+    } finally {
+      setLoading(false);
     }
-    setResult(res);
   };
 
   return (
@@ -45,10 +54,23 @@ export default function ForgotPassword() {
           <div className={styles.success}>
             <CheckCircle size={18} />
             <p>{result.message}</p>
-            {result.token && (
+            {!apiConfig.useRemoteApi && (
               <p className={styles.tokenHint}>
-                Mode local — utilisez ce lien :{' '}
-                <Link to={`/reinitialiser-mot-de-passe/${result.token}`}>Réinitialiser le mot de passe</Link>
+                Mode local — aucun email n&apos;est envoyé. Utilisez le lien ci-dessous :
+                {result.token && (
+                  <> <Link to={`/reinitialiser-mot-de-passe/${result.token}`}>Réinitialiser le mot de passe</Link></>
+                )}
+              </p>
+            )}
+            {apiConfig.useRemoteApi && (
+              <p className={styles.tokenHint}>
+                Vérifiez votre boîte mail (et les spams). L&apos;email part uniquement si le backend et Resend sont actifs.
+              </p>
+            )}
+            {result.devLink && (
+              <p className={styles.tokenHint}>
+                Dev — lien direct :{' '}
+                <a href={result.devLink}>Réinitialiser le mot de passe</a>
               </p>
             )}
           </div>
@@ -56,7 +78,9 @@ export default function ForgotPassword() {
           <form onSubmit={handleSubmit} className={styles.form}>
             {error && <p className={styles.error}><AlertCircle size={16} /> {error}</p>}
             <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={styles.input} /></label>
-            <button type="submit" className="btn-primary">Envoyer le lien</button>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Envoi en cours…' : 'Envoyer le lien'}
+            </button>
           </form>
         )}
         <p className={styles.back}><Link to={userType === 'pro' ? '/espace-pro' : '/dashboard/visiteur'}>← Retour à la connexion</Link></p>

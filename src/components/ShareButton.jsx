@@ -21,7 +21,12 @@ export default function ShareButton({ title, text, url, className = '' }) {
   };
 
   return (
-    <button type="button" className={`${styles.btn} ${className}`} onClick={handleShare} aria-label="Partager">
+    <button
+      type="button"
+      className={className || styles.btn}
+      onClick={handleShare}
+      aria-label="Partager"
+    >
       {copied ? <Check size={18} /> : <Share2 size={18} />}
       <span>{copied ? 'Copié !' : 'Partager'}</span>
     </button>

@@ -64,6 +64,28 @@ export const THEME_PRESETS = {
   rose: { label: 'Élégant rose', primaryColor: '#BE185D', accentColor: '#1A1A1A', backgroundColor: '#FFF5F7' },
 };
 
+/** Fusionne le thème du site avec le mode sombre global G-List (localStorage). */
+export function resolveMinisiteTheme(siteTheme = {}, appTheme = 'light') {
+  const base = {
+    primaryColor: '#C9A227',
+    accentColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
+    fontPreset: 'modern',
+    darkMode: false,
+    borderRadius: 'medium',
+    ...siteTheme,
+  };
+  const bg = String(base.backgroundColor || '').toLowerCase();
+  const alreadyDark = base.darkMode || ['#0e1208', '#0f0f0f', '#141414', '#161616'].includes(bg);
+  if (appTheme !== 'dark' || alreadyDark) return base;
+  return {
+    ...base,
+    accentColor: THEME_PRESETS.dark.accentColor,
+    backgroundColor: THEME_PRESETS.dark.backgroundColor,
+    darkMode: true,
+  };
+}
+
 export const EXTRA_FONT_PRESETS = {
   display: { label: 'Display', family: "'Poppins', 'Inter', sans-serif" },
   mono: { label: 'Technique', family: "'JetBrains Mono', 'Courier New', monospace" },

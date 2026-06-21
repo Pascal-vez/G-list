@@ -558,10 +558,109 @@ a.contactItem:hover { background: #f0f0f0; }
 
 .floatingWa:hover { transform: scale(1.08); }
 
-/* ── Niveau 11 ── */
-.siteDark { color: var(--ms-accent); }
+/* ── Mode sombre (thème site ou mode nuit G-List) ── */
+.siteDark {
+  color: var(--ms-accent);
+}
+
 .siteDark .sectionTitle { color: var(--ms-accent); }
-.siteDark .bodyText { color: rgba(255,255,255,0.8); }
+.siteDark .bodyText { color: rgba(240, 237, 230, 0.85); }
+
+.siteDark .siteNav {
+  background: rgba(15, 15, 15, 0.92);
+  border-bottom-color: var(--ms-border);
+}
+
+.siteDark .navLinks a { color: var(--ms-text-secondary); }
+.siteDark .navLinks a:hover { color: var(--ms-primary); }
+
+@media (max-width: 768px) {
+  .siteDark .navLinks {
+    background: var(--ms-surface);
+    border-bottom-color: var(--ms-border);
+  }
+}
+
+.siteDark .pageTabs { border-bottom-color: var(--ms-border); }
+.siteDark .pageTab {
+  background: var(--ms-surface);
+  border-color: var(--ms-border);
+  color: var(--ms-text-secondary);
+}
+
+.siteDark .pricingCard,
+.siteDark .blogCard,
+.siteDark .shopCard,
+.siteDark .eventCard,
+.siteDark .certCard {
+  background: var(--ms-surface);
+  border-color: var(--ms-border);
+}
+
+.siteDark .pricingFeatures li,
+.siteDark .faqA,
+.siteDark .mapAddress {
+  color: var(--ms-text-secondary);
+}
+
+.siteDark .faqItem { border-bottom-color: var(--ms-border); }
+
+.siteDark .formField input,
+.siteDark .formField textarea {
+  background: #1A1A1A;
+  border-color: var(--ms-border);
+  color: var(--ms-accent);
+}
+
+.siteDark .formField input:focus,
+.siteDark .formField textarea:focus {
+  border-color: var(--ms-primary);
+  outline: none;
+}
+
+.siteDark .popupCard {
+  background: var(--ms-surface);
+  color: var(--ms-accent);
+}
+
+.siteDark .shopCartInner {
+  background: var(--ms-surface);
+  color: var(--ms-accent);
+}
+
+.siteDark .filterBtn {
+  background: var(--ms-surface);
+  border-color: var(--ms-border);
+  color: var(--ms-text-secondary);
+}
+
+.siteDark .portfolioCard { border-color: var(--ms-border); }
+
+.siteDark .siteFooter {
+  border-top-color: var(--ms-border);
+  color: var(--ms-text-secondary);
+}
+
+.siteDark .serviceCard,
+.siteDark .teamCard,
+.siteDark .testimonialCard,
+.siteDark .statCard,
+.siteDark .menuItem,
+.siteDark .contactCard {
+  background: var(--ms-surface);
+  border-color: var(--ms-border);
+}
+
+.siteDark .passwordGate form {
+  background: var(--ms-surface);
+  color: var(--ms-accent);
+}
+
+.siteDark .passwordGate input {
+  background: #1A1A1A;
+  border-color: var(--ms-border);
+  color: var(--ms-accent);
+}
 
 .announceBar { padding: 10px 16px; text-align: center; font-size: 13px; font-weight: 600; }
 .announceBar p { margin: 0; }
@@ -697,6 +796,7 @@ a.contactItem:hover { background: #f0f0f0; }
 
 .passwordGate { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0E1208; padding: 20px; }
 .passwordGate form { background: #fff; padding: 32px; border-radius: 16px; max-width: 360px; width: 100%; text-align: center; }
-.passwordGate input { width: 100%; padding: 12px; margin: 16px 0; border: 1px solid #ddd; border-radius: 8px; }
+.passwordGate .wrap { margin: 16px 0; }
+.passwordGate input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
 .passwordGate button { width: 100%; padding: 12px; background: #F5C518; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
 .passwordErr { color: #DC2626; font-size: 13px; }

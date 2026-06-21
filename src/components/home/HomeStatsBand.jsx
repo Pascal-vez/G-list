@@ -43,7 +43,7 @@ export default function HomeStatsBand({
     {
       id: 'searches',
       icon: Search,
-      value: `${monthlySearches}+`,
+      value: monthlySearches > 0 ? `${formatCount(monthlySearches)}+` : '0',
       label: 'Recherches chaque mois',
       hint: 'Sur tout le territoire',
     },

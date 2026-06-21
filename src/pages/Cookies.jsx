@@ -1,4 +1,5 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
+import { SITE_CONTACT_EMAIL } from '../data/constants';
 import SeoHead from '../components/SEO/SeoHead';
 
 export default function Cookies() {
@@ -37,7 +38,7 @@ export default function Cookies() {
       </InfoSection>
       <InfoSection title="Contact">
         <p>
-          Pour toute question : <a href="mailto:contact@g-list.gn">contact@g-list.gn</a> ou WhatsApp +224 626 41 93 31.
+          Pour toute question : <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a> ou WhatsApp +224 626 41 93 31.
         </p>
       </InfoSection>
     </InfoPageLayout>

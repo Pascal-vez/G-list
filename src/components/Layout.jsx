@@ -21,16 +21,30 @@ const PERSONAL_PATH_PREFIXES = [
   '/verifier-email',
 ];
 
-function isPersonalPage(pathname) {
-  return PERSONAL_PATH_PREFIXES.some(
+const DASHBOARD_PATH_PREFIXES = [
+  '/espace-pro',
+  '/dashboard/visiteur',
+];
+
+function matchesPathPrefix(pathname, prefixes) {
+  return prefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+function isPersonalPage(pathname) {
+  return matchesPathPrefix(pathname, PERSONAL_PATH_PREFIXES);
+}
+
+function isDashboardPage(pathname) {
+  return matchesPathPrefix(pathname, DASHBOARD_PATH_PREFIXES);
 }
 
 export default function Layout({ children }) {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const hideFooter = isPersonalPage(location.pathname);
+  const hideNavbar = isDashboardPage(location.pathname);
   const [showFloaters, setShowFloaters] = useState(true);
 
   useEffect(() => {
@@ -67,12 +81,12 @@ export default function Layout({ children }) {
     <div className={styles.layout}>
       <SkipLink />
       <RouteScrollManager />
-      <Header />
-      <SystemBroadcastBanner />
+      {!hideNavbar && <Header />}
+      {!hideNavbar && <SystemBroadcastBanner />}
       <main id="main-content" className={styles.main}>{children}</main>
       {!hideFooter && <Footer />}
       <CookieBanner />
-      {showFloaters && (
+      {!hideNavbar && showFloaters && (
         <>
           <GlistBot />
           <EvaluateButton />

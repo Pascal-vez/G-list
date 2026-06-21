@@ -1,15 +1,21 @@
-import staticProfessionals from '../data/professionals';
 import { getCoordinates } from '../data/coordinates';
-import { getAllProAccountsList, getProReviews, getAdminOverrides } from '../utils/storage';
+import {
+  getAllProAccountsList, getAdminOverrides, getProServices, getProPlanLevel,
+  isAccountDeleted,
+} from '../utils/storage';
 import { enrichProfessional } from '../utils/proEnhancements';
-import { apiConfig } from './config';
-import { apiRequest } from './client';
+import { useSupabase } from '../lib/supabaseClient';
+import {
+  getProfessionalsCache,
+  getProfessionalsHiddenCache,
+  refreshProfessionalsCache,
+  fetchProfessionalFromCloudById,
+  isProfessionalsCacheLoaded,
+} from './professionalsStore';
 
 function accountToProfessional(account) {
-  const reviews = getProReviews(account.id);
-  const note = reviews.length
-    ? reviews.reduce((sum, r) => sum + r.note, 0) / reviews.length
-    : 0;
+  const savedServices = getProServices(account.id);
+  const services = savedServices.length > 0 ? savedServices : (account.services || []);
 
   return enrichProfessional({
     id: account.id,
@@ -24,28 +30,27 @@ function accountToProfessional(account) {
     description: account.description || '',
     slogan: account.slogan || '',
     verifie: Boolean(account.verifie),
-    note: Math.round(note * 10) / 10,
-    nombreAvis: reviews.length,
+    note: 0,
+    nombreAvis: 0,
     horaires: account.horaires || 'Lun-Sam 8h-18h',
     specialites: account.specialites || [],
-    services: account.services || [],
+    services,
     social: account.social || {},
     avis: [],
-    plan: account.plan || 'free',
+    plan: getProPlanLevel(account),
+    premium: Boolean(account.premium),
+    profileViews: account.profileViews || 0,
     ...getCoordinates(account.region, account.quartier, account.id),
   });
 }
 
-function getRawProfessionals() {
-  const staticIds = new Set(staticProfessionals.map((p) => p.id));
-  const registered = getAllProAccountsList()
-    .filter((account) => !staticIds.has(account.id))
+function getLocalRawProfessionals() {
+  return getAllProAccountsList()
+    .filter((account) => !isAccountDeleted(account.email))
     .map(accountToProfessional);
-
-  return [...staticProfessionals, ...registered];
 }
 
-function applyAdminOverrides(list, { includeHidden = false } = {}) {
+function applyLocalAdminOverrides(list, { includeHidden = false } = {}) {
   const overrides = getAdminOverrides();
   return list
     .map((p) => {
@@ -59,51 +64,58 @@ function applyAdminOverrides(list, { includeHidden = false } = {}) {
     });
 }
 
-function getLocalProfessionals() {
-  return applyAdminOverrides(getRawProfessionals());
+function getLocalProfessionals(includeHidden = false) {
+  return applyLocalAdminOverrides(getLocalRawProfessionals(), { includeHidden });
 }
 
+/** Liste annuaire — Supabase en production, comptes inscrits sinon. */
 export function getAllProfessionals() {
-  return getLocalProfessionals();
+  if (useSupabase) return getProfessionalsCache();
+  return getLocalProfessionals(false);
 }
 
 export function getAllProfessionalsIncludingHidden() {
-  return applyAdminOverrides(getRawProfessionals(), { includeHidden: true });
+  if (useSupabase) {
+    const hidden = getProfessionalsHiddenCache();
+    return hidden.length ? hidden : getProfessionalsCache();
+  }
+  return getLocalProfessionals(true);
 }
 
 export function getProfessionalById(id) {
   const numericId = Number(id);
+
+  if (useSupabase) {
+    return getProfessionalsCache().find((p) => p.id === numericId) ?? null;
+  }
+
   const overrides = getAdminOverrides();
   const o = overrides[numericId];
   if (o?.hidden || o?.disabled) return null;
-  const pro = getRawProfessionals().find((p) => p.id === numericId) ?? null;
+  const pro = getLocalRawProfessionals().find((p) => p.id === numericId) ?? null;
   if (!pro) return null;
   return { ...pro, verifie: o?.verifie ?? pro.verifie };
 }
 
-export async function fetchProfessionals(filters = {}) {
-  if (!apiConfig.useRemoteApi) {
-    return getAllProfessionals();
-  }
-
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value != null && value !== '' && value !== 'all') {
-      params.set(key, String(value));
-    }
-  });
-
-  const query = params.toString();
-  return apiRequest(`/professionals${query ? `?${query}` : ''}`);
+export async function loadProfessionalById(id) {
+  if (useSupabase) return fetchProfessionalFromCloudById(id);
+  return getProfessionalById(id);
 }
 
-export async function fetchProfessionalById(id) {
-  if (!apiConfig.useRemoteApi) {
-    return getProfessionalById(id);
+export async function ensureProfessionalsLoaded() {
+  if (useSupabase && !isProfessionalsCacheLoaded()) {
+    await refreshProfessionalsCache();
   }
-
-  return apiRequest(`/professionals/${id}`);
 }
 
-/** @deprecated Prefer getAllProfessionals() for fresh data with admin overrides */
+export async function reloadProfessionalsAnnuaire() {
+  if (useSupabase) {
+    await refreshProfessionalsCache({ includeHidden: true });
+    return getProfessionalsCache();
+  }
+  return getAllProfessionals();
+}
+
+export { refreshProfessionalsCache, invalidateProfessionalsCache } from './professionalsStore';
+
 export default getAllProfessionals();

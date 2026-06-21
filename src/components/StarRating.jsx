@@ -20,19 +20,12 @@ export default function StarRating({ value, onChange, readonly = false, size = 2
   );
 }
 
-export function StarDisplay({ rating, size = 18, filledColor }) {
+export function StarDisplay({ rating, size = 18 }) {
   const full = Math.floor(rating);
   const stars = [];
   for (let i = 1; i <= 5; i++) {
     stars.push(
-      <span
-        key={i}
-        className={i <= full ? styles.filled : styles.empty}
-        style={{
-          fontSize: size,
-          ...(i <= full && filledColor ? { color: filledColor } : {}),
-        }}
-      >
+      <span key={i} className={i <= full ? styles.filled : styles.empty} style={{ fontSize: size }}>
         ★
       </span>
     );

@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Star, ThumbsUp, ThumbsDown, MessageSquare, Lightbulb,
   CheckCircle, HelpCircle, XCircle, Download, Trash2, Search,
-  Send, Power, PowerOff, ScrollText, LogOut, Moon,
-  Bell, Wrench, AlertTriangle, Crown, Users, Radio,
+  Send, Power, PowerOff, ScrollText,
+  UserCircle, Users, UserPlus, Mail, MapPin, TrendingUp,
+  AlertTriangle, Target, Sparkles, Globe, Copy, Calendar,
+  Shield, Zap, Eye, BarChart2, ClipboardList,
 } from 'lucide-react';
 import { REGIONS, CATEGORIES } from '../data/constants';
 import {
@@ -14,16 +16,16 @@ import {
   adminSetProfessionalPlan,
   getWaitlistEntries, getContactMessages,
   getSubscriptionPlans, saveSubscriptionPlans, getPlanMonthlyPrice,
-  getAdminSettings, saveAdminSettings, isDarkMode, setDarkMode,
 } from '../utils/storage';
-import { apiConfig } from '../api/config';
 import {
   BROADCAST_TYPES, BROADCAST_AUDIENCES,
   getAdminBroadcasts, adminCreateBroadcast, adminToggleBroadcast, adminDeleteBroadcast,
   estimateBroadcastRecipients, getBroadcastTypeLabel, getBroadcastAudienceLabel,
 } from '../utils/adminBroadcasts';
 import { getAuditLog, getAuditActionLabel } from '../utils/auditLog';
-import { SAAS_PLATFORM_LEVEL, PLATFORM_MILESTONES, getPlatformLevelLabel } from '../utils/saasLevel100';
+import { PLATFORM_MILESTONES } from '../utils/saasLevel100';
+import { usePlatformAnalytics } from '../hooks/usePlatformAnalytics';
+import { reloadProfessionalsAnnuaire } from '../api/professionals';
 import {
   getPlatformKPIs, getActivitySeries, getTopCategories, getTopRegions,
   getRegionDensity, getOpportunityGaps, getRevenueStats, generateContentPreview,
@@ -40,14 +42,11 @@ function formatGNF(n) {
   return new Intl.NumberFormat('fr-GN').format(n);
 }
 
-function AdminPageHeader({ title, subtitle, children }) {
+function AdminPageHeader({ children }) {
+  if (!children) return null;
   return (
     <header className={styles.pageHeader}>
-      <div>
-        <h2>{title}</h2>
-        {subtitle && <p>{subtitle}</p>}
-      </div>
-      {children && <div className={styles.pageHeaderActions}>{children}</div>}
+      <div className={styles.pageHeaderActions}>{children}</div>
     </header>
   );
 }
@@ -91,11 +90,54 @@ function StatusBadge({ status }) {
   return <span className={`${styles.badge} ${map[status] || styles.badgeActive}`}>{status}</span>;
 }
 
+function StatKpi({ icon: Icon, bg, color, value, label }) {
+  return (
+    <div className={styles.feedbackKpi}>
+      <div className={styles.feedbackKpiIcon} style={{ background: bg, color }}>
+        <Icon size={18} aria-hidden />
+      </div>
+      <div>
+        <div className={styles.feedbackKpiValue}>{value}</div>
+        <div className={styles.feedbackKpiLabel}>{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function getInitials(name) {
+  return (name || '?').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+}
+
+function UserAvatar({ name }) {
+  return <span className={styles.userAvatar} aria-hidden>{getInitials(name)}</span>;
+}
+
+function RoleBadge({ role }) {
+  const map = {
+    visiteur: styles.roleVisitor,
+    pro: styles.rolePro,
+    admin: styles.roleAdmin,
+  };
+  return <span className={`${styles.roleBadge} ${map[role] || styles.roleVisitor}`}>{role}</span>;
+}
+
+function PriorityBadge({ score }) {
+  const high = score > 15;
+  return (
+    <span className={`${styles.priorityBadge} ${high ? styles.priorityHigh : styles.priorityMed}`}>
+      {high ? 'Haute' : 'Moyenne'}
+    </span>
+  );
+}
+
 export function AdminOverview({ evalStats, dateRange }) {
-  const kpis = useMemo(() => getPlatformKPIs(dateRange), [dateRange]);
-  const activity = useMemo(() => getActivitySeries(dateRange), [dateRange]);
-  const topCats = useMemo(() => getTopCategories(5, dateRange), [dateRange]);
+  const { kpis, activity, topCategories, loading } = usePlatformAnalytics(dateRange);
+  const topCats = topCategories.map((c) => ({ label: c.name.split(' ')[0], value: c.count }));
   const periodLabel = formatPeriodLabel(dateRange.startDate, dateRange.endDate);
+
+  if (loading || !kpis) {
+    return <div className={styles.section}><p>Chargement des indicateurs…</p></div>;
+  }
 
   return (
     <div className={styles.section}>
@@ -115,22 +157,46 @@ export function AdminOverview({ evalStats, dateRange }) {
       </div>
 
       <div className={styles.splitGrid}>
-        <div className={styles.panel}>
-          <h3>Activité — période sélectionnée</h3>
-          <BarChart data={activity} height={140} />
-        </div>
-        <div className={styles.panel}>
-          <h3>Top catégories</h3>
-          <BarChart data={topCats} color="#D4A800" height={140} />
-        </div>
+        <AdminCard title="Activité" subtitle="Période sélectionnée">
+          <BarChart data={activity} height={160} />
+        </AdminCard>
+        <AdminCard title="Top catégories" subtitle="Les plus consultées">
+          <BarChart data={topCats} color="#D4A800" height={160} />
+        </AdminCard>
       </div>
 
-      <div className={styles.miniStats}>
-        <span className={styles.miniStat}>{evalStats.total} évaluations plateforme</span>
-        <span className={styles.miniStat}>{kpis.pendingReports} signalements en attente</span>
-        <span className={styles.miniStat}>{kpis.premium} premium · {kpis.advanced} advanced</span>
-        <span className={styles.saasLevelBadge}>SaaS Niveau {SAAS_PLATFORM_LEVEL} — {getPlatformLevelLabel()}</span>
-      </div>
+      <AdminCard title="Synthèse rapide" subtitle="Signaux à surveiller">
+        <div className={styles.quickStatsGrid}>
+          <div className={styles.quickStat}>
+            <Star size={16} aria-hidden />
+            <div>
+              <strong>{evalStats.total}</strong>
+              <span>Évaluations plateforme</span>
+            </div>
+          </div>
+          <div className={styles.quickStat}>
+            <AlertTriangle size={16} aria-hidden />
+            <div>
+              <strong>{kpis.pendingReports}</strong>
+              <span>Signalements en attente</span>
+            </div>
+          </div>
+          <div className={styles.quickStat}>
+            <Zap size={16} aria-hidden />
+            <div>
+              <strong>{kpis.premium} / {kpis.advanced}</strong>
+              <span>Premium · Advanced</span>
+            </div>
+          </div>
+          <div className={styles.quickStat}>
+            <Sparkles size={16} aria-hidden />
+            <div>
+              <strong>{kpis.premium + kpis.advanced}</strong>
+              <span>Abonnés payants</span>
+            </div>
+          </div>
+        </div>
+      </AdminCard>
     </div>
   );
 }
@@ -156,8 +222,13 @@ export function AdminProfessionals() {
   const { show, Toast } = useToast();
   const [filter, setFilter] = useState({ plan: 'all', region: 'all', status: 'all' });
   const [search, setSearch] = useState('');
-  const [, setRefresh] = useState(0);
-  const pros = getProsWithAdminState();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    reloadProfessionalsAnnuaire().then(() => setRefreshKey((n) => n + 1)).catch(() => {});
+  }, []);
+
+  const pros = useMemo(() => getProsWithAdminState(), [refreshKey]);
 
   const filtered = useMemo(() => {
     let list = pros.filter((p) => {
@@ -174,9 +245,11 @@ export function AdminProfessionals() {
     return list;
   }, [pros, filter, search]);
 
+  const visiblePros = pros.filter((p) => !p.hidden);
+
   const act = (label, fn) => {
     fn();
-    setRefresh((n) => n + 1);
+    reloadProfessionalsAnnuaire().then(() => setRefreshKey((n) => n + 1)).catch(() => {});
     show(label);
   };
 
@@ -192,6 +265,14 @@ export function AdminProfessionals() {
         title="Professionnels"
         subtitle="Gérez les fiches, plans et statuts de vérification."
       />
+
+      <div className={styles.feedbackKpiGrid}>
+        <StatKpi icon={Users} bg="#FFFBEB" color="#CA8A04" value={visiblePros.length} label="Fiches actives" />
+        <StatKpi icon={CheckCircle} bg="#DCFCE7" color="#16A34A" value={visiblePros.filter((p) => p.verifie).length} label="Vérifiés" />
+        <StatKpi icon={Zap} bg="#DBEAFE" color="#1D4ED8" value={visiblePros.filter((p) => (p.plan || 'free') === 'advanced').length} label="Advanced" />
+        <StatKpi icon={Star} bg="#FEF9C3" color="#B45309" value={visiblePros.filter((p) => (p.plan || 'free') === 'premium').length} label="Premium" />
+      </div>
+
       <div className={styles.filters}>
         <select value={filter.plan} onChange={(e) => setFilter({ ...filter, plan: e.target.value })}>
           <option value="all">Tous plans</option>
@@ -223,6 +304,8 @@ export function AdminProfessionals() {
         </label>
         <span className={styles.filterCount}>{filtered.length} résultat(s)</span>
       </div>
+
+      <AdminCard title="Liste des professionnels" subtitle="Actions rapides sur chaque fiche">
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -272,6 +355,7 @@ export function AdminProfessionals() {
           </tbody>
         </table>
       </div>
+      </AdminCard>
     </div>
   );
 }
@@ -279,15 +363,31 @@ export function AdminProfessionals() {
 export function AdminUsers({ dateRange }) {
   const { show, Toast } = useToast();
   const [roles, setRoles] = useState({});
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const visitors = getAllVisitorAccounts();
   const pros = getAllProAccountsList();
-  const users = [
+  const waitlist = getWaitlistEntries();
+
+  const allUsers = useMemo(() => [
     ...visitors.map((v) => ({ ...v, role: roles[v.email] || 'visiteur', name: `${v.prenom} ${v.nom}` })),
     ...pros.map((p) => ({ ...p, role: roles[p.email] || 'pro', name: p.nom })),
-  ].filter((u) => {
+  ], [visitors, pros, roles]);
+
+  const periodUsers = useMemo(() => allUsers.filter((u) => {
     if (!u.createdAt) return false;
     return filterByDateRange([u], dateRange.startDate, dateRange.endDate, 'createdAt').length > 0;
-  });
+  }), [allUsers, dateRange]);
+
+  const filtered = useMemo(() => {
+    let list = periodUsers;
+    if (roleFilter !== 'all') list = list.filter((u) => u.role === roleFilter);
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter((u) => [u.name, u.email].filter(Boolean).join(' ').toLowerCase().includes(q));
+    }
+    return list;
+  }, [periodUsers, roleFilter, search]);
 
   const toggleRole = (email, current) => {
     const next = current === 'pro' ? 'visiteur' : 'pro';
@@ -300,38 +400,95 @@ export function AdminUsers({ dateRange }) {
       {Toast}
       <AdminPageHeader
         title="Utilisateurs"
-        subtitle={`Inscriptions sur la période — ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
+        subtitle={`Comptes inscrits — ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
       />
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Inscription</th><th>Actions</th></tr></thead>
-          <tbody>
-            {users.length === 0 ? (
-              <tr><td colSpan={5} className={styles.empty}>Aucun compte inscrit sur cette période.</td></tr>
-            ) : users.map((u) => (
-              <tr key={u.email}>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td><span className={styles.planTag}>{u.role}</span></td>
-                <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '—'}</td>
-                <td>
-                  <button type="button" onClick={() => toggleRole(u.email, u.role)}>
-                    Passer {u.role === 'pro' ? 'visiteur' : 'pro'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className={styles.feedbackKpiGrid}>
+        <StatKpi icon={Users} bg="#EDE9FE" color="#7C3AED" value={allUsers.length} label="Comptes totaux" />
+        <StatKpi icon={UserCircle} bg="#DBEAFE" color="#1D4ED8" value={visitors.length} label="Visiteurs" />
+        <StatKpi icon={UserPlus} bg="#DCFCE7" color="#16A34A" value={pros.length} label="Professionnels" />
+        <StatKpi icon={Mail} bg="#FEF9C3" color="#CA8A04" value={waitlist.length} label="Liste d'attente" />
       </div>
+
+      <div className={styles.filters}>
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+          <option value="all">Tous les rôles</option>
+          <option value="visiteur">Visiteurs</option>
+          <option value="pro">Professionnels</option>
+        </select>
+        <label className={styles.searchWrap}>
+          <Search size={16} aria-hidden />
+          <input
+            type="search"
+            className={styles.searchInput}
+            placeholder="Rechercher par nom ou email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Rechercher un utilisateur"
+          />
+        </label>
+        <span className={styles.filterCount}>{filtered.length} sur {periodUsers.length} inscrit(s)</span>
+      </div>
+
+      <AdminCard title="Comptes inscrits" subtitle="Gestion des rôles et accès">
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Inscription</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={5} className={styles.emptyRow}>Aucun compte sur cette période.</td></tr>
+              ) : filtered.map((u) => (
+                <tr key={u.email}>
+                  <td>
+                    <div className={styles.userCell}>
+                      <UserAvatar name={u.name} />
+                      <strong>{u.name}</strong>
+                    </div>
+                  </td>
+                  <td>{u.email}</td>
+                  <td><RoleBadge role={u.role} /></td>
+                  <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '—'}</td>
+                  <td>
+                    <button type="button" className={styles.btnSecondary} onClick={() => toggleRole(u.email, u.role)}>
+                      Passer {u.role === 'pro' ? 'visiteur' : 'pro'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AdminCard>
+
+      {waitlist.length > 0 && (
+        <AdminCard title="Liste d'attente" subtitle={`${waitlist.length} demande${waitlist.length > 1 ? 's' : ''} en attente`}>
+          <div className={styles.waitlistGrid}>
+            {waitlist.slice(0, 12).map((entry, i) => (
+              <div key={entry.email || i} className={styles.waitlistItem}>
+                <Mail size={14} aria-hidden />
+                <div>
+                  <strong>{entry.email || entry.nom || '—'}</strong>
+                  {entry.metier && <span>{entry.metier}{entry.ville ? ` · ${entry.ville}` : ''}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </AdminCard>
+      )}
     </div>
   );
 }
 
 export function AdminAnalytics({ dateRange }) {
-  const topCats = useMemo(() => getTopCategories(5, dateRange), [dateRange]);
-  const topRegions = useMemo(() => getTopRegions(5), []);
-  const kpis = useMemo(() => getPlatformKPIs(dateRange), [dateRange]);
+  const { kpis, activity, topCategories, topRegions, loading } = usePlatformAnalytics(dateRange);
+  const topCats = topCategories.map((c) => ({ label: c.name, value: c.count }));
+  const topRegs = topRegions.map((r) => ({ label: r.name, value: r.count }));
+
+  if (loading || !kpis) {
+    return <div className={styles.section}><p>Chargement…</p></div>;
+  }
 
   return (
     <div className={styles.section}>
@@ -339,22 +496,33 @@ export function AdminAnalytics({ dateRange }) {
         title="Analytics"
         subtitle={`Répartition et tendances — ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
       />
-      <div className={styles.splitGrid}>
-        <div className={styles.panel}>
-          <h3>Top catégories</h3>
-          <BarChart data={topCats} height={140} />
-        </div>
-        <div className={styles.panel}>
-          <h3>Top villes</h3>
-          <BarChart data={topRegions} color="#D4A800" height={140} />
-        </div>
+
+      <div className={styles.feedbackKpiGrid}>
+        <StatKpi icon={Eye} bg="#DCFCE7" color="#16A34A" value={kpis.totalViews.toLocaleString('fr-FR')} label="Vues annuaire" />
+        <StatKpi icon={Search} bg="#FFF7ED" color="#EA580C" value={kpis.totalSearches} label="Recherches" />
+        <StatKpi icon={TrendingUp} bg="#FFFBEB" color="#CA8A04" value={`+${kpis.growthPct}%`} label="Croissance" />
+        <StatKpi icon={BarChart2} bg="#EDE9FE" color="#7C3AED" value={kpis.whatsappClicks} label="Clics WhatsApp" />
       </div>
-      <AdminCard title="Tendances cette semaine" subtitle="Synthèse des signaux de trafic">
+
+      <AdminCard title="Courbe d'activité" subtitle="Évolution sur la période">
+        <BarChart data={activity} height={180} color="#F5C518" />
+      </AdminCard>
+
+      <div className={styles.splitGrid}>
+        <AdminCard title="Top catégories" subtitle="Volume de consultations">
+          <BarChart data={topCats} height={160} />
+        </AdminCard>
+        <AdminCard title="Top villes" subtitle="Activité géographique">
+          <BarChart data={topRegs} color="#D4A800" height={160} />
+        </AdminCard>
+      </div>
+
+      <AdminCard title="Tendances" subtitle="Synthèse des signaux de trafic">
         <ul className={styles.trendList}>
-        <li>Recherches totales : {kpis.totalSearches} (+{Math.min(24, kpis.growthPct + 6)}%)</li>
-        <li>{topCats[0] ? `${topCats[0].label} en tête avec ${topCats[0].value} entrées` : '—'}</li>
-        <li>{topRegions[0] ? `${topRegions[0].label} — ville la plus active` : '—'}</li>
-        <li>{kpis.whatsappClicks} contacts WhatsApp estimés</li>
+          <li><TrendingUp size={14} aria-hidden /> Recherches totales : <strong>{kpis.totalSearches}</strong></li>
+          <li><Target size={14} aria-hidden /> {topCats[0] ? `${topCats[0].label} en tête avec ${topCats[0].value} pros` : 'Pas encore de données catégorie'}</li>
+          <li><MapPin size={14} aria-hidden /> {topRegs[0] ? `${topRegs[0].label} — ville la plus active` : 'Pas encore de données ville'}</li>
+          <li><Zap size={14} aria-hidden /> {kpis.whatsappClicks} clics WhatsApp sur la période</li>
         </ul>
       </AdminCard>
     </div>
@@ -363,7 +531,12 @@ export function AdminAnalytics({ dateRange }) {
 
 export function AdminMap() {
   const regionDensity = useMemo(() => getRegionDensity(), []);
+  const totalPros = useMemo(() => Object.values(regionDensity).reduce((a, b) => a + b, 0), [regionDensity]);
   const max = Math.max(...Object.values(regionDensity), 1);
+  const topRegion = useMemo(() => {
+    const entries = Object.entries(regionDensity).sort((a, b) => b[1] - a[1]);
+    return entries[0] || ['—', 0];
+  }, [regionDensity]);
 
   return (
     <div className={styles.section}>
@@ -371,24 +544,41 @@ export function AdminMap() {
         title="Carte Guinée"
         subtitle="Densité des professionnels par ville et région."
       />
+
+      <div className={styles.feedbackKpiGrid}>
+        <StatKpi icon={Globe} bg="#FFFBEB" color="#CA8A04" value={totalPros} label="Pros sur la carte" />
+        <StatKpi icon={MapPin} bg="#DCFCE7" color="#16A34A" value={topRegion[0]} label="Région la plus dense" />
+        <StatKpi icon={Users} bg="#DBEAFE" color="#1D4ED8" value={topRegion[1]} label="Pros dans cette région" />
+        <StatKpi icon={MapPin} bg="#EDE9FE" color="#7C3AED" value={REGIONS.length} label="Régions couvertes" />
+      </div>
+
       <div className={styles.mapCard}>
-        <div>
+        <AdminCard title="Carte interactive" subtitle="Répartition géographique">
           <div className={styles.mapWrap}><GuineaMap /></div>
           <div className={styles.legend}>
             <span className={styles.legendHigh}>Dense ({'>'}{Math.round(max * 0.7)})</span>
             <span className={styles.legendMed}>Moyen</span>
             <span className={styles.legendLow}>Faible</span>
           </div>
-        </div>
-        <div className={styles.regionStats}>
-        {REGIONS.map((r) => (
-          <div key={r} className={styles.regionStat}>
-            <strong>{r}</strong>
-            <span>{regionDensity[r]} pros</span>
-            <div className={styles.regionBar} style={{ width: `${(regionDensity[r] / max) * 100}%` }} />
+        </AdminCard>
+        <AdminCard title="Détail par région" subtitle="Classement par nombre de pros">
+          <div className={styles.regionStats}>
+            {[...REGIONS]
+              .map((r) => ({ name: r, count: regionDensity[r] || 0 }))
+              .sort((a, b) => b.count - a.count)
+              .map(({ name, count }) => (
+                <div key={name} className={styles.regionStat}>
+                  <div className={styles.regionStatHead}>
+                    <strong>{name}</strong>
+                    <span>{count} pro{count > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className={styles.regionBarTrack}>
+                    <div className={styles.regionBar} style={{ width: `${(count / max) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
           </div>
-        ))}
-        </div>
+        </AdminCard>
       </div>
     </div>
   );
@@ -396,7 +586,13 @@ export function AdminMap() {
 
 export function AdminOpportunities({ dateRange }) {
   const { show, Toast } = useToast();
-  const opps = useMemo(() => getOpportunityGaps(10, dateRange), [dateRange]);
+  const { opportunities: opps, loading } = usePlatformAnalytics(dateRange);
+  const highPriority = opps.filter((o) => o.score > 15).length;
+  const maxScore = Math.max(...opps.map((o) => o.score), 1);
+
+  if (loading) {
+    return <div className={styles.section}><p>Chargement…</p></div>;
+  }
 
   return (
     <div className={styles.section}>
@@ -405,36 +601,77 @@ export function AdminOpportunities({ dateRange }) {
         title="Opportunités"
         subtitle="Zones à fort potentiel — peu de pros pour une demande estimée élevée."
       />
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead><tr><th>Catégorie</th><th>Villes</th><th>Recherches est.</th><th>Pros</th><th>Priorité</th><th>Action</th></tr></thead>
-          <tbody>
-            {opps.map((o) => (
-              <tr key={`${o.cat}-${o.region}`}>
-                <td>{o.cat}</td>
-                <td>{o.region}</td>
-                <td>{o.searches}</td>
-                <td>{o.pros}</td>
-                <td><span className={o.score > 15 ? styles.badgeWarn : styles.badgeActive}>{o.score > 15 ? 'Haute' : 'Moyenne'}</span></td>
-                <td>
-                  <button type="button" onClick={() => show(`Invitation campagne — ${o.cat} à ${o.region}`)}>
-                    Inviter des pros
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className={styles.feedbackKpiGrid}>
+        <StatKpi icon={Target} bg="#FEF9C3" color="#CA8A04" value={opps.length} label="Zones identifiées" />
+        <StatKpi icon={AlertTriangle} bg="#FEE2E2" color="#DC2626" value={highPriority} label="Priorité haute" />
+        <StatKpi icon={TrendingUp} bg="#DCFCE7" color="#16A34A" value={opps.reduce((s, o) => s + o.searches, 0)} label="Recherches est." />
+        <StatKpi icon={Users} bg="#DBEAFE" color="#1D4ED8" value={opps.reduce((s, o) => s + o.pros, 0)} label="Pros existants" />
       </div>
+
+      <AdminCard title="Marchés à développer" subtitle="Classement par score d'opportunité">
+        {opps.length === 0 ? (
+          <p className={styles.empty}>Aucune opportunité détectée pour cette période.</p>
+        ) : (
+          <div className={styles.oppList}>
+            {opps.map((o) => (
+              <article key={`${o.cat}-${o.region}`} className={styles.oppCard}>
+                <div className={styles.oppCardHead}>
+                  <div>
+                    <strong>{o.cat}</strong>
+                    <span><MapPin size={12} aria-hidden /> {o.region}</span>
+                  </div>
+                  <PriorityBadge score={o.score} />
+                </div>
+                <div className={styles.oppMetrics}>
+                  <span><Search size={12} aria-hidden /> {o.searches} recherches</span>
+                  <span><Users size={12} aria-hidden /> {o.pros} pro{o.pros > 1 ? 's' : ''}</span>
+                  <span>Score {o.score}</span>
+                </div>
+                <div className={styles.oppScoreTrack}>
+                  <div className={styles.oppScoreFill} style={{ width: `${(o.score / maxScore) * 100}%` }} />
+                </div>
+                <button
+                  type="button"
+                  className={styles.oppActionBtn}
+                  onClick={() => show(`Campagne d'invitation — ${o.cat} à ${o.region}`)}
+                >
+                  <Mail size={14} aria-hidden /> Inviter des pros
+                </button>
+              </article>
+            ))}
+          </div>
+        )}
+      </AdminCard>
     </div>
   );
 }
 
+const CONTENT_TEMPLATES = [
+  { id: 'medecins', label: 'Top 5 médecins Conakry', icon: ClipboardList, desc: 'Classement santé' },
+  { id: 'restaurants', label: 'Top restaurants', icon: Star, desc: 'Gastronomie locale' },
+  { id: 'regional', label: 'Classement par villes', icon: MapPin, desc: 'Vue régionale' },
+];
+
+const CALENDAR_PLAN = [
+  { day: 'Lun', date: 12, type: 'Post réseaux', tone: 'post' },
+  { day: 'Mar', date: 13, type: 'Story', tone: 'story' },
+  { day: 'Mer', date: 14, type: 'Post réseaux', tone: 'post' },
+  { day: 'Jeu', date: 15, type: 'Story', tone: 'story' },
+  { day: 'Ven', date: 16, type: 'Post réseaux', tone: 'post' },
+  { day: 'Sam', date: 17, type: 'Story', tone: 'story' },
+  { day: 'Dim', date: 18, type: 'Repos', tone: 'rest' },
+];
+
 export function AdminContent() {
   const [preview, setPreview] = useState('');
   const [copied, setCopied] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState('');
 
-  const generate = (type) => setPreview(generateContentPreview(type));
+  const generate = (type) => {
+    setActiveTemplate(type);
+    setPreview(generateContentPreview(type));
+  };
 
   const copyPreview = async () => {
     try {
@@ -450,30 +687,49 @@ export function AdminContent() {
         title="Contenu"
         subtitle="Générez des classements et planifiez vos publications réseaux."
       />
-      <AdminCard title="Générateur de contenu" subtitle="Textes prêts à publier">
-        <div className={styles.genBtns}>
-          <button type="button" onClick={() => generate('medecins')}>Top 5 médecins Conakry</button>
-          <button type="button" onClick={() => generate('restaurants')}>Top restaurants</button>
-          <button type="button" onClick={() => generate('regional')}>Classement par villes</button>
+
+      <AdminCard title="Générateur de contenu" subtitle="Textes prêts à publier sur les réseaux">
+        <div className={styles.contentTemplateGrid}>
+          {CONTENT_TEMPLATES.map(({ id, label, icon: Icon, desc }) => (
+            <button
+              key={id}
+              type="button"
+              className={`${styles.contentTemplateBtn} ${activeTemplate === id ? styles.contentTemplateActive : ''}`}
+              onClick={() => generate(id)}
+            >
+              <span className={styles.contentTemplateIcon}><Icon size={18} aria-hidden /></span>
+              <strong>{label}</strong>
+              <small>{desc}</small>
+            </button>
+          ))}
         </div>
-        {preview && (
-          <div style={{ marginTop: 16 }}>
+        {preview ? (
+          <div className={styles.previewBlock}>
             <pre className={styles.preview}>{preview}</pre>
-            <button type="button" className={styles.copyBtn} onClick={copyPreview} style={{ marginTop: 12 }}>
+            <button type="button" className={styles.copyBtn} onClick={copyPreview}>
+              <Copy size={14} aria-hidden />
               {copied ? 'Copié !' : 'Copier le texte'}
             </button>
           </div>
+        ) : (
+          <p className={styles.empty}>Choisissez un modèle pour générer un aperçu.</p>
         )}
       </AdminCard>
+
       <AdminCard title="Planning publications" subtitle="Semaine type — réseaux sociaux">
         <div className={styles.calendar}>
-        {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((d, i) => (
-          <div key={d} className={styles.calDay}>
-            <span>{d} {12 + i}</span>
-            <small>{i % 2 === 0 ? 'Post réseaux' : 'Story'}</small>
-          </div>
-        ))}
+          {CALENDAR_PLAN.map(({ day, date, type, tone }) => (
+            <div key={day} className={`${styles.calDay} ${styles[`calDay${tone.charAt(0).toUpperCase() + tone.slice(1)}`]}`}>
+              <span className={styles.calDayLabel}>{day}</span>
+              <strong className={styles.calDayDate}>{date}</strong>
+              <small>{type}</small>
+            </div>
+          ))}
         </div>
+        <p className={styles.hint} style={{ marginTop: 14 }}>
+          <Calendar size={13} aria-hidden style={{ verticalAlign: 'middle', marginRight: 4 }} />
+          Alternez posts longs et stories courtes pour maximiser l&apos;engagement.
+        </p>
       </AdminCard>
     </div>
   );
@@ -503,9 +759,16 @@ export function AdminModeration({ dateRange }) {
         title="Modération"
         subtitle={`Signalements du ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
       />
+
+      <div className={styles.feedbackKpiGrid}>
+        <StatKpi icon={AlertTriangle} bg="#FEE2E2" color="#DC2626" value={pending.length} label="En attente" />
+        <StatKpi icon={Shield} bg="#FFF7ED" color="#EA580C" value={suspects.length} label="Profils suspects" />
+        <StatKpi icon={Users} bg="#FEF9C3" color="#CA8A04" value={duplicateGroups.length} label="Groupes doublons" />
+        <StatKpi icon={CheckCircle} bg="#DCFCE7" color="#16A34A" value={periodReports.filter((r) => r.status === 'resolved').length} label="Traités" />
+      </div>
+
       <div className={styles.modGrid}>
-        <div className={styles.panel}>
-          <h3>Profils signalés ({pending.length})</h3>
+        <AdminCard title={`Signalements (${pending.length})`} subtitle="À traiter en priorité">
           {pending.length === 0 ? (
             <p className={styles.empty}>Aucun signalement en attente.</p>
           ) : (
@@ -525,21 +788,27 @@ export function AdminModeration({ dateRange }) {
               ))}
             </ul>
           )}
-        </div>
+        </AdminCard>
 
-        <div className={styles.panel}>
-          <h3>Profils suspects ({suspects.length})</h3>
-          <ul className={styles.modList}>
-            {suspects.map((p) => (
-              <li key={p.id} className={styles.modCard}>
-                <span>{p.nom} — {p.region}</span>
-                <button type="button" onClick={() => { adminHideProfessional(p.id); setRefresh((n) => n + 1); show(`${p.nom} masqué`); }}>
-                  Masquer
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <AdminCard title={`Profils suspects (${suspects.length})`} subtitle="Non vérifiés, sans avis">
+          {suspects.length === 0 ? (
+            <p className={styles.empty}>Aucun profil suspect détecté.</p>
+          ) : (
+            <ul className={styles.modList}>
+              {suspects.map((p) => (
+                <li key={p.id} className={styles.modCard}>
+                  <div>
+                    <strong>{p.nom}</strong>
+                    <p><MapPin size={12} aria-hidden /> {p.region}</p>
+                  </div>
+                  <button type="button" onClick={() => { adminHideProfessional(p.id); setRefresh((n) => n + 1); show(`${p.nom} masqué`); }}>
+                    Masquer
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </AdminCard>
       </div>
 
       <AdminCard title={`Doublons détectés (${duplicateGroups.length})`} subtitle="Fusionnez les entrées en double">
@@ -578,6 +847,12 @@ export function AdminIAInsights({ dateRange }) {
   const waitlist = kpis.waitlistCount;
   const contacts = filterByDateRange(getContactMessages(), dateRange.startDate, dateRange.endDate, 'date').length;
 
+  const insightPanels = [
+    { title: 'Tendances', items: trends, icon: TrendingUp, accent: '#F5C518', bg: '#FFFBEB' },
+    { title: 'Recommandations', items: recommendations, icon: Sparkles, accent: '#7C3AED', bg: '#EDE9FE' },
+    { title: 'Alertes', items: alerts, icon: AlertTriangle, accent: '#DC2626', bg: '#FEE2E2' },
+  ];
+
   return (
     <div className={styles.section}>
       <AdminPageHeader
@@ -590,18 +865,20 @@ export function AdminIAInsights({ dateRange }) {
         <MetricCard value={recommendations.length} label="Recommandations IA" accent="#AB47BC" />
       </div>
       <div className={styles.insightGrid}>
-        <div className={styles.panel}>
-          <h3>Tendances</h3>
-          <ul className={styles.insightList}>{trends.map((t) => <li key={t}>{t}</li>)}</ul>
-        </div>
-        <div className={styles.panel}>
-          <h3>Recommandations</h3>
-          <ul className={styles.insightList}>{recommendations.map((t) => <li key={t}>{t}</li>)}</ul>
-        </div>
-        <div className={styles.panel}>
-          <h3>Alertes</h3>
-          <ul className={styles.insightList}>{alerts.map((t) => <li key={t}>{t}</li>)}</ul>
-        </div>
+        {insightPanels.map(({ title, items, icon: Icon, accent, bg }) => (
+          <AdminCard key={title} title={title} subtitle={`${items.length} élément${items.length > 1 ? 's' : ''}`}>
+            <ul className={styles.insightList}>
+              {items.length === 0 ? (
+                <li className={styles.insightEmpty}>Rien à signaler pour le moment.</li>
+              ) : items.map((t) => (
+                <li key={t} className={styles.insightItem} style={{ borderLeftColor: accent, background: bg }}>
+                  <Icon size={14} aria-hidden style={{ color: accent, flexShrink: 0 }} />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </AdminCard>
+        ))}
       </div>
     </div>
   );
@@ -643,12 +920,22 @@ export function AdminSubscriptionPlans() {
         {saved && <span className={styles.savedBadge}>Enregistré</span>}
       </AdminPageHeader>
 
+      <AdminCard title="Plan Free" subtitle="Offre de base — non modifiable ici">
+        <div className={styles.freePlanSummary}>
+          <strong>Gratuit</strong>
+          <p>Fiche annuaire standard, visibilité de base, avis clients.</p>
+        </div>
+      </AdminCard>
+
       <div className={styles.planAdminGrid}>
         {paidIds.map((id) => {
           const plan = plans[id];
           return (
-            <article key={id} className={styles.planAdminCard}>
-              <h3>{plan.name}</h3>
+            <article key={id} className={`${styles.planAdminCard} ${styles[`planAdminCard${id.charAt(0).toUpperCase() + id.slice(1)}`]}`}>
+              <div className={styles.planAdminCardHead}>
+                <h3>{plan.name}</h3>
+                <span className={styles.planTag}>{id}</span>
+              </div>
               <label className={styles.planAdminField}>
                 <span>Prix mensuel (GNF)</span>
                 <input
@@ -691,9 +978,12 @@ export function AdminSubscriptionPlans() {
         })}
       </div>
 
-      <button type="button" className={styles.planAdminSave} onClick={handleSave}>
-        Enregistrer les offres
-      </button>
+      <div className={styles.planSaveBar}>
+        <p>Les changements sont visibles immédiatement dans l&apos;espace pro.</p>
+        <button type="button" className={styles.planAdminSave} onClick={handleSave}>
+          Enregistrer les offres
+        </button>
+      </div>
     </div>
   );
 }
@@ -701,17 +991,28 @@ export function AdminSubscriptionPlans() {
 export function AdminReports({ dateRange }) {
   return (
     <div className={styles.section}>
-      <AdminReportGenerator dateRange={dateRange} />
+      <AdminPageHeader
+        title="Rapports"
+        subtitle={`Export PDF, Word, Excel ou CSV — ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
+      />
+      <div className={styles.reportsShell}>
+        <AdminReportGenerator dateRange={dateRange} />
+      </div>
     </div>
   );
 }
 
 export function AdminRevenue({ dateRange }) {
   const [annual, setAnnual] = useState(false);
-  const rev = useMemo(() => getRevenueStats(dateRange), [dateRange]);
+  const { revenue: rev, loading } = usePlatformAnalytics(dateRange);
   const advPrice = getPlanMonthlyPrice('advanced');
   const premPrice = getPlanMonthlyPrice('premium');
-  const total = annual ? rev.mrr * 12 : rev.mrr;
+  const safeRev = rev || { free: 0, advanced: 0, premium: 0, mrr: 0, series: [] };
+  const total = annual ? safeRev.mrr * 12 : safeRev.mrr;
+
+  if (loading) {
+    return <div className={styles.section}><p>Chargement…</p></div>;
+  }
 
   return (
     <div className={styles.section}>
@@ -737,14 +1038,35 @@ export function AdminRevenue({ dateRange }) {
         </div>
       </AdminPageHeader>
       <div className={styles.kpiGrid}>
-        <MetricCard value={rev.free} label="Comptes Free" accent="#8A8A7A" />
-        <MetricCard value={rev.advanced} label={`Advanced × ${formatGNF(advPrice)}`} accent="#5C9EFF" />
-        <MetricCard value={rev.premium} label={`Premium × ${formatGNF(premPrice)}`} accent="#F5C518" />
+        <MetricCard value={safeRev.free} label="Comptes Free" accent="#8A8A7A" />
+        <MetricCard value={safeRev.advanced} label={`Advanced × ${formatGNF(advPrice)}`} accent="#5C9EFF" />
+        <MetricCard value={safeRev.premium} label={`Premium × ${formatGNF(premPrice)}`} accent="#F5C518" />
         <MetricCard value={`${formatGNF(total)} GNF`} label={annual ? 'Revenu annuel' : 'MRR'} accent="#4CAF50" />
       </div>
-      <AdminCard title="Évolution revenus" subtitle="Période sélectionnée (estimation)">
-        <BarChart data={rev.series} height={160} color="#F5C518" />
-        <p className={styles.hint} style={{ marginTop: 12 }}>Estimation basée sur les plans Advanced et Premium actifs.</p>
+      <AdminCard title="Évolution revenus" subtitle="Période sélectionnée">
+        <BarChart data={safeRev.series} height={160} color="#F5C518" />
+        <p className={styles.hint} style={{ marginTop: 12 }}>Basé sur les abonnements Advanced et Premium actifs en base.</p>
+      </AdminCard>
+
+      <AdminCard title="Répartition par plan" subtitle="Détail des abonnements actifs">
+        <div className={styles.revenueBreakdown}>
+          {[
+            { label: 'Free', count: safeRev.free, price: 0, color: '#9CA3AF' },
+            { label: 'Advanced', count: safeRev.advanced, price: advPrice, color: '#3B82F6' },
+            { label: 'Premium', count: safeRev.premium, price: premPrice, color: '#F5C518' },
+          ].map(({ label, count, price, color }) => (
+            <div key={label} className={styles.revenueRow}>
+              <div className={styles.revenueRowHead}>
+                <span className={styles.revenueDot} style={{ background: color }} />
+                <strong>{label}</strong>
+                <span>{count} compte{count > 1 ? 's' : ''}</span>
+              </div>
+              <div className={styles.revenueRowValue}>
+                {price > 0 ? `${formatGNF(count * price)} GNF / mois` : 'Gratuit'}
+              </div>
+            </div>
+          ))}
+        </div>
       </AdminCard>
     </div>
   );
@@ -883,10 +1205,10 @@ export function AdminFeedback({
 }
 
 const BROADCAST_PRESETS = [
-  { label: 'Maintenance planifiée', type: 'maintenance', icon: Wrench, title: 'Maintenance en cours', message: 'G-List est temporairement indisponible pour maintenance. Merci de votre patience.', audience: 'all' },
-  { label: 'Avertissement sécurité', type: 'warning', icon: AlertTriangle, title: 'Message important', message: 'Veuillez mettre à jour vos informations de connexion et ne jamais partager votre mot de passe.', audience: 'all' },
-  { label: 'Nouveauté Premium', type: 'info', icon: Crown, title: 'Nouveautés Premium', message: 'Découvrez le mini-site niveau 77 et les nouvelles fonctionnalités dans votre espace pro.', audience: 'pros_premium' },
-  { label: 'Bienvenue visiteurs', type: 'success', icon: Users, title: 'Bienvenue sur G-List', message: 'Trouvez les meilleurs professionnels de Guinée près de chez vous.', audience: 'visitors' },
+  { label: 'Maintenance planifiée', type: 'maintenance', title: 'Maintenance en cours', message: 'G-List est temporairement indisponible pour maintenance. Merci de votre patience.', audience: 'all' },
+  { label: 'Avertissement sécurité', type: 'warning', title: 'Message important', message: 'Veuillez mettre à jour vos informations de connexion et ne jamais partager votre mot de passe.', audience: 'all' },
+  { label: 'Nouveauté Premium', type: 'info', title: 'Nouveautés Premium', message: 'Découvrez le mini-site niveau 77 et les nouvelles fonctionnalités dans votre espace pro.', audience: 'pros_premium' },
+  { label: 'Bienvenue visiteurs', type: 'success', title: 'Bienvenue sur G-List', message: 'Trouvez les meilleurs professionnels de Guinée près de chez vous.', audience: 'visitors' },
 ];
 
 export function AdminNotifications() {
@@ -902,8 +1224,6 @@ export function AdminNotifications() {
   });
 
   const recipientEstimate = estimateBroadcastRecipients(form.audience);
-  const activeCount = broadcasts.filter((b) => b.active).length;
-  const pinnedCount = broadcasts.filter((b) => b.pinned).length;
 
   const refresh = () => setBroadcasts(getAdminBroadcasts());
 
@@ -952,67 +1272,37 @@ export function AdminNotifications() {
         subtitle="Envoyez des messages à tous les utilisateurs ou à des groupes ciblés"
       />
 
-      <div className={styles.broadcastKpis}>
-        <div className={styles.broadcastKpi}>
-          <span className={styles.broadcastKpiIcon}><Radio size={18} aria-hidden="true" /></span>
-          <div>
-            <strong>{activeCount}</strong>
-            <span>Notification{activeCount > 1 ? 's' : ''} active{activeCount > 1 ? 's' : ''}</span>
-          </div>
-        </div>
-        <div className={styles.broadcastKpi}>
-          <span className={styles.broadcastKpiIcon}><Bell size={18} aria-hidden="true" /></span>
-          <div>
-            <strong>{broadcasts.length}</strong>
-            <span>Envoyée{broadcasts.length > 1 ? 's' : ''} au total</span>
-          </div>
-        </div>
-        <div className={styles.broadcastKpi}>
-          <span className={styles.broadcastKpiIcon}><Users size={18} aria-hidden="true" /></span>
-          <div>
-            <strong>~{recipientEstimate}</strong>
-            <span>Destinataires estimés</span>
-          </div>
-        </div>
-      </div>
-
       <div className={styles.broadcastGrid}>
         <AdminCard title="Nouvelle notification" subtitle="Maintenance, avertissement, info…">
           <div className={styles.presetRow}>
-            {BROADCAST_PRESETS.map((p) => {
-              const PresetIcon = p.icon;
-              return (
-                <button key={p.label} type="button" className={styles.presetBtn} onClick={() => applyPreset(p)}>
-                  <PresetIcon size={14} aria-hidden="true" />
-                  {p.label}
-                </button>
-              );
-            })}
+            {BROADCAST_PRESETS.map((p) => (
+              <button key={p.label} type="button" className={styles.presetBtn} onClick={() => applyPreset(p)}>
+                {p.label}
+              </button>
+            ))}
           </div>
 
           <form className={styles.broadcastForm} onSubmit={handleSubmit}>
-            <div className={styles.broadcastFormRow}>
-              <label className={styles.planAdminField}>
-                Type
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                  {BROADCAST_TYPES.map((t) => (
-                    <option key={t.id} value={t.id}>{t.label} — {t.description}</option>
-                  ))}
-                </select>
-              </label>
+            <label className={styles.planAdminField}>
+              Type
+              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                {BROADCAST_TYPES.map((t) => (
+                  <option key={t.id} value={t.id}>{t.label} — {t.description}</option>
+                ))}
+              </select>
+            </label>
 
-              <label className={styles.planAdminField}>
-                Destinataires
-                <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })}>
-                  {BROADCAST_AUDIENCES.map((a) => (
-                    <option key={a.id} value={a.id}>{a.label}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <span className={styles.recipientHint}>
-              ~{recipientEstimate} destinataire{recipientEstimate > 1 ? 's' : ''} estimé{recipientEstimate > 1 ? 's' : ''}
-            </span>
+            <label className={styles.planAdminField}>
+              Destinataires
+              <select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })}>
+                {BROADCAST_AUDIENCES.map((a) => (
+                  <option key={a.id} value={a.id}>{a.label}</option>
+                ))}
+              </select>
+              <span className={styles.recipientHint}>
+                ~{recipientEstimate} destinataire{recipientEstimate > 1 ? 's' : ''} estimé{recipientEstimate > 1 ? 's' : ''}
+              </span>
+            </label>
 
             <label className={styles.planAdminField}>
               Titre
@@ -1055,18 +1345,15 @@ export function AdminNotifications() {
               Épingler en priorité
             </label>
 
-            <button type="submit" className={styles.broadcastSubmit}>
+            <button type="submit" className={styles.planAdminSave}>
               <Send size={16} /> Envoyer la notification
             </button>
           </form>
         </AdminCard>
 
-        <AdminCard title="Historique" subtitle={`${broadcasts.length} notification${broadcasts.length > 1 ? 's' : ''}${pinnedCount ? ` · ${pinnedCount} épinglée${pinnedCount > 1 ? 's' : ''}` : ''}`}>
+        <AdminCard title="Historique" subtitle={`${broadcasts.length} notification${broadcasts.length > 1 ? 's' : ''}`}>
           {broadcasts.length === 0 ? (
-            <div className={styles.broadcastEmpty}>
-              <Bell size={32} aria-hidden="true" />
-              <p>Aucune notification envoyée pour le moment. Utilisez le formulaire pour diffuser un message.</p>
-            </div>
+            <p className={styles.empty}>Aucune notification envoyée pour le moment.</p>
           ) : (
             <div className={styles.broadcastList}>
               {broadcasts.map((b) => (
@@ -1103,138 +1390,6 @@ export function AdminNotifications() {
   );
 }
 
-const ADMIN_DEFAULT_TAB_OPTIONS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'pros', label: 'Professionnels' },
-  { id: 'users', label: 'Utilisateurs' },
-  { id: 'analytics', label: 'Analytics' },
-  { id: 'moderation', label: 'Modération' },
-  { id: 'notifications', label: 'Notifications' },
-  { id: 'revenue', label: 'Revenus' },
-  { id: 'plans', label: 'Offres' },
-  { id: 'settings', label: 'Paramètres' },
-];
-
-export function AdminSettings({ onLogout, onExport, onReset, confirmReset }) {
-  const { show, Toast } = useToast();
-  const [prefs, setPrefs] = useState(() => getAdminSettings());
-  const [darkMode, setDarkModeState] = useState(() => isDarkMode());
-
-  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://g-list.gn';
-  const hashConfigured = Boolean(String(import.meta.env.VITE_ADMIN_HASH || '').trim());
-
-  const handleDefaultTab = (tabId) => {
-    const next = saveAdminSettings({ defaultTab: tabId });
-    setPrefs(next);
-    show('Onglet par défaut enregistré');
-  };
-
-  const toggleDark = () => {
-    const next = !darkMode;
-    setDarkModeState(next);
-    setDarkMode(next);
-    show(next ? 'Mode sombre activé' : 'Mode clair activé');
-  };
-
-  return (
-    <div className={styles.section}>
-      {Toast}
-      <AdminPageHeader
-        title="Paramètres"
-        subtitle="Configuration de la console d'administration G-List"
-      />
-
-      <AdminCard title="Plateforme" subtitle="Informations système">
-        <div className={styles.settingsGrid}>
-          <div className={styles.settingsItem}>
-            <span>Niveau SaaS</span>
-            <strong>{SAAS_PLATFORM_LEVEL} — {getPlatformLevelLabel()}</strong>
-          </div>
-          <div className={styles.settingsItem}>
-            <span>URL du site</span>
-            <strong>{siteUrl}</strong>
-          </div>
-          <div className={styles.settingsItem}>
-            <span>Mode API</span>
-            <strong>{apiConfig.useRemoteApi ? `Distante (${apiConfig.baseUrl})` : 'Local (localStorage)'}</strong>
-          </div>
-          <div className={styles.settingsItem}>
-            <span>Environnement</span>
-            <strong>{import.meta.env.MODE === 'production' ? 'Production' : 'Développement'}</strong>
-          </div>
-        </div>
-      </AdminCard>
-
-      <AdminCard title="Sécurité & session" subtitle="Authentification administrateur">
-        <div className={styles.settingsGrid}>
-          <div className={styles.settingsItem}>
-            <span>Durée de session</span>
-            <strong>1 heure</strong>
-          </div>
-          <div className={styles.settingsItem}>
-            <span>Mot de passe</span>
-            <strong>{hashConfigured ? 'Hash bcrypt (.env)' : 'Mot de passe prototype'}</strong>
-          </div>
-        </div>
-        <p className={styles.settingsHint}>
-          Configurez <code>VITE_ADMIN_HASH</code> dans le fichier <code>.env</code> pour sécuriser l&apos;accès en production.
-        </p>
-        <button type="button" className={styles.settingsLogoutBtn} onClick={onLogout}>
-          <LogOut size={16} /> Se déconnecter
-        </button>
-      </AdminCard>
-
-      <AdminCard title="Préférences" subtitle="Interface et navigation">
-        <div className={styles.settingsToggleRow}>
-          <div>
-            <strong><Moon size={14} aria-hidden="true" /> Mode sombre</strong>
-            <p>Appliquer le thème sombre sur l&apos;ensemble du site.</p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={darkMode}
-            className={`${styles.settingsSwitch} ${darkMode ? styles.settingsSwitchOn : ''}`}
-            onClick={toggleDark}
-          >
-            <span className={styles.settingsSwitchKnob} />
-          </button>
-        </div>
-        <label className={styles.planAdminField}>
-          Onglet au démarrage
-          <select
-            value={prefs.defaultTab || 'overview'}
-            onChange={(e) => handleDefaultTab(e.target.value)}
-          >
-            {ADMIN_DEFAULT_TAB_OPTIONS.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
-        </label>
-      </AdminCard>
-
-      <AdminCard title="Données" subtitle="Export et réinitialisation">
-        <p className={styles.settingsHint}>
-          Exportez toutes les données locales ou réinitialisez la plateforme prototype (action irréversible).
-        </p>
-        <div className={styles.footerActions}>
-          <button type="button" onClick={onExport} className={styles.exportBtn}>
-            <Download size={16} /> Exporter en JSON
-          </button>
-          <button
-            type="button"
-            onClick={onReset}
-            className={`${styles.resetBtn} ${confirmReset ? styles.confirmReset : ''}`}
-          >
-            <Trash2 size={16} />
-            {confirmReset ? 'Confirmer la réinitialisation ?' : 'Réinitialiser les données'}
-          </button>
-        </div>
-      </AdminCard>
-    </div>
-  );
-}
-
 export function AdminAuditLog({ dateRange }) {
   const { show, Toast } = useToast();
   const [filter, setFilter] = useState('');
@@ -1253,10 +1408,10 @@ export function AdminAuditLog({ dateRange }) {
       {Toast}
       <AdminPageHeader
         title="Journal d'audit"
-        subtitle={`Traçabilité niveau ${SAAS_PLATFORM_LEVEL} — ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
+        subtitle={`Traçabilité — ${formatPeriodLabel(dateRange.startDate, dateRange.endDate)}`}
       />
 
-      <AdminCard title="Plateforme Enterprise" subtitle="Fonctionnalités actives">
+      <AdminCard title="Fonctionnalités plateforme" subtitle="Modules actifs">
         <div className={styles.milestoneGrid}>
           {Object.entries(PLATFORM_MILESTONES).filter(([lvl]) => Number(lvl) >= 77).map(([lvl, label]) => (
             <div key={lvl} className={styles.milestoneItem}>
@@ -1268,7 +1423,7 @@ export function AdminAuditLog({ dateRange }) {
       </AdminCard>
 
       <AdminCard title="Événements" subtitle={`${logs.length} entrée${logs.length > 1 ? 's' : ''}`}>
-        <div className={styles.filters}>
+        <div className={styles.filters} style={{ marginBottom: 16 }}>
           <select value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="">Tous les acteurs</option>
             <option value="admin">Admin</option>
@@ -1280,18 +1435,23 @@ export function AdminAuditLog({ dateRange }) {
         {logs.length === 0 ? (
           <p className={styles.empty}>Aucun événement sur cette période.</p>
         ) : (
-          <div className={styles.auditList}>
+          <div className={styles.auditTimeline}>
             {logs.map((entry) => (
-              <div key={entry.id} className={styles.auditRow}>
-                <div className={styles.auditRowHead}>
-                  <span className={styles.planTag}>{entry.actorType}</span>
-                  <strong>{getAuditActionLabel(entry.action)}</strong>
-                  <time>{new Date(entry.timestamp).toLocaleString('fr-FR')}</time>
+              <article key={entry.id} className={styles.auditRow}>
+                <div className={styles.auditTimelineDot} data-actor={entry.actorType} />
+                <div className={styles.auditRowBody}>
+                  <div className={styles.auditRowHead}>
+                    <span className={`${styles.auditActor} ${styles[`auditActor${entry.actorType.charAt(0).toUpperCase() + entry.actorType.slice(1)}`]}`}>
+                      {entry.actorType}
+                    </span>
+                    <strong>{getAuditActionLabel(entry.action)}</strong>
+                    <time>{new Date(entry.timestamp).toLocaleString('fr-FR')}</time>
+                  </div>
+                  {entry.target && <p className={styles.auditTarget}>Cible : {entry.target}</p>}
+                  {entry.details && <p className={styles.auditDetails}>{entry.details}</p>}
+                  <small className={styles.auditActorName}>Par : {entry.actor}</small>
                 </div>
-                {entry.target && <p>Cible : {entry.target}</p>}
-                {entry.details && <p>{entry.details}</p>}
-                <small>Par : {entry.actor}</small>
-              </div>
+              </article>
             ))}
           </div>
         )}

@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import SeoHead from '../components/SEO/SeoHead';
 import { resetPassword } from '../api/auth';
+import PasswordInput from '../components/PasswordInput';
 import styles from './AuthPages.module.css';
 
 export default function ResetPassword() {
@@ -44,8 +45,14 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={handleSubmit} className={styles.form}>
             {error && <p className={styles.error}><AlertCircle size={16} /> {error}</p>}
-            <label>Nouveau mot de passe<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={styles.input} /></label>
-            <label>Confirmer<input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required className={styles.input} /></label>
+            <label>
+              Nouveau mot de passe
+              <PasswordInput inLabel value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={styles.input} autoComplete="new-password" />
+            </label>
+            <label>
+              Confirmer
+              <PasswordInput inLabel value={confirm} onChange={(e) => setConfirm(e.target.value)} required className={styles.input} autoComplete="new-password" />
+            </label>
             <button type="submit" className="btn-primary">Enregistrer</button>
           </form>
         )}

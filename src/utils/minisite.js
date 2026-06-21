@@ -707,7 +707,7 @@ export function applyTemplate(templateId, account, currentSite = {}, options = {
   return syncSitePages({
     ...currentSite,
     slug: currentSite.slug || slugify(account?.nom),
-    published: currentSite.published ?? false,
+    published: currentSite.published === true,
     templateId,
     level: MINISITE_LEVEL,
     theme: {
@@ -737,28 +737,36 @@ export function applyTemplate(templateId, account, currentSite = {}, options = {
 }
 
 export function normalizeMinisite(data, account) {
-  if (!data || !data.sections?.length) {
+  if (!data) {
+    if (!account) return null;
+    return createDefaultMinisite(account);
+  }
+
+  const synced = syncSitePages(data);
+  const sectionList = synced.sections || [];
+
+  if (!sectionList.length) {
     if (!account) return null;
     const migrated = createDefaultMinisite(account);
-    if (data) {
-      migrated.slug = data.slug || migrated.slug;
-      migrated.published = data.published ?? false;
-      if (data.color) migrated.theme.primaryColor = data.color;
-      if (data.slogan && migrated.sections[0]) migrated.sections[0].subtitle = data.slogan;
-      if (data.coverPhoto && migrated.sections[0]) migrated.sections[0].coverImage = data.coverPhoto;
-    }
+    migrated.slug = synced.slug || migrated.slug;
+    migrated.published = synced.published === true;
+    if (synced.theme) migrated.theme = { ...migrated.theme, ...synced.theme };
+    if (data.color) migrated.theme.primaryColor = data.color;
+    if (data.slogan && migrated.sections[0]) migrated.sections[0].subtitle = data.slogan;
+    if (data.coverPhoto && migrated.sections[0]) migrated.sections[0].coverImage = data.coverPhoto;
     return migrated;
   }
 
   const defaults = account ? createDefaultMinisite(account) : null;
 
   return syncSitePages({
-    level: MINISITE_LEVEL,
-    templateId: data.templateId || 'artisan',
-    slug: data.slug || defaults?.slug || 'mon-site',
-    published: data.published ?? false,
+    level: synced.level || MINISITE_LEVEL,
+    templateId: synced.templateId || data.templateId || 'artisan',
+    slug: synced.slug || data.slug || defaults?.slug || 'mon-site',
+    published: synced.published === true,
     theme: {
       ...defaults?.theme,
+      ...synced.theme,
       ...data.theme,
     },
     settings: {
@@ -770,27 +778,29 @@ export function normalizeMinisite(data, account) {
       showPopup: false,
       popup: { title: '', body: '', ctaLabel: 'Fermer' },
       multiPage: false,
+      ...synced.settings,
       ...data.settings,
     },
-    advanced: { customCss: '', headCode: '', ...data.advanced },
-    locale: { active: 'fr', strings: { fr: {}, en: {} }, ...data.locale },
-    integrations: { googleAnalyticsId: '', facebookPixelId: '', hotjarId: '', ...data.integrations },
-    security: { passwordEnabled: false, password: '', ...data.security },
-    snapshots: data.snapshots || [],
+    advanced: { customCss: '', headCode: '', ...synced.advanced, ...data.advanced },
+    locale: { active: 'fr', strings: { fr: {}, en: {} }, ...synced.locale, ...data.locale },
+    integrations: { googleAnalyticsId: '', facebookPixelId: '', hotjarId: '', ...synced.integrations, ...data.integrations },
+    security: { passwordEnabled: false, password: '', ...synced.security, ...data.security },
+    snapshots: synced.snapshots || data.snapshots || [],
     seo: {
       title: account?.nom || '',
       description: account?.description?.slice(0, 160) || '',
       ogImage: null,
+      ...synced.seo,
       ...data.seo,
     },
-    sections: ensureSectionIds(data.sections.map((s) => ({
+    sections: ensureSectionIds(sectionList.map((s) => ({
       ...getSectionDefaults(s.type),
       style: defaultSectionStyle(),
       ...s,
       style: { ...defaultSectionStyle(), ...s.style },
     }))),
-    pages: data.pages?.length
-      ? data.pages.map((p) => ({
+    pages: synced.pages?.length
+      ? synced.pages.map((p) => ({
         ...p,
         sections: ensureSectionIds((p.sections || []).map((s) => ({
           ...getSectionDefaults(s.type),

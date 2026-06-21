@@ -9,7 +9,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
-import { CATEGORIES, REGIONS } from '../data/constants';
+import { CATEGORIES, REGIONS, SITE_CONTACT_EMAIL } from '../data/constants';
 import { SITE_NAV_LINKS, SITE_INFO_LINKS } from '../data/siteNav';
 import CategoryIcon, { CATEGORY_COLORS } from './CategoryIcon';
 import Logo from './Logo';
@@ -145,7 +145,7 @@ export default function Footer() {
               </li>
               <li className={styles.contactItem}>
                 <span className={styles.contactIcon}><Mail size={15} aria-hidden="true" /></span>
-                <a href="mailto:contact@g-list.gn">contact@g-list.gn</a>
+                <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>
               </li>
               <li className={styles.contactItem}>
                 <span className={styles.contactIcon}><Clock size={15} aria-hidden="true" /></span>

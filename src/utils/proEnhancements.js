@@ -1,56 +1,47 @@
-import { getProStats, getAdminPlanForPro } from './storage';
-
-const SERVICE_TEMPLATES = {
-  default: [
-    { nom: 'Consultation', description: 'Premier rendez-vous et évaluation de vos besoins.', prix: '50 000 GNF' },
-    { nom: 'Intervention standard', description: 'Prestation complète sur site.', prix: '150 000 GNF' },
-    { nom: 'Urgence', description: 'Intervention rapide sous 24h.', prix: '200 000 GNF' },
-  ],
-};
-
-const LANGUES = ['Français', 'Soussou', 'Malinké', 'Peulh', 'Anglais'];
+import { getProStats, getAdminPlanForPro, getProPlanLevel } from './storage';
 
 export function getProPlan(pro) {
   const adminPlan = getAdminPlanForPro(pro.id);
   if (adminPlan) return adminPlan;
-  if (pro.plan) return pro.plan;
-  if (pro.topGList) return 'top';
-  if (pro.id % 7 === 0) return 'premium';
-  if (pro.id % 4 === 0) return 'advanced';
-  return 'free';
+  const accountLevel = getProPlanLevel(pro);
+  if (accountLevel !== 'free') return accountLevel;
+  return pro.plan || 'free';
 }
 
 export function isTopGList(pro) {
-  return pro.topGList || (pro.verifie && pro.note >= 4.8 && pro.id % 11 === 0);
+  return Boolean(pro.topGList || (pro.verifie && (pro.note || 0) >= 4.8 && (pro.nombreAvis || 0) >= 5));
+}
+
+export function normalizeServiceItems(services) {
+  if (!Array.isArray(services) || services.length === 0) return [];
+  return services.map((s, i) => {
+    if (typeof s === 'string') {
+      return { nom: s, description: s, prix: '' };
+    }
+    return s;
+  });
 }
 
 export function enrichProfessional(pro) {
   const stats = getProStats(pro.id);
   const plan = getProPlan(pro);
   const topGList = isTopGList(pro);
-  const services = pro.services || generateServices(pro);
+  const services = normalizeServiceItems(
+    Array.isArray(pro.services) && pro.services.length > 0 ? pro.services : [],
+  );
   return {
     ...pro,
     plan,
     topGList,
-    vues: stats.views ?? (80 + (pro.id * 17) % 450),
-    favoris: stats.favorites ?? (5 + (pro.id * 3) % 80),
-    whatsappClicks: stats.whatsappClicks ?? (10 + (pro.id * 5) % 120),
+    vues: stats.views ?? pro.profileViews ?? 0,
+    favoris: stats.favorites ?? 0,
+    whatsappClicks: stats.whatsappClicks ?? pro.whatsappClicks ?? 0,
     services,
-    experience: 2 + (pro.id % 18),
-    langues: LANGUES.slice(0, 2 + (pro.id % 3)),
+    avis: [],
+    experience: pro.experience ?? null,
+    langues: pro.langues || [],
     photos: pro.photos || null,
   };
-}
-
-function generateServices(pro) {
-  const specs = pro.specialites || [];
-  return (SERVICE_TEMPLATES.default.slice(0, 3)).map((s, i) => ({
-    ...s,
-    nom: specs[i] || s.nom,
-    description: `${s.description} — ${pro.profession} à ${pro.quartier}.`,
-    prix: `${(50 + i * 50 + (pro.id % 10) * 10) * 1000} GNF`,
-  }));
 }
 
 export function getPlanBadgeLabel(plan, topGList) {

@@ -1,0 +1,223 @@
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.trigger:hover {
+  border-color: var(--or-principal);
+}
+
+.triggerOpen,
+.trigger:focus-visible {
+  outline: none;
+  border-color: #F5C518;
+}
+
+.triggerPlaceholder {
+  color: var(--text-muted);
+}
+
+.triggerIcon {
+  margin-left: auto;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.popover {
+  position: absolute;
+  z-index: 9100;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 280px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #E8E8E8;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  animation: popIn 0.15s ease;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.calHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.calHead strong {
+  font-size: 14px;
+  color: #1A1A1A;
+  text-transform: capitalize;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: #F5F5F5;
+  color: #444;
+  cursor: pointer;
+}
+
+.navBtn:hover {
+  background: #EBEBEB;
+}
+
+.navBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  padding: 4px 0;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayEmpty {
+  aspect-ratio: 1;
+}
+
+.dayBtn {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.dayBtn:hover:not(:disabled) {
+  background: #FFFBEB;
+}
+
+.daySelected {
+  background: #F5C518 !important;
+  color: #0E1208 !important;
+  font-weight: 700;
+}
+
+.dayToday {
+  box-shadow: inset 0 0 0 1.5px #F5C518;
+}
+
+.dayDisabled {
+  color: #CCC;
+  cursor: not-allowed;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #F0F0F0;
+}
+
+.timeRow label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
+}
+
+.timeSelects {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.timeInput {
+  width: 56px;
+  padding: 8px 6px;
+  border: 1.5px solid #E5E5E5;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  background: #fff;
+  color: #1A1A1A;
+  text-align: center;
+  color-scheme: light;
+  -moz-appearance: textfield;
+}
+
+.timeInput::-webkit-outer-spin-button,
+.timeInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.timeInput:focus {
+  outline: none;
+  border-color: #F5C518;
+}
+
+.timeSep {
+  font-weight: 700;
+  color: #888;
+}
+
+.confirmBtn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #1A1A1A;
+  color: #F5C518;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirmBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

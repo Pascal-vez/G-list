@@ -5,10 +5,11 @@
   flex-wrap: wrap;
   padding: 14px 18px;
   margin-bottom: 20px;
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 10px var(--shadow-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .summary {
@@ -20,20 +21,20 @@
 }
 
 .summary > svg {
-  color: #F5C518;
+  color: var(--or-principal);
   flex-shrink: 0;
 }
 
 .summary strong {
   display: block;
   font-size: 13px;
-  color: #0E1208;
+  color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 .summary span {
   font-size: 12px;
-  color: #777;
+  color: var(--text-secondary);
 }
 
 .presets {
@@ -44,26 +45,26 @@
 
 .presetBtn {
   padding: 6px 12px;
-  border: 1.5px solid #E8E8E8;
+  border: 1.5px solid var(--border-color);
   border-radius: 20px;
-  background: #FAFAFA;
+  background: var(--hover-bg);
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 .presetBtn:hover {
-  border-color: #F5C518;
-  color: #0E1208;
+  border-color: var(--or-principal);
+  color: var(--text-primary);
 }
 
 .presetBtnActive {
-  background: #0E1208;
-  border-color: #0E1208;
-  color: #F5C518;
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--or-principal);
 }
 
 .dates {
@@ -75,26 +76,27 @@
 .dateField {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 600;
-  color: #888;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
 }
 
 .dateField input {
   padding: 8px 10px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
   font-family: inherit;
   font-size: 13px;
-  color: #1A1A1A;
-  background: #fff;
+  color: var(--text-primary);
+  background: var(--input-bg);
   min-width: 140px;
 }
 
 .dateField input:focus {
   outline: none;
-  border-color: #F5C518;
+  border-color: var(--or-principal);
 }
 
 .barGreen .summary > svg {

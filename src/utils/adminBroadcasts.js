@@ -3,6 +3,7 @@ import {
   getProPlanLevel, getAdminPlanForPro, getAllProAccountsList, getAllVisitorAccounts,
   KEYS,
 } from './storage';
+import { pushSystemNotification } from './notificationInbox';
 
 const BROADCASTS_KEY = KEYS.ADMIN_BROADCASTS;
 const DISMISSED_KEY = KEYS.BROADCAST_DISMISSED;
@@ -134,8 +135,41 @@ export function adminCreateBroadcast({ title, message, type = 'info', audience =
   const list = getAdminBroadcasts();
   list.unshift(entry);
   setItem(BROADCASTS_KEY, list);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('glist-broadcasts-updated'));
+  }
+  deliverBroadcastToInboxes(entry);
   import('./platformEvents.js').then((m) => m.onAdminBroadcast(trimmedTitle, audience)).catch(() => {});
   return entry;
+}
+
+/** Copie la notification admin dans la boîte de chaque utilisateur ciblé (prototype localStorage). */
+function deliverBroadcastToInboxes(broadcast) {
+  const context = { role: 'anonymous', plan: null, userKey: 'anonymous' };
+  const targets = new Set();
+
+  if (matchesBroadcastAudience(broadcast, context)) {
+    targets.add('anonymous');
+  }
+
+  getAllVisitorAccounts().forEach((v) => {
+    const ctx = { role: 'visiteur', plan: null, userKey: `visitor:${v.email}` };
+    if (matchesBroadcastAudience(broadcast, ctx)) targets.add(ctx.userKey);
+  });
+
+  getAllProAccountsList().forEach((p) => {
+    const plan = resolveProPlan(p);
+    const ctx = { role: 'pro', plan, userKey: `pro:${p.id}` };
+    if (matchesBroadcastAudience(broadcast, ctx)) targets.add(ctx.userKey);
+  });
+
+  targets.forEach((userKey) => {
+    pushSystemNotification(userKey, {
+      type: broadcast.type,
+      title: broadcast.title,
+      message: broadcast.message,
+    });
+  });
 }
 
 export function adminToggleBroadcast(id, active) {

@@ -9,6 +9,17 @@ export function onProLogin(proId) {
   recordSecuritySession('pro', proId);
 }
 
+export function onProRegister(proId, email) {
+  logActivity('pro', proId, { type: 'LOGIN', label: 'Compte professionnel créé' });
+  logAuditEvent({ actor: email, actorType: 'pro', action: AUDIT_ACTIONS.PRO_REGISTER, target: String(proId) });
+  recordSecuritySession('pro', proId);
+  pushSystemNotification(`pro:${proId}`, {
+    type: 'success',
+    title: 'Bienvenue sur G-List !',
+    message: 'Votre espace pro est prêt. Complétez votre profil pour être plus visible dans l\'annuaire.',
+  });
+}
+
 import { BILLING_CYCLE_MONTHLY } from './planConfig';
 
 export function onProUpgrade(proId, plan, billingCycle = BILLING_CYCLE_MONTHLY) {

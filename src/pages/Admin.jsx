@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import bcrypt from 'bcryptjs';
+import { Link } from 'react-router-dom';
 import {
-  Shield, Lock, Eye, EyeOff,
+  Shield, Lock,
   RotateCw, LogOut,
   MessageSquare, Bell,
   Users, Lightbulb,
   LayoutDashboard, UserCircle, BarChart3, Map,
-  FileText, FileBarChart, ShieldAlert, Sparkles, Wallet, Crown, Menu, X, ScrollText, Settings,
+  FileText, FileBarChart, ShieldAlert, Sparkles, Wallet, Crown, Menu, X, ScrollText, Home,
 } from 'lucide-react';
 import {
   getItem,
@@ -14,7 +15,6 @@ import {
   resetAllData,
   getTotalProfileReviews,
   getEvaluations,
-  getAdminSettings,
   KEYS,
 } from '../utils/storage';
 import {
@@ -24,34 +24,67 @@ import {
   formatCountdown,
 } from '../utils/adminAuth';
 import DateRangePicker, { defaultDateRange } from '../components/dashboard/DateRangePicker';
+import ThemeToggle from '../components/ThemeToggle';
+import SidebarCollapseToggle from '../components/dashboard/SidebarCollapseToggle';
+import { useSidebar } from '../context/SidebarContext';
 import GlistBot, { GlistBotAdminTrigger } from '../components/GlistBot';
+import PasswordInput from '../components/PasswordInput';
 import { filterByDateRange } from '../utils/dateRange';
 import styles from './Admin.module.css';
 import {
   AdminOverview, AdminProfessionals, AdminUsers, AdminAnalytics,
   AdminMap, AdminOpportunities, AdminContent, AdminModeration,
   AdminIAInsights, AdminRevenue, AdminReports, AdminSubscriptionPlans, AdminFeedback,
-  AdminNotifications, AdminAuditLog, AdminSettings,
+  AdminNotifications, AdminAuditLog,
 } from './AdminDashboardExtras';
 
-const ADMIN_TABS = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'pros', label: 'Professionnels', icon: Users },
-  { id: 'users', label: 'Utilisateurs', icon: UserCircle },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'map', label: 'Carte Guinée', icon: Map },
-  { id: 'opportunities', label: 'Opportunités', icon: Lightbulb },
-  { id: 'content', label: 'Contenu', icon: FileText },
-  { id: 'moderation', label: 'Modération', icon: ShieldAlert },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'audit', label: 'Journal d\'audit', icon: ScrollText },
-  { id: 'ia', label: 'IA Insights', icon: Sparkles },
-  { id: 'revenue', label: 'Revenus', icon: Wallet },
-  { id: 'reports', label: 'Rapports', icon: FileBarChart },
-  { id: 'plans', label: 'Offres', icon: Crown },
-  { id: 'legacy', label: 'Feedback', icon: MessageSquare },
-  { id: 'settings', label: 'Paramètres', icon: Settings },
+const ADMIN_SIDEBAR_SECTIONS = [
+  { key: 'menu', label: 'Menu' },
+  { key: 'analyse', label: 'Analyse' },
+  { key: 'gestion', label: 'Gestion' },
+  { key: 'compte', label: null },
 ];
+
+const ADMIN_TABS = [
+  { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutDashboard, section: 'menu' },
+  { id: 'pros', label: 'Professionnels', icon: Users, section: 'menu' },
+  { id: 'users', label: 'Utilisateurs', icon: UserCircle, section: 'menu' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, section: 'analyse' },
+  { id: 'map', label: 'Carte Guinée', icon: Map, section: 'analyse' },
+  { id: 'opportunities', label: 'Opportunités', icon: Lightbulb, section: 'analyse' },
+  { id: 'ia', label: 'IA Insights', icon: Sparkles, section: 'analyse' },
+  { id: 'revenue', label: 'Revenus', icon: Wallet, section: 'analyse' },
+  { id: 'reports', label: 'Rapports', icon: FileBarChart, section: 'analyse' },
+  { id: 'content', label: 'Contenu', icon: FileText, section: 'gestion' },
+  { id: 'moderation', label: 'Modération', icon: ShieldAlert, section: 'gestion' },
+  { id: 'notifications', label: 'Notifications', icon: Bell, section: 'gestion' },
+  { id: 'audit', label: 'Journal d\'audit', icon: ScrollText, section: 'gestion' },
+  { id: 'plans', label: 'Offres', icon: Crown, section: 'gestion' },
+  { id: 'legacy', label: 'Feedback', icon: MessageSquare, section: 'compte' },
+];
+
+const ADMIN_TAB_SUBTITLES = {
+  overview: 'Indicateurs clés de la plateforme G-List',
+  pros: 'Gérez les fiches, plans et statuts de vérification',
+  users: 'Comptes visiteurs, professionnels et liste d\'attente',
+  analytics: 'Répartition du trafic et tendances',
+  map: 'Densité des professionnels par région',
+  opportunities: 'Zones à fort potentiel commercial',
+  content: 'Générateur de contenu et planning réseaux',
+  moderation: 'Signalements, suspects et doublons',
+  notifications: 'Messages diffusés aux utilisateurs',
+  audit: 'Traçabilité des actions administrateur',
+  ia: 'Tendances automatiques et recommandations',
+  revenue: 'Estimation MRR / ARR et répartition',
+  reports: 'Export PDF, Word, Excel ou CSV',
+  plans: 'Prix et descriptions des abonnements',
+  legacy: 'Évaluations et suggestions utilisateurs',
+};
+
+const ADMIN_DATE_TABS = new Set([
+  'overview', 'pros', 'users', 'analytics', 'opportunities',
+  'moderation', 'audit', 'ia', 'revenue', 'reports', 'legacy',
+]);
 
 /** Bcrypt hash from .env — quotes required in .env so $ chars are not stripped */
 function getAdminHash() {
@@ -109,7 +142,6 @@ function buildEvaluationStats(evaluations) {
 
 function AdminLogin({ onSuccess }) {
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
@@ -130,15 +162,16 @@ function AdminLogin({ onSuccess }) {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.body.style.background = '#060e18';
     const id = setInterval(tick, 1000);
-    return () => {
-      clearInterval(id);
-      document.body.style.overflow = '';
-      document.body.style.background = '';
-    };
+    return () => clearInterval(id);
   }, [tick]);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const shakeButton = () => {
     setShake(true);
@@ -193,6 +226,7 @@ function AdminLogin({ onSuccess }) {
 
   return (
     <div className={styles.loginPage}>
+      <ThemeToggle onDark className={styles.loginThemeToggle} />
       <div className={styles.loginBgImage} aria-hidden="true" />
       <div className={styles.loginBgOverlay} aria-hidden="true" />
       <div className={styles.loginBgFx} aria-hidden="true">
@@ -234,8 +268,11 @@ function AdminLogin({ onSuccess }) {
           <form onSubmit={handleLogin} className={styles.loginFormInner}>
             <div className={`${styles.glassInputWrap} ${error ? styles.glassInputError : ''}`}>
               <Lock size={16} className={styles.fieldIcon} />
-              <input
-                type={showPassword ? 'text' : 'password'}
+              <PasswordInput
+                variant="glass"
+                wrapClassName={styles.glassPasswordWrap}
+                className={styles.passwordInput}
+                toggleClassName={styles.eyeBtn}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -244,20 +281,10 @@ function AdminLogin({ onSuccess }) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleLogin(e);
                 }}
-                className={styles.passwordInput}
                 placeholder="Mot de passe administrateur"
                 autoComplete="current-password"
                 disabled={loading || isBlocked}
               />
-              <button
-                type="button"
-                className={styles.eyeBtn}
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
 
             {error && <p className={styles.errorBox}>{error}</p>}
@@ -290,8 +317,9 @@ export default function Admin() {
   const [data, setData] = useState(null);
   const [evaluations, setEvaluations] = useState([]);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [adminTab, setAdminTab] = useState(() => getAdminSettings().defaultTab || 'overview');
+  const [adminTab, setAdminTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { collapsed } = useSidebar();
   const [botOpen, setBotOpen] = useState(false);
   const [dateRange, setDateRange] = useState(defaultDateRange);
 
@@ -379,8 +407,9 @@ export default function Admin() {
         />
       )}
 
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-        <div className={styles.sidebarBrand}>
+      <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        <SidebarCollapseToggle />
+        <div className={styles.sidebarProfile}>
           <button
             type="button"
             className={styles.sidebarClose}
@@ -389,37 +418,66 @@ export default function Admin() {
           >
             <X size={20} />
           </button>
-          <Shield size={22} className={styles.dashLogo} />
-          <div>
-            <strong>G-List Admin</strong>
-            <span>Dashboard</span>
+          <div className={styles.sidebarAvatar}>
+            <Shield size={20} aria-hidden />
+          </div>
+          <div className={styles.sidebarUserInfo}>
+            <div className={styles.sidebarNameRow}>
+              <strong>G-List Admin</strong>
+            </div>
+            <span>Console d&apos;administration</span>
           </div>
         </div>
 
         <nav className={styles.sidebarNav}>
-          {ADMIN_TABS.map((t) => {
-            const Icon = t.icon;
+          <div className={styles.sidebarGroup}>
+            <Link to="/" className={styles.sidebarItem} data-label="Accueil" onClick={() => setSidebarOpen(false)}>
+              <Home size={18} className={styles.navIcon} aria-hidden="true" />
+              <span className={styles.navLabel}>Accueil</span>
+            </Link>
+          </div>
+          {ADMIN_SIDEBAR_SECTIONS.map(({ key, label }) => {
+            const items = ADMIN_TABS.filter((t) => t.section === key);
+            if (!items.length) return null;
             return (
-              <button
-                key={t.id}
-                type="button"
-                className={`${styles.sidebarItem} ${adminTab === t.id ? styles.sidebarItemActive : ''}`}
-                onClick={() => {
-                  setAdminTab(t.id);
-                  setSidebarOpen(false);
-                }}
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span>{t.label}</span>
-              </button>
+              <div key={key} className={styles.sidebarGroup}>
+                {label && <span className={styles.sidebarGroupLabel}>{label}</span>}
+                {items.map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`${styles.sidebarItem} ${adminTab === t.id ? styles.sidebarItemActive : ''}`}
+                      data-label={t.label}
+                      onClick={() => {
+                        setAdminTab(t.id);
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      <Icon size={18} className={styles.navIcon} aria-hidden="true" />
+                      <span className={styles.navLabel}>{t.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
+
+        <div className={styles.sidebarPremium}>
+          <Sparkles size={18} aria-hidden />
+          <div>
+            <strong>G-Bot Admin</strong>
+            <p>Copilote IA — stats live et navigation rapide.</p>
+          </div>
+          <button type="button" onClick={() => setBotOpen(true)}>Ouvrir G-Bot</button>
+        </div>
       </aside>
 
       <div className={styles.main}>
-        <header className={styles.dashTopBar}>
-          <div className={styles.dashTopBarLeft}>
+        <header className={styles.mainHeader}>
+          <div className={styles.mainHeaderLeft}>
             <button
               type="button"
               className={styles.menuBtn}
@@ -430,23 +488,25 @@ export default function Admin() {
             </button>
             <div>
               <h1 className={styles.mainTitle}>{activeTab.label}</h1>
-              <span className={styles.dashBadge}>Administration</span>
+              <p className={styles.mainSubtitle}>{ADMIN_TAB_SUBTITLES[adminTab] || ''}</p>
             </div>
           </div>
-          <div className={styles.dashTopBarRight}>
+          <div className={styles.mainHeaderRight}>
             <GlistBotAdminTrigger onClick={() => setBotOpen((v) => !v)} active={botOpen} />
-            <button type="button" onClick={loadData} className={styles.refreshBtn}>
-              <RotateCw size={14} /> Actualiser
+            <ThemeToggle className={styles.headerThemeToggle} />
+            <button type="button" className={styles.headerActionBtn} onClick={loadData}>
+              <RotateCw size={16} aria-hidden />
+              <span>Actualiser</span>
             </button>
-            <button type="button" onClick={handleLogout} className={styles.logoutBtn}>
-              <LogOut size={14} /> Se déconnecter
+            <button type="button" className={styles.headerIconBtn} onClick={handleLogout} title="Se déconnecter">
+              <LogOut size={18} aria-hidden />
             </button>
           </div>
         </header>
 
         <div className={styles.mainContent}>
-        {adminTab !== 'settings' && (
-          <DateRangePicker value={dateRange} onChange={setDateRange} variant="green" />
+        {ADMIN_DATE_TABS.has(adminTab) && (
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
         )}
 
       {adminTab === 'overview' && <AdminOverview evalStats={evalStats} dateRange={dateRange} />}
@@ -474,15 +534,6 @@ export default function Admin() {
           confirmReset={confirmReset}
           onExport={handleExport}
           onReset={handleReset}
-        />
-      )}
-
-      {adminTab === 'settings' && (
-        <AdminSettings
-          onLogout={handleLogout}
-          onExport={handleExport}
-          onReset={handleReset}
-          confirmReset={confirmReset}
         />
       )}
         </div>

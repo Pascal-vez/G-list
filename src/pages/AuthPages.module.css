@@ -1,9 +1,11 @@
 .page {
-  min-height: 60vh;
+  min-height: calc(100dvh - var(--header-height));
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 40px 20px;
+  padding: clamp(48px, 8vh, 96px) 20px clamp(48px, 5vw, 64px);
+  box-sizing: border-box;
+  background: var(--bg-secondary);
 }
 
 .box {

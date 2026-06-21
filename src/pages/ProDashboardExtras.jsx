@@ -10,10 +10,13 @@ import {
 import ProCard from '../components/ProCard';
 import BarChart from '../components/dashboard/BarChart';
 import MetricCard from '../components/dashboard/MetricCard';
-import { getAllProfessionals } from '../api/professionals';
+import ThemeToggle from '../components/ThemeToggle';
+import { useProfessionalsList } from '../hooks/useProfessionalsList';
 import { CATEGORIES } from '../data/constants';
+import { useProReviews } from '../hooks/useProReviews';
+import { useProAnalytics } from '../hooks/useProAnalytics';
+import { postReviewResponse } from '../api/reviews';
 import {
-  getProReviews, setReviewResponse, getReviewResponse,
   getCrmProspects, moveCrmProspect, getMinisite, saveMinisite,
   getProServices, saveProServices, getProPhotos, saveProPhotos,
   getProStats, saveProAccount,
@@ -22,22 +25,23 @@ import {
   ALERT_EVENT_TYPES, getProAlertSettings, toggleProAlert, getProPlanLevel,
 } from '../utils/storage';
 import {
-  getAccountMetricsForRange, getChartDataForRange,
   computeReputationBreakdown,
   getCategoryRank, buildProSuggestions, buildProAlerts,
 } from '../utils/proAnalytics';
 import { filterByDateRange, formatPeriodShort } from '../utils/dateRange';
+import AbonnementStatus from '../components/Abonnement/AbonnementStatus';
+import { isAbonnementActif } from '../utils/plans';
 import { getActiveBroadcastsForUser, dismissBroadcast } from '../utils/adminBroadcasts';
 import { getActivityHistory } from '../utils/activityHistory';
 import { getBillingHistory, getBillingStatusLabel } from '../utils/billingHistory';
 import { getSecuritySessions, exportProGdprData } from '../utils/platformEvents';
 import NotificationInbox from '../components/NotificationInbox';
-import { SAAS_PLATFORM_LEVEL, getPlatformLevelLabel } from '../utils/saasLevel100';
 import { getInitials, getAvatarColor } from '../utils/helpers';
 import { StarDisplay } from '../components/StarRating';
 import ProCardPreview from '../components/ProCardPreview';
 import MinisiteEditor from '../components/minisite/MinisiteEditor';
 import ProReportGenerator from '../components/pro/ProReportGenerator';
+import PasswordInput from '../components/PasswordInput';
 import { NETWORKS } from '../components/SocialLinks';
 import styles from './ProDashboardExtras.module.css';
 
@@ -232,7 +236,7 @@ export function PhotosTab({ account, plan }) {
 }
 
 export function ReviewsTabExtended({ account, plan, dateRange }) {
-  const allReviews = useMemo(() => getProReviews(account.id), [account.id]);
+  const { reviews: allReviews, reload } = useProReviews(account?.id);
   const reviews = useMemo(
     () => filterByDateRange(allReviews, dateRange.startDate, dateRange.endDate),
     [allReviews, dateRange.startDate, dateRange.endDate],
@@ -242,13 +246,14 @@ export function ReviewsTabExtended({ account, plan, dateRange }) {
   const avg = reviews.length
     ? (reviews.reduce((s, r) => s + r.note, 0) / reviews.length).toFixed(1)
     : '—';
-  const responded = reviews.filter((r) => getReviewResponse(account.id, r.id)).length;
+  const responded = reviews.filter((r) => r.response).length;
   const pending = reviews.length - responded;
 
-  const saveResponse = (reviewId, text) => {
+  const saveResponse = async (reviewId, text) => {
     if (plan === 'free' || !text?.trim()) return;
-    setReviewResponse(account.id, reviewId, text);
+    await postReviewResponse(account.id, reviewId, text);
     setResponses({ ...responses, [reviewId]: '' });
+    reload();
   };
 
   return (
@@ -281,7 +286,7 @@ export function ReviewsTabExtended({ account, plan, dateRange }) {
         ) : (
           <div className={styles.reviewListPremium}>
             {reviews.map((r) => {
-              const existing = getReviewResponse(account.id, r.id);
+              const existing = r.response;
               return (
                 <article key={r.id} className={styles.reviewCardPremium}>
                   <div className={styles.reviewHead}>
@@ -332,8 +337,9 @@ const PLAN_VISUALS = {
   premium: { icon: Crown, cardClass: 'billingCardPremium', label: 'Performance' },
 };
 
-export function UpgradeTab({ account, plan, onUpgrade }) {
+export function UpgradeTab({ account, plan, onSubscribe }) {
   const [billingCycle, setBillingCycle] = useState(BILLING_CYCLE_MONTHLY);
+  const abonnementActif = isAbonnementActif(account);
   const plans = useMemo(() => getSubscriptionPlans(), []);
   const tiers = useMemo(() => [
     plans.free,
@@ -476,13 +482,17 @@ export function UpgradeTab({ account, plan, onUpgrade }) {
                     Abonnement actif
                   </span>
                 ) : isUpgrade ? (
-                  <button type="button" onClick={() => onUpgrade(t.id, billingCycle)} className={styles.billingCtaPrimary}>
+                  <button type="button" onClick={() => onSubscribe?.(t.id)} className={styles.billingCtaPrimary}>
                     <Crown size={16} aria-hidden="true" />
-                    Passer à {t.name}
+                    S&apos;abonner — {t.name}
                     <ArrowRight size={16} aria-hidden="true" />
                   </button>
+                ) : isDowngrade && abonnementActif ? (
+                  <span className={styles.billingFootCurrent}>
+                    Changement indisponible tant que l&apos;abonnement est actif
+                  </span>
                 ) : isDowngrade ? (
-                  <button type="button" onClick={() => onUpgrade(t.id, billingCycle)} className={styles.billingCtaSecondary}>
+                  <button type="button" onClick={() => onSubscribe?.(t.id)} className={styles.billingCtaSecondary}>
                     Revenir à {t.name}
                   </button>
                 ) : null}
@@ -503,16 +513,13 @@ export function UpgradeTab({ account, plan, onUpgrade }) {
 
 export function AnalyticsTab({ account, dateRange }) {
   const { startDate, endDate } = dateRange;
-  const metrics = useMemo(
-    () => getAccountMetricsForRange(account, startDate, endDate),
-    [account, startDate, endDate],
-  );
-  const chartData = useMemo(
-    () => getChartDataForRange(account.id, startDate, endDate),
-    [account.id, startDate, endDate],
-  );
+  const { metrics, chartData, loading } = useProAnalytics(account, dateRange);
   const periodLabel = formatPeriodShort(startDate, endDate);
   const { sources, visibilityScore } = metrics;
+
+  if (loading) {
+    return <div className={styles.tab}><p>Chargement des statistiques…</p></div>;
+  }
 
   return (
     <div className={styles.tab}>
@@ -623,14 +630,11 @@ function resolveCategoryName(categorieIdOrName) {
   return byName?.name || categorieIdOrName;
 }
 
-function buildCategoryPeers(account) {
+function buildCategoryPeers(account, allPros) {
   const categoryName = resolveCategoryName(account.categorie);
-  const reviews = getProReviews(account.id);
-  const accountNote = reviews.length
-    ? reviews.reduce((sum, r) => sum + r.note, 0) / reviews.length
-    : 4.2;
+  const accountNote = account.note || 0;
 
-  const inCategory = getAllProfessionals().filter((p) => p.categorie === categoryName);
+  const inCategory = allPros.filter((p) => p.categorie === categoryName);
   const hasSelf = inCategory.some((p) => p.id === account.id);
 
   const peers = hasSelf
@@ -663,8 +667,9 @@ function sortPeers(peers, sortKey, sortDir) {
 export function ConcurrenceTab({ account }) {
   const [sortKey, setSortKey] = useState('score');
   const [sortDir, setSortDir] = useState('desc');
+  const allPros = useProfessionalsList();
 
-  const peers = useMemo(() => buildCategoryPeers(account), [account]);
+  const peers = useMemo(() => buildCategoryPeers(account, allPros), [account, allPros]);
   const categoryLabel = resolveCategoryName(account.categorie);
 
   const visibilityRank = useMemo(() => {
@@ -967,10 +972,7 @@ export function ReportsTab({ account, dateRange }) {
 
 export function ReputationTab({ account, dateRange }) {
   const completion = getProfileCompletion(account);
-  const periodMetrics = useMemo(
-    () => getAccountMetricsForRange(account, dateRange.startDate, dateRange.endDate),
-    [account, dateRange.startDate, dateRange.endDate],
-  );
+  const { metrics: periodMetrics } = useProAnalytics(account, dateRange);
   const periodLabel = formatPeriodShort(dateRange.startDate, dateRange.endDate);
   const criteria = useMemo(
     () => computeReputationBreakdown(account, completion),
@@ -1287,9 +1289,9 @@ function getProfileChecklist(account, reviewCount = 0) {
   ];
 }
 
-function ReviewsEmptyPanel({ account, onTabChange }) {
+function ReviewsEmptyPanel({ account, onTabChange, reviewCount = 0 }) {
   const [shareMsg, setShareMsg] = useState('');
-  const checklist = getProfileChecklist(account, getProReviews(account.id).length);
+  const checklist = getProfileChecklist(account, reviewCount);
   const pending = checklist.filter((item) => !item.done);
 
   const handleShare = async () => {
@@ -1378,7 +1380,7 @@ export function ProfileDashboardHeader({ account, reviews, avgRating, onEditProf
     : { background: `linear-gradient(135deg, ${getAvatarColor(account.categorie || account.profession)} 0%, #1A1A1A 100%)` };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/mon-profil`;
+    const url = `${window.location.origin}/profil/${account.id}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: account.nom, text: account.profession, url });
@@ -1456,17 +1458,10 @@ export function ProfileDashboardHeader({ account, reviews, avgRating, onEditProf
 }
 
 export function OverviewFreeTab({
-  account, reviews, avgRating, plan, onUpgrade, onTabChange, onAccountUpdate, dateRange,
+  account, reviews, avgRating, plan, onSubscribe, onTabChange, onAccountUpdate, dateRange,
 }) {
   const { startDate, endDate } = dateRange;
-  const periodMetrics = useMemo(
-    () => getAccountMetricsForRange(account, startDate, endDate),
-    [account, startDate, endDate],
-  );
-  const chartData = useMemo(
-    () => getChartDataForRange(account.id, startDate, endDate),
-    [account.id, startDate, endDate],
-  );
+  const { metrics: periodMetrics, chartData } = useProAnalytics(account, dateRange);
   const periodLabel = formatPeriodShort(startDate, endDate);
   const periodReviews = useMemo(
     () => filterByDateRange(reviews, startDate, endDate),
@@ -1515,7 +1510,7 @@ export function OverviewFreeTab({
             </button>
           </div>
           {recentReviews.length === 0 ? (
-            <ReviewsEmptyPanel account={account} onTabChange={onTabChange} />
+            <ReviewsEmptyPanel account={account} onTabChange={onTabChange} reviewCount={reviews.length} />
           ) : (
             recentReviews.map((r) => (
               <div key={r.id} className={styles.reviewSnippet}>
@@ -1600,7 +1595,7 @@ export function OverviewFreeTab({
         <div className={styles.upgradeBanner}>
           <Crown size={20} />
           <div><strong>Passez en Advanced</strong><p>Analytics, réponses avis, concurrence et plus.</p></div>
-          <button type="button" onClick={() => onUpgrade('advanced')}>Upgrade</button>
+          <button type="button" onClick={() => onSubscribe?.('advanced')}>S&apos;abonner</button>
         </div>
       )}
     </div>
@@ -1675,7 +1670,7 @@ export function ProfileTabExtended({ account, form, handleSave, handleChange, ha
         </div>
 
         <aside className={styles.previewColPremium}>
-          <PremiumPanel title="Aperçu live" subtitle="Rendu carte annuaire">
+          <PremiumPanel title="Aperçu live" subtitle="Aperçu du rendu public — carte annuaire">
             <ProCardPreview account={{ ...account, ...form, specialites: form.specialitesStr?.split(',').map((s) => s.trim()).filter(Boolean) }} />
           </PremiumPanel>
           <div className={styles.completionCardPremium}>
@@ -1692,7 +1687,7 @@ export function ProfileTabExtended({ account, form, handleSave, handleChange, ha
   );
 }
 
-export function SettingsTab({ account, onLogout, onDeleteAccount }) {
+export function SettingsTab({ account, onLogout, onDeleteAccount, onSubscribe }) {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -1713,10 +1708,10 @@ export function SettingsTab({ account, onLogout, onDeleteAccount }) {
     setDeleteError('');
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     setDeleteError('');
     setDeleting(true);
-    const result = onDeleteAccount?.(deletePassword);
+    const result = await onDeleteAccount?.(deletePassword);
     setDeleting(false);
 
     if (result?.ok === false) {
@@ -1736,6 +1731,16 @@ export function SettingsTab({ account, onLogout, onDeleteAccount }) {
           <p>Gérez vos informations et votre session.</p>
         </div>
       </div>
+
+      <AbonnementStatus
+        account={account}
+        onRenew={(planId) => onSubscribe?.(planId)}
+        onUpgrade={(planId) => onSubscribe?.(planId)}
+      />
+
+      <PremiumPanel title="Apparence" subtitle="Thème de l'interface">
+        <ThemeToggle variant="ligne" />
+      </PremiumPanel>
 
       <PremiumPanel title="Informations du compte" subtitle="Données liées à votre espace pro">
         <div className={styles.settingsGrid}>
@@ -1767,7 +1772,7 @@ export function SettingsTab({ account, onLogout, onDeleteAccount }) {
         </button>
       </PremiumPanel>
 
-      <PremiumPanel title="Sessions récentes" subtitle="Niveau 100 — sécurité">
+      <PremiumPanel title="Sessions récentes" subtitle="Sécurité du compte">
         <div className={styles.sessionsList}>
           {getSecuritySessions('pro', account.id).map((s) => (
             <div key={s.id} className={`${styles.sessionItem} ${s.current ? styles.sessionCurrent : ''}`}>
@@ -1811,8 +1816,8 @@ export function SettingsTab({ account, onLogout, onDeleteAccount }) {
         </p>
         <label className={styles.deleteField}>
           <span>Confirmer avec votre mot de passe</span>
-          <input
-            type="password"
+          <PasswordInput
+            inLabel
             value={deletePassword}
             onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
             className={styles.deleteInput}
@@ -1887,7 +1892,7 @@ export function HistoryTab({ account, dateRange }) {
         <History size={20} aria-hidden="true" />
         <div>
           <strong>Historique d&apos;activité</strong>
-          <p>Journal complet de vos actions sur G-List — niveau {SAAS_PLATFORM_LEVEL}.</p>
+          <p>Journal complet de vos actions sur G-List.</p>
         </div>
         <span className={styles.premiumBadge}>{activities.length} événement{activities.length > 1 ? 's' : ''}</span>
       </div>
@@ -1973,7 +1978,7 @@ export function NotificationsTab({ onUpdate }) {
         <Bell size={20} aria-hidden="true" />
         <div>
           <strong>Notifications</strong>
-          <p>Messages officiels G-List et alertes système — niveau {SAAS_PLATFORM_LEVEL}.</p>
+          <p>Messages officiels G-List et alertes système.</p>
         </div>
       </div>
       <NotificationInbox onUpdate={onUpdate} />

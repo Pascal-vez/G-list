@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react';
-import { useParams, Navigate, useLocation } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { SearchX } from 'lucide-react';
 import CategoryHero from '../components/CategoryHero';
 import FilterSidebar from '../components/FilterSidebar';
 import ProCard from '../components/ProCard';
 import LocationBanner from '../components/LocationBanner';
-import { getAllProfessionals } from '../api/professionals';
+import { useProfessionalsList } from '../hooks/useProfessionalsList';
 import { getCategoryById, CATEGORY_DESCRIPTIONS } from '../data/constants';
 import { filterProfessionals, getCategoryCounts, getRegionCounts } from '../utils/helpers';
 import { sortByDistance } from '../utils/geo';
 import { useGeolocation } from '../hooks/useGeolocation';
-import SeoHead from '../components/SEO/SeoHead';
+import { usePageMeta } from '../hooks/usePageMeta';
 import styles from './CategoryPage.module.css';
 
 const DEFAULT_FILTERS = {
@@ -27,13 +27,11 @@ const DEFAULT_FILTERS = {
 
 export default function CategoryPage() {
   const { id } = useParams();
-  const routerLocation = useLocation();
-  const isSecteurRoute = routerLocation.pathname.startsWith('/secteur/');
   const category = getCategoryById(id);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const { location: userLocation, error, loading, requestLocation, clearLocation } = useGeolocation();
+  const { location, error, loading, requestLocation, clearLocation } = useGeolocation();
 
-  const professionals = getAllProfessionals();
+  const professionals = useProfessionalsList();
   const categoryCounts = useMemo(() => getCategoryCounts(professionals), [professionals.length]);
   const regionCounts = useMemo(() => getRegionCounts(professionals), [professionals.length]);
   const categoryName = category?.name ?? '';
@@ -41,16 +39,18 @@ export default function CategoryPage() {
     ? (CATEGORY_DESCRIPTIONS[category.id] || CATEGORY_DESCRIPTIONS.autre)
     : '';
 
-  const seoUrl = category
-    ? (isSecteurRoute ? `/secteur/${category.id}` : `/categorie/${category.id}`)
-    : undefined;
+  usePageMeta({
+    title: category?.name,
+    description: description || 'Professionnels par catégorie en Guinée',
+    path: category ? `/categorie/${category.id}` : undefined,
+  });
 
   const filtered = useMemo(() => {
     if (!categoryName) return [];
     const results = filterProfessionals(professionals, { ...filters, category: categoryName });
-    if (userLocation) return sortByDistance(results, userLocation.lat, userLocation.lng);
+    if (location) return sortByDistance(results, location.lat, location.lng);
     return results;
-  }, [filters, userLocation, categoryName]);
+  }, [filters, location, categoryName]);
 
   if (!category) return <Navigate to="/" replace />;
 
@@ -62,18 +62,9 @@ export default function CategoryPage() {
 
   return (
     <>
-      {category && (
-        <SeoHead
-          titre={isSecteurRoute ? `${category.name} en Guinée` : category.name}
-          description={isSecteurRoute
-            ? `Trouvez les meilleurs professionnels du secteur ${category.name} dans toutes les régions de Guinée sur G-List.`
-            : (description || 'Professionnels par catégorie en Guinée')}
-          url={seoUrl}
-        />
-      )}
       <CategoryHero category={category} description={description} count={totalInCategory} />
       <section className={styles.section}>
-        <LocationBanner location={userLocation} loading={loading} error={error} onRequest={requestLocation} onDismiss={clearLocation} />
+        <LocationBanner location={location} loading={loading} error={error} onRequest={requestLocation} onDismiss={clearLocation} />
         <div className={styles.annuaireLayout}>
           <FilterSidebar
             filters={filters}
@@ -86,12 +77,12 @@ export default function CategoryPage() {
           <div className={styles.resultsArea}>
             <p className={styles.count}>
               {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
-              {userLocation && ' · triés par proximité'}
+              {location && ' · triés par proximité'}
             </p>
             {filtered.length > 0 ? (
               <div className={styles.grid}>
                 {filtered.map((pro) => (
-                  <ProCard key={pro.id} pro={pro} userLocation={userLocation} />
+                  <ProCard key={pro.id} pro={pro} userLocation={location} />
                 ))}
               </div>
             ) : (

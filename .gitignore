@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .env
 .env.local
+backend/.env
 
 # Editor directories and files
 .vscode/*
@@ -26,4 +27,6 @@ dist-ssr
 *.sw?
 
 .backend/data/db.json
+.vercel
+
 .vercel

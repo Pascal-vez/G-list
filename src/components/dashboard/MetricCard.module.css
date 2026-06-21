@@ -1,12 +1,13 @@
 .card {
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   height: 100%;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .cardTop {
@@ -43,18 +44,18 @@
 .value {
   font-size: 24px;
   font-weight: 700;
-  color: #0E1208;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
 .label {
   font-size: 12px;
-  color: #555;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .period {
   font-size: 10px;
-  color: #aaa;
+  color: var(--text-muted);
   margin-top: 4px;
 }

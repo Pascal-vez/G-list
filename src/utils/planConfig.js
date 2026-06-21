@@ -54,7 +54,7 @@ export const DEFAULT_SUBSCRIPTION_PLANS = {
     priceMonthly: 120000,
     features: [
       'CRM prospects',
-      'Mini-site niveau 100',
+      'Mini-site portfolio',
       '12 photos',
       'Rapports mensuels',
       'Score réputation',

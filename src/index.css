@@ -1,4 +1,20 @@
-:root {
+:root,
+[data-theme="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8F8F8;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --border-color: #E5E5E5;
+  --or-principal: #F5C518;
+  --or-clair: #FFF8E1;
+  --hover-bg: #F8F8F8;
+  --active-bg: #FFF3CD;
+  --input-bg: #FFFFFF;
+  --shadow-color: rgba(0, 0, 0, 0.06);
+
   --bg-deep: #0E1208;
   --bg-mid: #141A0E;
   --yellow: #F5C518;
@@ -7,15 +23,15 @@
   --gray: #8A8A7A;
   --gold: #F5C518;
   --gold-hover: #D4A800;
-  --black: #1A1A1A;
-  --card-bg: #F0F0F0;
-  --text-secondary: #555555;
+  --black: var(--text-primary);
+  --card-bg: var(--bg-card);
+  --text-secondary-legacy: var(--text-secondary);
   --whatsapp: #25D366;
   --verified-bg: #E7F3FF;
   --verified-text: #1877F2;
   --unverified-bg: #EEEEEE;
   --unverified-text: #757575;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow: 0 2px 8px var(--shadow-color);
   --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
   --radius: 12px;
   --transition: 0.2s ease;
@@ -25,23 +41,67 @@
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-html.dark-mode {
+[data-theme="dark"] {
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #161616;
+  --bg-sidebar: #141414;
+  --bg-card: #1C1C1C;
+  --text-primary: #F0F0F0;
+  --text-secondary: #B8B8B8;
+  --text-muted: #8A8A8A;
+  --border-color: #333333;
+  --or-principal: #F5C518;
+  --or-clair: #2A2410;
+  --hover-bg: #202020;
+  --active-bg: #2A2410;
+  --input-bg: #1A1A1A;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+
   --bg-deep: #0a0c06;
   --bg-mid: #10140a;
   --white: #e8e6df;
-  --black: #f0ede6;
-  --card-bg: #1e1e1c;
-  --text-secondary: #b0aea3;
-  --cream: #141412;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --black: var(--text-primary);
+  --card-bg: var(--bg-card);
+  --cream: var(--bg-secondary);
+  --shadow: 0 2px 8px var(--shadow-color);
   --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.45);
   --verified-bg: rgba(24, 119, 242, 0.15);
   --unverified-bg: rgba(255, 255, 255, 0.08);
 }
 
-html.dark-mode body {
-  background: var(--cream);
-  color: var(--black);
+html.dark-mode {
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #161616;
+  --bg-sidebar: #141414;
+  --bg-card: #1C1C1C;
+  --text-primary: #F0F0F0;
+  --text-secondary: #B8B8B8;
+  --text-muted: #8A8A8A;
+  --border-color: #333333;
+  --or-clair: #2A2410;
+  --hover-bg: #202020;
+  --active-bg: #2A2410;
+  --input-bg: #1A1A1A;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --bg-deep: #0a0c06;
+  --bg-mid: #10140a;
+  --white: #e8e6df;
+  --black: var(--text-primary);
+  --card-bg: var(--bg-card);
+  --cream: var(--bg-secondary);
+  --shadow: 0 2px 8px var(--shadow-color);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --verified-bg: rgba(24, 119, 242, 0.15);
+  --unverified-bg: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"],
+html.dark-mode {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 *,
@@ -63,8 +123,8 @@ html {
 body {
   font-family: var(--font-sans);
   font-weight: 400;
-  background: var(--cream);
-  color: var(--black);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   line-height: var(--leading-normal);
   letter-spacing: var(--tracking-normal);
   -webkit-font-smoothing: antialiased;
@@ -73,6 +133,7 @@ body {
   max-width: 100%;
   overflow-x: clip;
   min-width: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @media (min-width: 1280px) {
@@ -124,6 +185,52 @@ textarea {
   max-width: 100%;
 }
 
+input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]),
+select,
+textarea {
+  background: var(--input-bg);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--or-principal);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Panneaux clairs (modales, date pickers) — texte lisible en mode sombre */
+.lightSurface {
+  color-scheme: light !important;
+  color: #1A1A1A;
+}
+
+.lightSurface input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]),
+.lightSurface select,
+.lightSurface textarea {
+  background: #fff !important;
+  border-color: #E5E5E5;
+  color: #1A1A1A !important;
+  -webkit-text-fill-color: #1A1A1A;
+}
+
+.lightSurface select option {
+  background: #fff !important;
+  color: #1A1A1A !important;
+}
+
+.lightSurface input::placeholder,
+.lightSurface textarea::placeholder {
+  color: #999;
+}
+
 img {
   max-width: 100%;
 }
@@ -168,6 +275,11 @@ h2, h3 {
 
 .btn-primary:hover {
   background: var(--gold-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-whatsapp {
@@ -256,6 +368,17 @@ h2, h3 {
 @keyframes gridPulse {
   0%, 100% { opacity: 0; }
   50% { opacity: 0.12; }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  :root,
+  [data-theme="light"] {
+    --glass-fallback: rgba(255, 255, 255, 0.12);
+  }
+
+  [data-theme="dark"] {
+    --glass-fallback: rgba(255, 255, 255, 0.12);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

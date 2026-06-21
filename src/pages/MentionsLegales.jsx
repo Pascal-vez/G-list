@@ -1,4 +1,5 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
+import { SITE_CONTACT_EMAIL } from '../data/constants';
 import SeoHead from '../components/SEO/SeoHead';
 
 export default function MentionsLegales() {
@@ -15,7 +16,7 @@ export default function MentionsLegales() {
           <strong>G-List</strong><br />
           Annuaire professionnel — République de Guinée<br />
           Siège : Conakry, Guinée<br />
-          Email : <a href="mailto:contact@g-list.gn">contact@g-list.gn</a><br />
+          Email : <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a><br />
           WhatsApp : +224 626 41 93 31
         </p>
       </InfoSection>

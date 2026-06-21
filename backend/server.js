@@ -1,10 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import { getCollection, pushToCollection, setNested, getNested } from './store.js';
-
-dotenv.config();
+import { isEmailConfigured, sendPasswordResetEmail, sendVerificationEmail, sendAdminDemandeAbonnementEmail, sendSubscriptionUserEmail } from './email.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,7 +12,12 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'g-list-api', version: '1.0.0' });
+  res.json({
+    ok: true,
+    service: 'g-list-api',
+    version: '1.0.0',
+    email: isEmailConfigured(),
+  });
 });
 
 // ── Waitlist ──
@@ -45,17 +49,36 @@ app.get('/api/reports', (_req, res) => {
   res.json(getCollection('reports'));
 });
 
-// ── Auth stubs ──
-app.post('/api/auth/forgot-password', (req, res) => {
-  const { email, userType } = req.body;
+// ── Auth ──
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const { userType } = req.body;
+  if (!email) {
+    return res.status(400).json({ ok: false, message: 'Email requis.' });
+  }
+
   const token = `rst_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   setNested('passwordResets', token, {
-    email: email?.trim().toLowerCase(),
+    email,
     userType,
     expires: Date.now() + 3600000,
   });
-  // TODO: envoyer email avec lien /reinitialiser-mot-de-passe/:token
-  res.json({ ok: true, token, message: 'Lien de réinitialisation généré.' });
+
+  const sent = await sendPasswordResetEmail({ email, token });
+  if (!sent.ok && !sent.simulated) {
+    return res.status(502).json({ ok: false, message: sent.error || 'Envoi email impossible.' });
+  }
+
+  const payload = {
+    ok: true,
+    message: sent.ok
+      ? 'Un email de réinitialisation a été envoyé si ce compte existe.'
+      : 'Lien de réinitialisation généré (mode dev).',
+  };
+  if (process.env.NODE_ENV !== 'production' && sent.simulated) {
+    payload.devLink = sent.link;
+  }
+  res.json(payload);
 });
 
 app.post('/api/auth/reset-password', async (req, res) => {
@@ -66,7 +89,82 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
   const hash = await bcrypt.hash(password, 12);
   setNested('users', entry.email, { passwordHash: hash, userType: entry.userType });
-  res.json({ ok: true });
+  setNested('passwordResets', token, null);
+  res.json({ ok: true, email: entry.email, userType: entry.userType });
+});
+
+app.post('/api/auth/verify-password', async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const { password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ ok: false });
+  }
+  const user = getNested('users', email);
+  if (!user?.passwordHash) {
+    return res.json({ ok: false });
+  }
+  const match = await bcrypt.compare(password, user.passwordHash);
+  res.json({ ok: match });
+});
+
+app.get('/api/auth/email-exists', (req, res) => {
+  const email = req.query.email?.trim().toLowerCase();
+  if (!email) return res.status(400).json({ exists: false });
+  res.json({ exists: Boolean(getNested('users', email)?.passwordHash) });
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const { password, userType = 'pro' } = req.body;
+  if (!email || !password || password.length < 6) {
+    return res.status(400).json({ ok: false, message: 'Email et mot de passe (6 car. min.) requis.' });
+  }
+  if (getNested('users', email)?.passwordHash) {
+    return res.status(409).json({ ok: false, message: 'Email déjà utilisé.' });
+  }
+  const hash = await bcrypt.hash(password, 12);
+  setNested('users', email, { passwordHash: hash, userType });
+  res.status(201).json({ ok: true, email });
+});
+
+app.post('/api/auth/delete-account', async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const { password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ ok: false, message: 'Email et mot de passe requis.' });
+  }
+
+  const user = getNested('users', email);
+  if (!user?.passwordHash) {
+    return res.json({ ok: true, deleted: false });
+  }
+
+  const match = await bcrypt.compare(password, user.passwordHash);
+  if (!match) {
+    return res.status(403).json({ ok: false, message: 'Mot de passe incorrect.' });
+  }
+
+  setNested('users', email, null);
+
+  const resets = getCollection('passwordResets');
+  if (resets && typeof resets === 'object') {
+    for (const [token, entry] of Object.entries(resets)) {
+      if (entry?.email === email) {
+        setNested('passwordResets', token, null);
+      }
+    }
+  }
+
+  const verifications = getCollection('emailVerifications');
+  if (verifications && typeof verifications === 'object') {
+    for (const [token, entry] of Object.entries(verifications)) {
+      if (entry?.email === email) {
+        setNested('emailVerifications', token, null);
+      }
+    }
+  }
+
+  res.json({ ok: true, deleted: true });
 });
 
 app.post('/api/auth/verify-email', (req, res) => {
@@ -75,13 +173,29 @@ app.post('/api/auth/verify-email', (req, res) => {
   res.json({ ok: true, email: entry.email });
 });
 
-app.post('/api/auth/send-verification', (req, res) => {
+app.post('/api/auth/send-verification', async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const { userType } = req.body;
+  if (!email) {
+    return res.status(400).json({ ok: false, message: 'Email requis.' });
+  }
+
   const token = `ver_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-  setNested('emailVerifications', token, {
-    email: req.body.email?.trim().toLowerCase(),
-    userType: req.body.userType,
-  });
-  res.json({ ok: true, token });
+  setNested('emailVerifications', token, { email, userType });
+
+  const sent = await sendVerificationEmail({ email, token });
+  if (!sent.ok && !sent.simulated) {
+    return res.status(502).json({ ok: false, message: sent.error || 'Envoi email impossible.' });
+  }
+
+  const payload = {
+    ok: true,
+    message: sent.ok ? 'Email de vérification envoyé.' : 'Lien généré (mode dev).',
+  };
+  if (process.env.NODE_ENV !== 'production' && sent.simulated) {
+    payload.devLink = sent.link;
+  }
+  res.json(payload);
 });
 
 // ── Professionals placeholder (à connecter à une vraie DB) ──
@@ -104,6 +218,41 @@ app.post('/api/professionals/:id/reviews', (req, res) => {
 
 app.get('/api/professionals/:id/reviews', (req, res) => {
   res.json(getNested('reviews', req.params.id) || []);
+});
+
+// ── Abonnement manuel ──
+app.post('/api/abonnement/notify-admin', async (req, res) => {
+  try {
+    const raw = req.body || {};
+    const acc = raw.account || {};
+    const sent = await sendAdminDemandeAbonnementEmail({
+      proNom: raw.proNom || acc.nom,
+      proEmail: raw.proEmail || acc.email,
+      planDemande: raw.planDemande,
+      montant: raw.montant,
+      numeroEmetteur: raw.numeroEmetteur,
+      idTransaction: raw.idTransaction,
+      heureTransaction: raw.heureTransaction,
+    });
+    res.json({ ok: true, email: sent.ok, simulated: sent.simulated });
+  } catch (err) {
+    console.error('[abonnement] notify-admin:', err);
+    res.status(500).json({ message: 'Erreur envoi email admin.' });
+  }
+});
+
+app.post('/api/abonnement/notify-user', async (req, res) => {
+  try {
+    const sent = await sendSubscriptionUserEmail(req.body || {});
+    res.json({ ok: true, email: sent.ok, simulated: sent.simulated });
+  } catch (err) {
+    console.error('[abonnement] notify-user:', err);
+    res.status(500).json({ message: 'Erreur envoi email utilisateur.' });
+  }
+});
+
+app.post('/api/cron/verify-subscriptions', (_req, res) => {
+  res.json({ ok: true, message: 'Exécuter verifier-abonnements via Supabase Edge Function ou cron local.' });
 });
 
 app.use((err, _req, res, _next) => {

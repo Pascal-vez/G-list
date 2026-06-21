@@ -23,9 +23,11 @@ export default function SystemBroadcastBanner() {
       if (!e.key || e.key.includes('broadcast')) refresh();
     };
     window.addEventListener('storage', onStorage);
+    window.addEventListener('glist-broadcasts-updated', refresh);
     const interval = setInterval(refresh, 30000);
     return () => {
       window.removeEventListener('storage', onStorage);
+      window.removeEventListener('glist-broadcasts-updated', refresh);
       clearInterval(interval);
     };
   }, [refresh]);

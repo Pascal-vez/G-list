@@ -6,14 +6,18 @@ import Categories from '../components/Categories';
 import FeaturedProsCarousel from '../components/home/FeaturedProsCarousel';
 import RecentProCard from '../components/home/RecentProCard';
 import HomeStatsBand from '../components/home/HomeStatsBand';
-import { getAllProfessionals } from '../api/professionals';
+import { useProfessionalsList } from '../hooks/useProfessionalsList';
 import { getCategoryCounts } from '../utils/helpers';
-import { getTotalProfileReviews } from '../utils/storage';
-import SeoHead from '../components/SEO/SeoHead';
-import { ORGANIZATION_JSON_LD } from '../utils/seoConfig';
+import { useHomePlatformStats } from '../hooks/usePlatformAnalytics';
+import { usePageMeta } from '../hooks/usePageMeta';
 import styles from './Home.module.css';
 
 export default function Home() {
+  usePageMeta({
+    description: 'Trouvez les meilleurs professionnels de Guinée — médecins, artisans, restaurants, techniciens et plus.',
+    path: '/',
+  });
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,18 +35,22 @@ export default function Home() {
     }
   }, [searchParams, location.hash, location.search, navigate]);
 
-  const professionals = getAllProfessionals();
+  const professionals = useProfessionalsList();
+  const platformStats = useHomePlatformStats();
   const categoryCounts = useMemo(() => getCategoryCounts(professionals), [professionals.length]);
 
   const featuredPros = useMemo(() => {
-    const sponsored = professionals.filter((p) => p.topGList || p.plan === 'premium');
-    const pool = sponsored.length > 0 ? sponsored : professionals;
+    const unique = new Map();
+    professionals.forEach((p) => unique.set(p.id, p));
+    const list = [...unique.values()];
+    const sponsored = list.filter((p) => p.topGList || p.plan === 'premium');
+    const pool = sponsored.length > 0 ? sponsored : list;
     return [...pool].sort((a, b) => b.note - a.note);
-  }, []);
+  }, [professionals]);
 
   const recentPros = useMemo(() => (
     [...professionals].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 4)
-  ), []);
+  ), [professionals]);
 
   const avgRating = useMemo(() => {
     if (!professionals.length) return 0;
@@ -51,25 +59,17 @@ export default function Home() {
   }, [professionals.length]);
 
   const reviewStats = useMemo(() => {
-    const catalogReviews = professionals.reduce((s, p) => s + (p.nombreAvis || 0), 0);
-    const userReviews = getTotalProfileReviews();
-    const totalReviews = catalogReviews + userReviews;
+    const totalReviews = professionals.reduce((s, p) => s + (p.nombreAvis || 0), 0);
     const topRated = professionals.filter((p) => (p.note || 0) >= 4.5 && (p.nombreAvis || 0) > 0).length;
     const satisfied = professionals.filter((p) => (p.note || 0) >= 4).length;
     const satisfiedPct = professionals.length
       ? Math.round((satisfied / professionals.length) * 100)
       : 0;
     return { totalReviews, satisfiedPct, topRated };
-  }, [professionals.length]);
+  }, [professionals]);
 
   return (
     <>
-      <SeoHead
-        titre="Accueil"
-        description="L'annuaire professionnel de référence en Guinée. Trouvez des professionnels et commerces dans les 14 régions du pays, contact direct via WhatsApp."
-        url="/"
-        jsonLd={ORGANIZATION_JSON_LD}
-      />
       <Hero />
 
       <section className={styles.featuredSection}>
@@ -110,7 +110,7 @@ export default function Home() {
         totalPros={professionals.length}
         totalReviews={reviewStats.totalReviews}
         avgRating={avgRating}
-        monthlySearches="2 000"
+        monthlySearches={platformStats.totalSearches || 0}
         satisfiedPct={reviewStats.satisfiedPct}
         topRatedCount={reviewStats.topRated}
       />

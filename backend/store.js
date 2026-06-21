@@ -47,7 +47,11 @@ export function pushToCollection(name, item) {
 export function setNested(collection, key, value) {
   const db = readDb();
   if (!db[collection]) db[collection] = {};
-  db[collection][key] = value;
+  if (value == null) {
+    delete db[collection][key];
+  } else {
+    db[collection][key] = value;
+  }
   writeDb(db);
   return value;
 }

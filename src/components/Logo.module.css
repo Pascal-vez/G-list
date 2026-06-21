@@ -1,5 +1,5 @@
 .logo {
-  height: 52px;
+  height: 42px;
   width: auto;
   min-width: 0;
   object-fit: contain;
@@ -10,9 +10,9 @@
 
 @media (max-width: 768px) {
   .logo {
-    height: clamp(32px, 8vw, 36px);
+    height: clamp(28px, 7vw, 32px);
     width: auto;
-    max-width: 140px;
+    max-width: 120px;
     object-fit: contain;
   }
 }
