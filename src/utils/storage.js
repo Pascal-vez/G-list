@@ -314,12 +314,34 @@ export async function loginProAccount(email, password) {
   if (remoteResult.ok && !acc) {
     // Nouvel appareil : récupérer le profil depuis Supabase
     const cloudProfile = await fetchProProfileByEmailFromSupabase(normalized);
-    if (cloudProfile) {
-      account = { ...cloudProfile, email: normalized, password };
-      const reg = getAllProAccountsRegistry();
-      reg[normalized] = account;
-      saveAllProAccountsRegistry(reg);
-    }
+    const base = cloudProfile || {
+      // Profil pas encore lié dans Supabase (email absent de professionals.email)
+      // Session minimale : l'utilisateur pourra compléter son profil
+      id: Date.now(),
+      nom: normalized.split('@')[0],
+      prenom: '',
+      profession: '',
+      categorie: '',
+      region: '',
+      quartier: '',
+      telephone: '',
+      whatsapp: '',
+      description: '',
+      slogan: '',
+      plan: 'free',
+      premium: false,
+      horaires: 'Lun-Sam 8h-18h',
+      specialites: [],
+      services: [],
+      social: {},
+      verifie: false,
+      profileViews: 0,
+      whatsappClicks: 0,
+    };
+    account = { ...base, email: normalized, password };
+    const reg = getAllProAccountsRegistry();
+    reg[normalized] = account;
+    saveAllProAccountsRegistry(reg);
   } else if (remoteResult.ok && acc && acc.password !== password) {
     // Mot de passe changé à distance (reset) → mettre à jour le local
     registry[normalized].password = password;
