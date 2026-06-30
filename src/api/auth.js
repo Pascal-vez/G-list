@@ -6,6 +6,8 @@ import {
   verifyEmailToken,
   createEmailVerificationToken,
   updateProPasswordInRegistry,
+  getProAccount,
+  saveProAccount,
 } from '../utils/storage';
 
 export async function forgotPassword(email, userType) {
@@ -41,6 +43,11 @@ export async function resetPassword(token, password) {
     });
     if (res?.ok && res.email && res.userType === 'pro') {
       updateProPasswordInRegistry(res.email, password);
+      // Si l'utilisateur est connecté sur cet appareil, mettre à jour sa session
+      const active = getProAccount();
+      if (active?.email?.toLowerCase() === res.email.toLowerCase()) {
+        saveProAccount({ ...active });
+      }
     }
     return res;
   }

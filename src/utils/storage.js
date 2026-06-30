@@ -268,10 +268,7 @@ function migrateLegacyAccount() {
   }
   const registry = getAllProAccountsRegistry();
   if (!registry[email]) {
-    registry[email] = {
-      ...session,
-      password: session.password || 'glist2026',
-    };
+    registry[email] = { ...session };
     saveAllProAccountsRegistry(registry);
   }
 }
@@ -509,13 +506,7 @@ async function registerRemoteUser(email, password) {
 }
 
 async function ensureRemoteUser(email, password) {
-  const first = await registerRemoteUser(email, password);
-  if (first.ok) return first;
-  if (first.exists) {
-    const removed = await deleteRemoteUser(email, password);
-    if (removed.ok) return registerRemoteUser(email, password);
-  }
-  return first;
+  return registerRemoteUser(email, password);
 }
 
 /** Supprime définitivement un compte pro et toutes ses données (local, backend, Supabase). */
@@ -635,7 +626,7 @@ export function createProAccount(data) {
   return createProAccountAsync(data);
 }
 
-/** Crée un compte pro — libère l'email si le compte avait été supprimé. */
+/** Crée un compte pro — Supabase est la source de vérité, le local vient ensuite. */
 export async function createProAccountAsync(data) {
   migrateLegacyAccount();
   sanitizeDeletedRegistryEntries();
@@ -645,27 +636,26 @@ export async function createProAccountAsync(data) {
   if (!data.password) throw new Error('PASSWORD_REQUIRED');
   if (data.password.length < 6) throw new Error('PASSWORD_TOO_SHORT');
 
-  const registry = getAllProAccountsRegistry();
-  const existing = registry[email];
-
-  if (existing) {
-    if (isAccountDeleted(email)) {
-      purgeLocalProDataById(existing.id, email);
-      delete registry[email];
-    } else {
-      const remoteExists = await checkRemoteEmailExists(email);
-      if (!remoteExists) {
-        purgeLocalProDataById(existing.id, email);
-        delete registry[email];
-      } else {
-        const pwOk = existing.password === data.password
-          || await verifyProPasswordRemote(email, data.password);
-        if (pwOk) throw new Error('EMAIL_EXISTS_LOGIN_INSTEAD');
-        throw new Error('EMAIL_EXISTS');
-      }
+  // ── Vérification Supabase EN PREMIER (source de vérité, tous appareils) ──
+  if (apiConfig.useRemoteApi) {
+    const remoteExists = await checkRemoteEmailExists(email);
+    if (remoteExists) {
+      const pwOk = await verifyProPasswordRemote(email, data.password);
+      if (pwOk) throw new Error('EMAIL_EXISTS_LOGIN_INSTEAD');
+      throw new Error('EMAIL_EXISTS');
+    }
+  } else {
+    // Mode hors-ligne : vérification locale uniquement
+    const reg = getAllProAccountsRegistry();
+    const existing = reg[email];
+    if (existing && !isAccountDeleted(email)) {
+      const pwOk = existing.password === data.password;
+      if (pwOk) throw new Error('EMAIL_EXISTS_LOGIN_INSTEAD');
+      throw new Error('EMAIL_EXISTS');
     }
   }
 
+  // ── Nettoyage des tombstones ──
   if (isAccountDeleted(email)) {
     const tombstone = getDeletedAccountsRegistry()[email];
     if (tombstone?.proId != null) {
@@ -678,6 +668,16 @@ export async function createProAccountAsync(data) {
     clearAccountDeletedTombstone(email);
   }
 
+  // ── Inscription dans Supabase EN PREMIER — si ça échoue, on n'inscrit pas ──
+  if (apiConfig.useRemoteApi) {
+    const registered = await registerRemoteUser(email, data.password);
+    if (!registered.ok) {
+      if (registered.exists) throw new Error('EMAIL_EXISTS');
+      throw new Error('Erreur lors de la création du compte. Veuillez réessayer.');
+    }
+  }
+
+  // ── Création locale seulement après confirmation Supabase ──
   const id = Date.now();
   const account = {
     id,
@@ -704,6 +704,7 @@ export async function createProAccountAsync(data) {
     createdAt: new Date().toISOString(),
   };
 
+  const registry = getAllProAccountsRegistry();
   registry[email] = { ...account, password: data.password };
   saveAllProAccountsRegistry(registry);
 
@@ -711,7 +712,6 @@ export async function createProAccountAsync(data) {
   setUserType('pro');
   import('./platformEvents.js').then((m) => m.onProRegister(id, email)).catch(() => {});
 
-  await ensureRemoteUser(email, data.password).catch(() => {});
   await syncProfessionalToCloud(account);
 
   notifyAccountsChanged();
