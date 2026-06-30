@@ -41,9 +41,6 @@ export function rowToAnnuaireProfessional(row) {
     description: row.description || '',
     slogan: row.slogan || '',
     verifie: Boolean(row.verifie),
-    hidden: Boolean(row.hidden),
-    disabled: Boolean(row.disabled),
-    flagged_duplicate: Boolean(row.flagged_duplicate),
     note: Number(row.note) || 0,
     nombreAvis: Number(row.nombre_avis) || 0,
     horaires: row.horaires || 'Lun-Sam 8h-18h',
@@ -227,5 +224,47 @@ export async function upsertProfessionalProfileToSupabase(account) {
     return { ok: false, reason: error.message };
   }
 
+  if (data?.ok !== false && account.email) {
+    await supabase.rpc('link_professional_email', {
+      p_legacy_id: legacyId,
+      p_email: account.email,
+    }).catch(() => {});
+  }
+
   return { ok: data?.ok !== false, professionalId: data?.professional_id };
+}
+
+/** Récupère le profil pro depuis Supabase par email (connexion multi-appareils). */
+export async function fetchProProfileByEmailFromSupabase(email) {
+  if (!useSupabase || !supabase || !email) return null;
+  try {
+    const { data, error } = await supabase.rpc('get_professional_by_email', {
+      p_email: email,
+    });
+    if (error || !data?.found) return null;
+    return {
+      id: data.id,
+      nom: data.nom || '',
+      prenom: '',
+      profession: data.profession || '',
+      categorie: data.categorie || 'Services',
+      region: data.region || 'Conakry',
+      quartier: data.quartier || 'Centre',
+      telephone: data.telephone || '',
+      whatsapp: data.whatsapp || data.telephone || '',
+      description: data.description || '',
+      slogan: data.slogan || '',
+      plan: data.plan || 'free',
+      premium: data.plan === 'premium',
+      horaires: data.horaires || 'Lun-Sam 8h-18h',
+      specialites: parseJsonArray(data.specialites),
+      services: parseJsonArray(data.services),
+      social: data.social && typeof data.social === 'object' ? data.social : {},
+      verifie: Boolean(data.verifie),
+      profileViews: data.profile_views || 0,
+      whatsappClicks: 0,
+    };
+  } catch {
+    return null;
+  }
 }

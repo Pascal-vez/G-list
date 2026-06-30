@@ -1,7 +1,8 @@
 import { normalizeMinisite, slugify, syncSitePages } from './minisite';
 import { useSupabase } from '../lib/supabaseClient';
 import { saveMinisiteRemote, formatMinisiteSaveError, purgeProfessionalCloudOnAccountDelete } from '../api/supabaseMinisite';
-import { upsertProfessionalProfileToSupabase } from '../api/supabaseProfessionals';
+import { validateDeletionReason, recordAccountDeletionFeedback } from './accountDeletionFeedback';
+import { upsertProfessionalProfileToSupabase, fetchProProfileByEmailFromSupabase } from '../api/supabaseProfessionals';
 import { invalidateProfessionalsCache } from '../api/professionalsStore';
 import { apiConfig } from '../api/config';
 import { apiRequest } from '../api/client';
@@ -17,8 +18,7 @@ import {
   BILLING_CYCLE_MONTHLY,
   BILLING_CYCLE_ANNUAL,
 } from './planConfig';
-import { upsertAdminOverrideByLegacy } from '../api/supabaseAdmin';
-import { isAbonnementActif } from './plans';
+import { isAbonnementActif, toPlanDemande } from './plans';
 
 export {
   ANNUAL_PAID_MONTHS,
@@ -293,24 +293,69 @@ export async function loginProAccount(email, password) {
   migrateLegacyAccount();
   const normalized = normalizeEmail(email);
   if (isAccountDeleted(normalized)) return null;
+
+  // Vérification distante en premier (source de vérité, fonctionne sur tous les appareils)
+  const remoteResult = await verifyProPasswordRemoteDetailed(normalized, password);
+
+  // Fallback local si le backend est inaccessible
   const registry = getAllProAccountsRegistry();
   const acc = registry[normalized];
-  if (!acc) return null;
+  const localOk = !remoteResult.ok && Boolean(acc?.password) && acc.password === password;
 
-  const localOk = acc.password === password;
-  const remoteOk = !localOk && await verifyProPasswordRemote(normalized, password);
-  if (!localOk && !remoteOk) return null;
+  if (!remoteResult.ok && !localOk) return null;
 
-  if (remoteOk) {
-    registry[normalized].password = password;
-    saveAllProAccountsRegistry(registry);
+  const localOverride = acc && (getAdminOverrides()[acc.id] || getAdminOverrides()[String(acc.id)]);
+  if (localOverride?.disabled || localOverride?.hidden) return null;
+
+  if (useSupabase && acc?.id) {
+    const blocked = await isProBlockedInCloud(acc.id);
+    if (blocked) return null;
   }
 
-  const { password: _pw, ...session } = acc;
+  let account = acc;
+
+  if (remoteResult.ok && !acc) {
+    // Nouvel appareil : récupérer le profil depuis Supabase
+    const cloudProfile = await fetchProProfileByEmailFromSupabase(normalized);
+    if (cloudProfile) {
+      account = { ...cloudProfile, email: normalized, password };
+      const reg = getAllProAccountsRegistry();
+      reg[normalized] = account;
+      saveAllProAccountsRegistry(reg);
+    }
+  } else if (remoteResult.ok && acc && acc.password !== password) {
+    // Mot de passe changé à distance (reset) → mettre à jour le local
+    registry[normalized].password = password;
+    saveAllProAccountsRegistry(registry);
+    account = registry[normalized];
+  }
+
+  if (!account) return null;
+
+  const { password: _pw, ...session } = account;
   saveProAccount(session);
   setUserType('pro');
   import('./platformEvents.js').then((m) => m.onProLogin(session.id)).catch(() => {});
   return session;
+}
+
+async function isProBlockedInCloud(legacyProId) {
+  try {
+    const { supabase, useSupabase: sb } = await import('../lib/supabaseClient.js');
+    if (!sb || !supabase) return false;
+    const id = Number(legacyProId);
+    if (!Number.isFinite(id)) return false;
+    const { data } = await supabase.rpc('get_annuaire_professional', { p_legacy_id: id });
+    if (data?.professional) return false;
+    const { data: row } = await supabase
+      .from('professionals')
+      .select('id')
+      .eq('legacy_local_id', id)
+      .maybeSingle();
+    return Boolean(row?.id);
+  } catch {
+    return false;
+  }
 }
 
 export function recoverProPassword(email) {
@@ -352,6 +397,19 @@ function notifyAccountsChanged() {
 async function syncProfessionalToCloud(account) {
   if (!useSupabase || !account?.id) return;
   await upsertProfessionalProfileToSupabase(account).catch(() => {});
+}
+
+async function verifyProPasswordRemoteDetailed(email, password) {
+  if (!apiConfig.useRemoteApi) return { ok: false };
+  try {
+    const res = await apiRequest('/auth/verify-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    return { ok: res?.ok === true, userType: res?.userType };
+  } catch {
+    return { ok: false };
+  }
 }
 
 async function verifyProPasswordRemote(email, password) {
@@ -461,7 +519,17 @@ async function ensureRemoteUser(email, password) {
 }
 
 /** Supprime définitivement un compte pro et toutes ses données (local, backend, Supabase). */
-export async function deleteProAccount(email, password) {
+export async function deleteProAccount(email, password, options = {}) {
+  const { reason, requireReason = false, adminOverride = false } = options;
+
+  let validatedReason = null;
+  if (requireReason) {
+    validatedReason = validateDeletionReason(reason);
+    if (!validatedReason.ok) {
+      return { ok: false, error: validatedReason.error, message: validatedReason.message };
+    }
+  }
+
   migrateLegacyAccount();
   sanitizeDeletedRegistryEntries();
   const normalized = normalizeEmail(email);
@@ -469,23 +537,53 @@ export async function deleteProAccount(email, password) {
   const acc = registry[normalized];
 
   if (!acc && isAccountDeleted(normalized)) {
-    await deleteRemoteUser(normalized, password);
+    if (!adminOverride) await deleteRemoteUser(normalized, password);
     return { ok: true, alreadyDeleted: true };
   }
 
   if (!acc) {
     const remoteOnly = await verifyProPasswordRemote(normalized, password);
-    if (!remoteOnly) return { ok: false, error: 'NOT_FOUND' };
+    if (!remoteOnly && !adminOverride) return { ok: false, error: 'NOT_FOUND' };
+    if (adminOverride && options.legacyProId != null) {
+      const cloudOnly = await purgeCloudAndBackendOnDelete({
+        proId: options.legacyProId,
+        slug: null,
+        email: normalized.includes('@') ? normalized : null,
+        password,
+      });
+      notifyAccountsChanged();
+      return { ok: true, cloudDeleted: cloudOnly.cloudResult?.deleted === true, cloudOnly: true };
+    }
   }
 
-  const passwordOk = acc
-    ? (acc.password === password || await verifyProPasswordRemote(normalized, password))
-    : await verifyProPasswordRemote(normalized, password);
-  if (!passwordOk) return { ok: false, error: 'PASSWORD_INVALID' };
+  if (!adminOverride) {
+    const passwordOk = acc
+      ? (acc.password === password || await verifyProPasswordRemote(normalized, password))
+      : await verifyProPasswordRemote(normalized, password);
+    if (!passwordOk) return { ok: false, error: 'PASSWORD_INVALID' };
+  }
 
-  const proId = acc?.id ?? getDeletedAccountsRegistry()[normalized]?.proId;
+  const proId = acc?.id ?? options.legacyProId ?? getDeletedAccountsRegistry()[normalized]?.proId;
   const minisiteSlug = proId != null ? getMinisiteSlugBeforeDelete(proId) : null;
   const accountEmail = acc?.email || normalized;
+
+  if (validatedReason?.reason) {
+    recordAccountDeletionFeedback({
+      userType: 'pro',
+      email: accountEmail,
+      displayName: acc?.nom,
+      reason: validatedReason.reason,
+      proId,
+    });
+  } else if (adminOverride && reason) {
+    recordAccountDeletionFeedback({
+      userType: 'pro',
+      email: accountEmail,
+      displayName: acc?.nom,
+      reason: reason.trim(),
+      proId,
+    });
+  }
 
   // ── Phase 1 : suppression locale immédiate (annuaire / session) ──
   delete registry[normalized];
@@ -512,7 +610,7 @@ export async function deleteProAccount(email, password) {
     password,
   });
 
-  import('./platformEvents.js').then((m) => m.onProDelete(proId, email)).catch(() => {});
+  import('./platformEvents.js').then((m) => m.onProDelete(proId, email, validatedReason?.reason)).catch(() => {});
 
   return {
     ok: true,
@@ -785,10 +883,12 @@ export function recordEngagement(answer) {
   }
 }
 
-export function addWaitlistEntry(entry) {
-  const list = getItem(KEYS.WAITLIST, []);
-  list.push({ ...entry, timestamp: new Date().toISOString() });
-  setItem(KEYS.WAITLIST, list);
+export function addWaitlistEntry() {
+  /* liste d'attente supprimée — inscription directe via /espace-pro */
+}
+
+export function getWaitlistEntries() {
+  return [];
 }
 
 /** @deprecated Utiliser getProReviews — alias conservé pour compatibilité */
@@ -917,6 +1017,44 @@ export function loginVisitorAccount(email, password) {
 export function logoutVisitorAccount() {
   localStorage.removeItem(KEYS.VISITOR_ACCOUNT);
   if (getUserType() === 'visiteur') localStorage.removeItem(KEYS.USER_TYPE);
+}
+
+/** Supprime définitivement un compte visiteur (motif obligatoire si requireReason). */
+export async function deleteVisitorAccount(email, password, options = {}) {
+  const { reason, requireReason = false } = options;
+
+  let validatedReason = null;
+  if (requireReason) {
+    validatedReason = validateDeletionReason(reason);
+    if (!validatedReason.ok) {
+      return { ok: false, error: validatedReason.error, message: validatedReason.message };
+    }
+  }
+
+  const normalized = normalizeEmail(email || '');
+  const registry = getVisitorRegistry();
+  const acc = registry[normalized];
+  if (!acc) return { ok: false, error: 'NOT_FOUND' };
+  if (acc.password !== password) return { ok: false, error: 'PASSWORD_INVALID' };
+
+  const displayName = `${acc.prenom || ''} ${acc.nom || ''}`.trim() || normalized;
+
+  if (validatedReason?.reason) {
+    recordAccountDeletionFeedback({
+      userType: 'visitor',
+      email: normalized,
+      displayName,
+      reason: validatedReason.reason,
+    });
+  }
+
+  delete registry[normalized];
+  saveVisitorRegistry(registry);
+  logoutVisitorAccount();
+
+  import('./platformEvents.js').then((m) => m.onVisitorDelete(normalized, validatedReason?.reason)).catch(() => {});
+
+  return { ok: true };
 }
 
 export function getAllVisitorAccounts() {
@@ -1545,40 +1683,90 @@ export function setAdminOverride(proId, overrides) {
 }
 
 export function adminVerifyProfessional(proId) {
-  setAdminOverride(proId, { verifie: true, disabled: false, hidden: false });
-  if (useSupabase) {
-    upsertAdminOverrideByLegacy(proId, { verifie: true, disabled: false, hidden: false }).catch(() => {});
-  }
+  setAdminOverride(proId, { verifie: true, disabled: false, hidden: false, flaggedDuplicate: false });
+  syncAdminOverrideToCloud(proId, { verifie: true, hidden: false, disabled: false });
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    notifyProInbox(proId, {
+      type: 'success',
+      title: 'Profil vérifié',
+      message: 'Félicitations ! Votre profil affiche désormais le badge « Vérifié » sur G-List.',
+    });
+  }).catch(() => {});
 }
 
 export function adminDisableProfessional(proId) {
   setAdminOverride(proId, { disabled: true, verifie: false });
-  if (useSupabase) {
-    upsertAdminOverrideByLegacy(proId, { disabled: true, verifie: false }).catch(() => {});
-  }
+  syncAdminOverrideToCloud(proId, { disabled: true, verifie: false });
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    notifyProInbox(proId, {
+      type: 'warning',
+      title: 'Profil désactivé',
+      message: 'Votre fiche a été temporairement désactivée par l\'administration. Contactez le support pour plus d\'informations.',
+    });
+  }).catch(() => {});
 }
 
 export function adminFlagDuplicate(proId) {
   setAdminOverride(proId, { flaggedDuplicate: true });
-  if (useSupabase) {
-    upsertAdminOverrideByLegacy(proId, { flaggedDuplicate: true }).catch(() => {});
-  }
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    notifyProInbox(proId, {
+      type: 'warning',
+      title: 'Doublon signalé',
+      message: 'Votre fiche a été signalée comme doublon. L\'équipe G-List va la traiter sous peu.',
+    });
+  }).catch(() => {});
 }
 
 export function adminHideProfessional(proId) {
   setAdminOverride(proId, { hidden: true, disabled: true });
-  if (useSupabase) {
-    upsertAdminOverrideByLegacy(proId, { hidden: true, disabled: true }).catch(() => {});
-  }
+  syncAdminOverrideToCloud(proId, { hidden: true, disabled: true });
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    notifyProInbox(proId, {
+      type: 'warning',
+      title: 'Profil masqué',
+      message: 'Votre fiche n\'est plus visible dans l\'annuaire public.',
+    });
+  }).catch(() => {});
+}
+
+export function adminReactivateProfessional(proId) {
+  setAdminOverride(proId, { hidden: false, disabled: false, flaggedDuplicate: false });
+  syncAdminOverrideToCloud(proId, { hidden: false, disabled: false });
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    notifyProInbox(proId, {
+      type: 'success',
+      title: 'Profil réactivé',
+      message: 'Votre fiche est de nouveau visible dans l\'annuaire G-List.',
+    });
+  }).catch(() => {});
+}
+
+export function adminNotifyProfessional(proId, { title, message }) {
+  if (!title || !message) return;
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    notifyProInbox(proId, { type: 'info', title, message });
+  }).catch(() => {});
+}
+
+async function syncAdminOverrideToCloud(proId, { verifie, hidden, disabled }) {
+  if (!useSupabase) return;
+  try {
+    const { supabase } = await import('../lib/supabaseClient.js');
+    if (!supabase) return;
+    await supabase.rpc('admin_set_pro_override', {
+      p_legacy_id: Number(proId),
+      p_verifie: verifie ?? null,
+      p_hidden: hidden ?? null,
+      p_disabled: disabled ?? null,
+    });
+    const { invalidateProfessionalsCache } = await import('../api/professionalsStore.js');
+    invalidateProfessionalsCache();
+  } catch { /* ignore */ }
 }
 
 export function adminMergeDuplicate(keepId, removeId) {
   setAdminOverride(removeId, { hidden: true, mergedInto: keepId });
   setAdminOverride(keepId, { verifie: true, flaggedDuplicate: false });
-  if (useSupabase) {
-    upsertAdminOverrideByLegacy(removeId, { hidden: true }).catch(() => {});
-    upsertAdminOverrideByLegacy(keepId, { verifie: true, flaggedDuplicate: false }).catch(() => {});
-  }
 }
 
 export function updateProAccountById(proId, patch) {
@@ -1609,6 +1797,24 @@ export function getAdminPlanForPro(proId) {
   return entry?.plan || null;
 }
 
+async function syncPlanToCloud(proId, plan) {
+  if (!useSupabase) return;
+  try {
+    const { supabase } = await import('../lib/supabaseClient.js');
+    if (!supabase) return;
+    const legacyId = Number(proId);
+    if (!Number.isFinite(legacyId)) return;
+    const planDemande = plan === 'free' ? 'free' : toPlanDemande(plan);
+    await supabase.rpc('admin_activate_plan_legacy', {
+      p_legacy_id: legacyId,
+      p_plan: planDemande,
+      p_days: plan === 'free' ? 1 : 30,
+    });
+    const { invalidateProfessionalsCache } = await import('../api/professionalsStore.js');
+    await invalidateProfessionalsCache();
+  } catch { /* ignore */ }
+}
+
 export function adminSetProfessionalPlan(proId, plan) {
   const valid = ['free', 'advanced', 'premium'];
   if (!valid.includes(plan)) return false;
@@ -1629,11 +1835,24 @@ export function adminSetProfessionalPlan(proId, plan) {
 
   updateProAccountById(id, {
     plan,
+    planAbonnement: plan === 'free' ? 'gratuit' : toPlanDemande(plan),
+    planActif: plan !== 'free',
     premium: plan === 'premium',
-    billingCycle: plan === 'free' ? null : 'annual',
+    billingCycle: plan === 'free' ? null : 'monthly',
     premiumSince: plan !== 'free' ? new Date().toISOString() : null,
-    premiumExpires: plan !== 'free' ? new Date(Date.now() + 365 * 86400000).toISOString() : null,
+    premiumExpires: plan !== 'free' ? new Date(Date.now() + 30 * 86400000).toISOString() : null,
+    planFin: plan !== 'free' ? new Date(Date.now() + 30 * 86400000).toISOString() : null,
   });
+
+  syncPlanToCloud(id, plan);
+
+  import('./notificationInbox.js').then(({ notifyProInbox }) => {
+    if (plan === 'free') {
+      notifyProInbox(id, { type: 'info', title: 'Plan modifié', message: 'Votre abonnement a été remis au plan gratuit.' });
+    } else {
+      notifyProInbox(id, { type: 'success', title: 'Abonnement activé', message: `Votre plan ${plan === 'premium' ? 'Premium' : 'Advanced'} est maintenant actif.` });
+    }
+  }).catch(() => {});
 
   return true;
 }
@@ -1642,10 +1861,6 @@ export function updateReportStatus(id, status) {
   const list = getReports().map((r) => (r.id === id ? { ...r, status } : r));
   setItem(KEYS.REPORTS, list);
   return list;
-}
-
-export function getWaitlistEntries() {
-  return getItem(KEYS.WAITLIST, []);
 }
 
 export function getContactMessages() {
