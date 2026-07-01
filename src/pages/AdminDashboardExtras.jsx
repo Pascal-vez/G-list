@@ -9,27 +9,38 @@ import {
   Shield, Zap, Eye, BarChart2, ClipboardList,
 } from 'lucide-react';
 import { REGIONS, CATEGORIES } from '../data/constants';
+import LocaliteInput from '../components/LocaliteInput';
+import { localiteCorrespond } from '../utils/localite';
 import {
   getAllProAccountsList, getAllVisitorAccounts, getReports,
   adminVerifyProfessional, adminDisableProfessional, adminFlagDuplicate,
-  adminHideProfessional, adminMergeDuplicate, updateReportStatus,
-  adminSetProfessionalPlan,
-  getWaitlistEntries, getContactMessages,
+  adminHideProfessional, adminReactivateProfessional, adminNotifyProfessional,
+  adminMergeDuplicate,
+  adminSetProfessionalPlan, deleteProAccount,
+  getContactMessages,
   getSubscriptionPlans, saveSubscriptionPlans, getPlanMonthlyPrice,
 } from '../utils/storage';
+import { fetchReports, resolveReportStatus } from '../api/reports';
+import { syncPlatformFormsCache } from '../api/platformForms';
+import { activerAbonnementManuel } from '../api/abonnement';
+import { invalidateProfessionalsCache } from '../api/professionalsStore';
+import { hidePlatformReview, deletePlatformReview, fetchPlatformReviews } from '../api/supabasePlatformReviews';
+import {
+  getAdminNotifications, getAdminUnreadCount, markAdminNotificationRead, markAllAdminNotificationsRead,
+} from '../utils/adminNotifications';
 import {
   BROADCAST_TYPES, BROADCAST_AUDIENCES,
   getAdminBroadcasts, adminCreateBroadcast, adminToggleBroadcast, adminDeleteBroadcast,
   estimateBroadcastRecipients, getBroadcastTypeLabel, getBroadcastAudienceLabel,
 } from '../utils/adminBroadcasts';
 import { getAuditLog, getAuditActionLabel } from '../utils/auditLog';
+import { getAccountDeletionFeedbacks } from '../utils/accountDeletionFeedback';
 import { PLATFORM_MILESTONES } from '../utils/saasLevel100';
 import { usePlatformAnalytics } from '../hooks/usePlatformAnalytics';
-import { reloadProfessionalsAnnuaire } from '../api/professionals';
 import {
   getPlatformKPIs, getActivitySeries, getTopCategories, getTopRegions,
-  getRegionDensity, getOpportunityGaps, getRevenueStats, generateContentPreview,
-  getIAInsights, getProsWithAdminState, findDuplicateGroups,
+  generateContentPreview,
+  getProsWithAdminState, findDuplicateGroups,
 } from '../utils/adminAnalytics';
 import { filterByDateRange, formatPeriodLabel } from '../utils/dateRange';
 import BarChart from '../components/dashboard/BarChart';
@@ -122,7 +133,7 @@ function RoleBadge({ role }) {
 }
 
 function PriorityBadge({ score }) {
-  const high = score > 15;
+  const high = score >= 10;
   return (
     <span className={`${styles.priorityBadge} ${high ? styles.priorityHigh : styles.priorityMed}`}>
       {high ? 'Haute' : 'Moyenne'}
@@ -130,7 +141,157 @@ function PriorityBadge({ score }) {
   );
 }
 
-export function AdminOverview({ evalStats, dateRange }) {
+export function AdminAlertsPanel({ onNavigate }) {
+  const [alerts, setAlerts] = useState(() => getAdminNotifications().slice(0, 30));
+  const [unread, setUnread] = useState(() => getAdminUnreadCount());
+
+  const loadRemote = () => {
+    import('../api/supabaseAdminAlerts.js').then(({ fetchAdminAlertsRemote }) => (
+      fetchAdminAlertsRemote(30)
+    )).then((result) => {
+      if (!result?.alerts) return;
+      setAlerts(result.alerts.map((a) => ({
+        id: a.id,
+        type: a.type,
+        title: a.title,
+        message: a.message,
+        link: a.link,
+        read: !!a.read_at,
+        createdAt: a.created_at,
+        supabase: true,
+      })));
+      setUnread(result.unread ?? 0);
+    }).catch(() => {
+      setAlerts(getAdminNotifications().slice(0, 30));
+      setUnread(getAdminUnreadCount());
+    });
+  };
+
+  useEffect(() => { loadRemote(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRead = (id, link, isSupabase) => {
+    if (isSupabase) {
+      import('../api/supabaseAdminAlerts.js').then((m) => m.markAdminAlertReadRemote(id)).catch(() => {});
+      setAlerts((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      setUnread((c) => Math.max(0, c - 1));
+    } else {
+      markAdminNotificationRead(id);
+      setAlerts(getAdminNotifications().slice(0, 30));
+      setUnread(getAdminUnreadCount());
+    }
+    if (link && onNavigate) onNavigate(link);
+  };
+
+  const handleReadAll = () => {
+    import('../api/supabaseAdminAlerts.js').then((m) => m.markAllAdminAlertsReadRemote()).catch(() => {});
+    markAllAdminNotificationsRead();
+    setAlerts((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnread(0);
+  };
+
+  if (!alerts.length) return null;
+
+  return (
+    <AdminCard
+      title={`Alertes admin${unread ? ` (${unread} non lue${unread > 1 ? 's' : ''})` : ''}`}
+      subtitle="Demandes d'abonnement et événements récents"
+    >
+      <ul className={styles.alertList}>
+        {alerts.map((n) => (
+          <li key={n.id} className={`${styles.alertItem} ${n.read ? styles.alertRead : ''}`}>
+            <div>
+              <strong>{n.title}</strong>
+              <p>{n.message}</p>
+              <time>{new Date(n.createdAt || n.created_at).toLocaleString('fr-FR')}</time>
+            </div>
+            <div className={styles.alertActions}>
+              {!n.read && (
+                <button type="button" className={styles.btnSecondary} onClick={() => handleRead(n.id, n.link, n.supabase)}>
+                  Voir
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {unread > 0 && (
+        <button type="button" className={styles.btnSecondary} onClick={handleReadAll}>
+          Tout marquer comme lu
+        </button>
+      )}
+    </AdminCard>
+  );
+}
+
+export function AdminPlatformReviewsModeration() {
+  const { show, Toast } = useToast();
+  const [reviews, setReviews] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const reload = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchPlatformReviews({ offset: 0, limit: 50, includeHidden: true });
+      setReviews(data.reviews || []);
+      setTotal(data.total || 0);
+    } catch {
+      setReviews([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { reload(); }, []);
+
+  const handleHide = async (id, hidden) => {
+    await hidePlatformReview(id, hidden);
+    show(hidden ? 'Avis masqué' : 'Avis réaffiché');
+    reload();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer cet avis définitivement ?')) return;
+    await deletePlatformReview(id);
+    show('Avis supprimé');
+    reload();
+  };
+
+  return (
+    <AdminCard title={`Avis sur G-List (${total})`} subtitle="Modération des avis publics sur la plateforme">
+      {Toast}
+      {loading ? (
+        <p className={styles.empty}>Chargement…</p>
+      ) : reviews.length === 0 ? (
+        <p className={styles.empty}>Aucun avis pour le moment.</p>
+      ) : (
+        <div className={styles.evalList}>
+          {reviews.map((r) => (
+            <div key={r.id} className={`${styles.evalRow} ${r.hidden ? styles.alertRead : ''}`}>
+              <div className={styles.evalRowHead}>
+                <span className={styles.evalStars}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                <strong>{r.author_name}</strong>
+                {r.hidden && <span className={styles.priorityBadge}>Masqué</span>}
+                <span className={styles.evalDate}>{new Date(r.created_at).toLocaleString('fr-FR')}</span>
+              </div>
+              <p className={styles.evalExcerpt}>{r.comment}</p>
+              <div className={styles.modActions} style={{ flexDirection: 'row' }}>
+                <button type="button" onClick={() => handleHide(r.id, !r.hidden)}>
+                  {r.hidden ? 'Réafficher' : 'Masquer'}
+                </button>
+                <button type="button" className={styles.btnMuted} onClick={() => handleDelete(r.id)}>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </AdminCard>
+  );
+}
+
+export function AdminOverview({ evalStats, dateRange, onNavigateTab }) {
   const { kpis, activity, topCategories, loading } = usePlatformAnalytics(dateRange);
   const topCats = topCategories.map((c) => ({ label: c.name.split(' ')[0], value: c.count }));
   const periodLabel = formatPeriodLabel(dateRange.startDate, dateRange.endDate);
@@ -145,14 +306,15 @@ export function AdminOverview({ evalStats, dateRange }) {
         title="Vue d'ensemble"
         subtitle={`Indicateurs clés — ${periodLabel}`}
       />
+
+      <AdminAlertsPanel onNavigate={onNavigateTab} />
       <div className={styles.kpiGrid}>
         <MetricCard value={kpis.totalPros} label="Professionnels actifs" accent="#F5C518" />
         <MetricCard value={kpis.verified} label="Profils vérifiés" accent="#5C9EFF" />
-        <MetricCard value={kpis.totalUsers} label="Comptes inscrits" accent="#AB47BC" />
+        <MetricCard value={kpis?.totalUsers ?? kpis?.totalPros ?? 0} label="Comptes inscrits" accent="#AB47BC" />
         <MetricCard value={kpis.totalViews} label="Vues annuaire" accent="#4CAF50" />
         <MetricCard value={kpis.totalSearches} label="Recherches" accent="#FF9800" />
         <MetricCard value={kpis.whatsappClicks} label="Clics WhatsApp est." accent="#25D366" />
-        <MetricCard value={kpis.waitlistCount} label="Liste d'attente" accent="#F5C518" />
         <MetricCard value={`+${kpis.growthPct}%`} label="Croissance" accent="#D4A800" trend={kpis.growthPct} />
       </div>
 
@@ -222,20 +384,17 @@ export function AdminProfessionals() {
   const { show, Toast } = useToast();
   const [filter, setFilter] = useState({ plan: 'all', region: 'all', status: 'all' });
   const [search, setSearch] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  useEffect(() => {
-    reloadProfessionalsAnnuaire().then(() => setRefreshKey((n) => n + 1)).catch(() => {});
-  }, []);
-
-  const pros = useMemo(() => getProsWithAdminState(), [refreshKey]);
+  const [showHidden, setShowHidden] = useState(false);
+  const [, setRefresh] = useState(0);
+  const pros = getProsWithAdminState();
 
   const filtered = useMemo(() => {
     let list = pros.filter((p) => {
+      if (!showHidden && p.hidden) return false;
       if (filter.plan !== 'all' && (p.plan || 'free') !== filter.plan) return false;
-      if (filter.region !== 'all' && p.region !== filter.region) return false;
+      if (filter.region !== 'all' && !localiteCorrespond(p.region, filter.region)) return false;
       if (filter.status !== 'all' && p.adminStatus !== filter.status) return false;
-      return !p.hidden;
+      return true;
     });
     if (search.trim()) {
       list = list.filter((p) => matchesProSearch(p, search));
@@ -243,19 +402,68 @@ export function AdminProfessionals() {
       list = list.slice(0, 80);
     }
     return list;
-  }, [pros, filter, search]);
+  }, [pros, filter, search, showHidden]);
 
   const visiblePros = pros.filter((p) => !p.hidden);
 
   const act = (label, fn) => {
     fn();
-    reloadProfessionalsAnnuaire().then(() => setRefreshKey((n) => n + 1)).catch(() => {});
+    setRefresh((n) => n + 1);
     show(label);
   };
 
   const handlePlanChange = (pro, plan) => {
     if (plan === (pro.plan || 'free')) return;
     act(`Plan ${pro.nom} → ${PLAN_LABELS[plan]}`, () => adminSetProfessionalPlan(pro.id, plan));
+  };
+
+  const handleNotify = (pro) => {
+    const title = window.prompt('Titre de la notification', 'Message de G-List');
+    if (!title) return;
+    const message = window.prompt('Message', '');
+    if (!message) return;
+    adminNotifyProfessional(pro.id, { title, message });
+    show(`Notification envoyée à ${pro.nom}`);
+  };
+
+  const handleActivateAbo = async (pro, planId) => {
+    try {
+      await activerAbonnementManuel(pro.id, planId);
+      await invalidateProfessionalsCache().catch(() => {});
+      setRefresh((n) => n + 1);
+      show(`Abonnement ${PLAN_LABELS[planId]} activé pour ${pro.nom}`);
+    } catch (err) {
+      show(err?.message || 'Erreur activation abonnement');
+    }
+  };
+
+  const handleDelete = async (pro) => {
+    if (!window.confirm(`Supprimer définitivement ${pro.nom} ? Cette action est irréversible.`)) return;
+    const acc = getAllProAccountsList().find((p) => Number(p.id) === Number(pro.id));
+    const email = acc?.email || pro.email;
+
+    if (email) {
+      const result = await deleteProAccount(email, undefined, {
+        adminOverride: true,
+        legacyProId: pro.id,
+        reason: 'Suppression initiée par l\'administrateur',
+      });
+      if (!result.ok) {
+        show(result.error || 'Suppression impossible');
+        return;
+      }
+    } else {
+      const { purgeProfessionalCloudOnAccountDelete } = await import('../api/supabaseMinisite');
+      const cloud = await purgeProfessionalCloudOnAccountDelete({ legacyProId: pro.id, email: pro.email || null });
+      if (!cloud.deleted) {
+        show('Suppression cloud impossible — fiche introuvable dans Supabase');
+        return;
+      }
+    }
+
+    await invalidateProfessionalsCache().catch(() => {});
+    setRefresh((n) => n + 1);
+    show(`${pro.nom} supprimé`);
   };
 
   return (
@@ -280,10 +488,14 @@ export function AdminProfessionals() {
           <option value="advanced">Advanced</option>
           <option value="premium">Premium</option>
         </select>
-        <select value={filter.region} onChange={(e) => setFilter({ ...filter, region: e.target.value })}>
-          <option value="all">Toutes les villes</option>
-          {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+        <div className={styles.localiteFilter}>
+          <LocaliteInput
+            value={filter.region === 'all' ? '' : filter.region}
+            onChange={(v) => setFilter({ ...filter, region: v || 'all' })}
+            placeholder="Filtrer par localité…"
+            trackUsage
+          />
+        </div>
         <select value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })}>
           <option value="all">Tous statuts</option>
           <option value="vérifié">Vérifié</option>
@@ -303,6 +515,10 @@ export function AdminProfessionals() {
           />
         </label>
         <span className={styles.filterCount}>{filtered.length} résultat(s)</span>
+        <label className={styles.filterToggle}>
+          <input type="checkbox" checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} />
+          Afficher les fiches masquées
+        </label>
       </div>
 
       <AdminCard title="Liste des professionnels" subtitle="Actions rapides sur chaque fiche">
@@ -347,8 +563,17 @@ export function AdminProfessionals() {
                 <td><StatusBadge status={p.adminStatus} /></td>
                 <td className={styles.actions}>
                   <button type="button" onClick={() => act(`${p.nom} vérifié`, () => adminVerifyProfessional(p.id))}>Vérifier</button>
-                  <button type="button" onClick={() => act('Doublon signalé', () => adminFlagDuplicate(p.id))}>Doublon</button>
-                  <button type="button" onClick={() => act(`${p.nom} désactivé`, () => adminDisableProfessional(p.id))}>Désactiver</button>
+                  {p.hidden || p.disabled ? (
+                    <button type="button" onClick={() => act(`${p.nom} réactivé`, () => adminReactivateProfessional(p.id))}>Réactiver</button>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => act(`${p.nom} masqué`, () => adminHideProfessional(p.id))}>Masquer</button>
+                      <button type="button" onClick={() => act(`${p.nom} désactivé`, () => adminDisableProfessional(p.id))}>Désactiver</button>
+                    </>
+                  )}
+                  <button type="button" onClick={() => handleNotify(p)}>Notifier</button>
+                  <button type="button" onClick={() => handleActivateAbo(p, 'premium')}>Activer Premium</button>
+                  <button type="button" onClick={() => handleDelete(p)}>Supprimer</button>
                 </td>
               </tr>
             ))}
@@ -364,10 +589,10 @@ export function AdminUsers({ dateRange }) {
   const { show, Toast } = useToast();
   const [roles, setRoles] = useState({});
   const [roleFilter, setRoleFilter] = useState('all');
+  const [regionFilter, setRegionFilter] = useState('');
   const [search, setSearch] = useState('');
   const visitors = getAllVisitorAccounts();
   const pros = getAllProAccountsList();
-  const waitlist = getWaitlistEntries();
 
   const allUsers = useMemo(() => [
     ...visitors.map((v) => ({ ...v, role: roles[v.email] || 'visiteur', name: `${v.prenom} ${v.nom}` })),
@@ -382,17 +607,56 @@ export function AdminUsers({ dateRange }) {
   const filtered = useMemo(() => {
     let list = periodUsers;
     if (roleFilter !== 'all') list = list.filter((u) => u.role === roleFilter);
+    if (regionFilter.trim()) {
+      list = list.filter((u) => u.role !== 'pro' || localiteCorrespond(u.region, regionFilter));
+    }
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter((u) => [u.name, u.email].filter(Boolean).join(' ').toLowerCase().includes(q));
     }
     return list;
-  }, [periodUsers, roleFilter, search]);
+  }, [periodUsers, roleFilter, regionFilter, search]);
 
   const toggleRole = (email, current) => {
     const next = current === 'pro' ? 'visiteur' : 'pro';
     setRoles((r) => ({ ...r, [email]: next }));
     show(`Rôle mis à jour : ${next}`);
+  };
+
+  const handleNotifyUser = (u) => {
+    if (u.role !== 'pro' || !u.id) {
+      show('Notification réservée aux comptes pro');
+      return;
+    }
+    const title = window.prompt('Titre', 'Message G-List');
+    if (!title) return;
+    const message = window.prompt('Message', '');
+    if (!message) return;
+    adminNotifyProfessional(u.id, { title, message });
+    show(`Notification envoyée à ${u.name}`);
+  };
+
+  const handleDeleteUser = async (u) => {
+    if (u.role !== 'pro') {
+      show('Suppression réservée aux comptes pro');
+      return;
+    }
+    if (!window.confirm(`Supprimer ${u.name} ?`)) return;
+    await deleteProAccount(u.email, undefined, {
+      adminOverride: true,
+      reason: 'Suppression initiée par l\'administrateur',
+    });
+    show(`${u.name} supprimé`);
+  };
+
+  const handleActivateAbo = async (u, planId) => {
+    if (u.role !== 'pro' || !u.id) return;
+    try {
+      await activerAbonnementManuel(u.id, planId);
+      show(`Abonnement ${planId} activé pour ${u.name}`);
+    } catch {
+      show('Erreur activation abonnement');
+    }
   };
 
   return (
@@ -407,7 +671,6 @@ export function AdminUsers({ dateRange }) {
         <StatKpi icon={Users} bg="#EDE9FE" color="#7C3AED" value={allUsers.length} label="Comptes totaux" />
         <StatKpi icon={UserCircle} bg="#DBEAFE" color="#1D4ED8" value={visitors.length} label="Visiteurs" />
         <StatKpi icon={UserPlus} bg="#DCFCE7" color="#16A34A" value={pros.length} label="Professionnels" />
-        <StatKpi icon={Mail} bg="#FEF9C3" color="#CA8A04" value={waitlist.length} label="Liste d'attente" />
       </div>
 
       <div className={styles.filters}>
@@ -416,6 +679,14 @@ export function AdminUsers({ dateRange }) {
           <option value="visiteur">Visiteurs</option>
           <option value="pro">Professionnels</option>
         </select>
+        <div className={styles.localiteFilter}>
+          <LocaliteInput
+            value={regionFilter}
+            onChange={setRegionFilter}
+            placeholder="Filtrer les pros par localité…"
+            trackUsage
+          />
+        </div>
         <label className={styles.searchWrap}>
           <Search size={16} aria-hidden />
           <input
@@ -444,16 +715,30 @@ export function AdminUsers({ dateRange }) {
                   <td>
                     <div className={styles.userCell}>
                       <UserAvatar name={u.name} />
-                      <strong>{u.name}</strong>
+                      {u.role === 'pro' && u.id ? (
+                        <Link to={`/profil/${u.id}`} className={styles.proNameLink}>{u.name}</Link>
+                      ) : (
+                        <strong>{u.name}</strong>
+                      )}
                     </div>
                   </td>
                   <td>{u.email}</td>
                   <td><RoleBadge role={u.role} /></td>
                   <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '—'}</td>
-                  <td>
-                    <button type="button" className={styles.btnSecondary} onClick={() => toggleRole(u.email, u.role)}>
-                      Passer {u.role === 'pro' ? 'visiteur' : 'pro'}
-                    </button>
+                  <td className={styles.actions}>
+                    {u.role === 'pro' && u.id && (
+                      <Link to={`/profil/${u.id}`} className={styles.btnSecondary}>Voir profil</Link>
+                    )}
+                    <button type="button" className={styles.btnSecondary} onClick={() => handleNotifyUser(u)}>Notifier</button>
+                    {u.role === 'pro' && u.id && (
+                      <>
+                        <button type="button" className={styles.btnSecondary} onClick={() => handleActivateAbo(u, 'advanced')}>Activer Advanced</button>
+                        <button type="button" className={styles.btnSecondary} onClick={() => handleActivateAbo(u, 'premium')}>Activer Premium</button>
+                      </>
+                    )}
+                    {u.role === 'pro' && (
+                      <button type="button" className={styles.btnSecondary} onClick={() => handleDeleteUser(u)}>Supprimer</button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -461,22 +746,6 @@ export function AdminUsers({ dateRange }) {
           </table>
         </div>
       </AdminCard>
-
-      {waitlist.length > 0 && (
-        <AdminCard title="Liste d'attente" subtitle={`${waitlist.length} demande${waitlist.length > 1 ? 's' : ''} en attente`}>
-          <div className={styles.waitlistGrid}>
-            {waitlist.slice(0, 12).map((entry, i) => (
-              <div key={entry.email || i} className={styles.waitlistItem}>
-                <Mail size={14} aria-hidden />
-                <div>
-                  <strong>{entry.email || entry.nom || '—'}</strong>
-                  {entry.metier && <span>{entry.metier}{entry.ville ? ` · ${entry.ville}` : ''}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </AdminCard>
-      )}
     </div>
   );
 }
@@ -530,8 +799,19 @@ export function AdminAnalytics({ dateRange }) {
 }
 
 export function AdminMap() {
-  const regionDensity = useMemo(() => getRegionDensity(), []);
-  const totalPros = useMemo(() => Object.values(regionDensity).reduce((a, b) => a + b, 0), [regionDensity]);
+  const dateRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
+  }, []);
+  const { topRegions, kpis } = usePlatformAnalytics(dateRange);
+  const regionDensity = useMemo(() => {
+    const map = Object.fromEntries(REGIONS.map((r) => [r, 0]));
+    (topRegions || []).forEach(({ name, count }) => { map[name] = count; });
+    return map;
+  }, [topRegions]);
+  const totalPros = kpis?.totalPros ?? Object.values(regionDensity).reduce((a, b) => a + b, 0);
   const max = Math.max(...Object.values(regionDensity), 1);
   const topRegion = useMemo(() => {
     const entries = Object.entries(regionDensity).sort((a, b) => b[1] - a[1]);
@@ -586,13 +866,25 @@ export function AdminMap() {
 
 export function AdminOpportunities({ dateRange }) {
   const { show, Toast } = useToast();
-  const { opportunities: opps, loading } = usePlatformAnalytics(dateRange);
-  const highPriority = opps.filter((o) => o.score > 15).length;
-  const maxScore = Math.max(...opps.map((o) => o.score), 1);
+  const { kpis, topCategories, topRegions } = usePlatformAnalytics(dateRange);
 
-  if (loading) {
-    return <div className={styles.section}><p>Chargement…</p></div>;
-  }
+  const opps = useMemo(() => {
+    const prosByCat = Object.fromEntries((topCategories || []).map((c) => [c.name, c.count]));
+    const prosByRegion = Object.fromEntries((topRegions || []).map((r) => [r.name, r.count]));
+    const gaps = [];
+    CATEGORIES.forEach((cat) => {
+      REGIONS.forEach((region) => {
+        const pros = Math.min(prosByCat[cat.name] || 0, prosByRegion[region] || 0);
+        if (pros === 0) {
+          gaps.push({ cat: cat.name, region, pros: 0, searches: 0, score: 10 });
+        }
+      });
+    });
+    return gaps.slice(0, 10);
+  }, [topCategories, topRegions]);
+
+  const highPriority = opps.length;
+  const maxScore = Math.max(...opps.map((o) => o.score), 1);
 
   return (
     <div className={styles.section}>
@@ -605,7 +897,7 @@ export function AdminOpportunities({ dateRange }) {
       <div className={styles.feedbackKpiGrid}>
         <StatKpi icon={Target} bg="#FEF9C3" color="#CA8A04" value={opps.length} label="Zones identifiées" />
         <StatKpi icon={AlertTriangle} bg="#FEE2E2" color="#DC2626" value={highPriority} label="Priorité haute" />
-        <StatKpi icon={TrendingUp} bg="#DCFCE7" color="#16A34A" value={opps.reduce((s, o) => s + o.searches, 0)} label="Recherches est." />
+        <StatKpi icon={TrendingUp} bg="#DCFCE7" color="#16A34A" value={kpis?.totalViews ?? 0} label="Vues annuaire" />
         <StatKpi icon={Users} bg="#DBEAFE" color="#1D4ED8" value={opps.reduce((s, o) => s + o.pros, 0)} label="Pros existants" />
       </div>
 
@@ -624,9 +916,8 @@ export function AdminOpportunities({ dateRange }) {
                   <PriorityBadge score={o.score} />
                 </div>
                 <div className={styles.oppMetrics}>
-                  <span><Search size={12} aria-hidden /> {o.searches} recherches</span>
                   <span><Users size={12} aria-hidden /> {o.pros} pro{o.pros > 1 ? 's' : ''}</span>
-                  <span>Score {o.score}</span>
+                  <span>Priorité haute — aucun pro</span>
                 </div>
                 <div className={styles.oppScoreTrack}>
                   <div className={styles.oppScoreFill} style={{ width: `${(o.score / maxScore) * 100}%` }} />
@@ -744,8 +1035,19 @@ export function AdminModeration({ dateRange }) {
     .slice(0, 8);
   const duplicateGroups = findDuplicateGroups();
 
-  const resolve = (id, status) => {
-    setReports(updateReportStatus(id, status));
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await syncPlatformFormsCache();
+      const next = await fetchReports();
+      if (!cancelled) setReports(next);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const resolve = async (id, status) => {
+    const next = await resolveReportStatus(id, status);
+    setReports(next);
     show(status === 'resolved' ? 'Signalement traité' : 'Signalement rejeté');
   };
 
@@ -842,10 +1144,30 @@ export function AdminModeration({ dateRange }) {
 }
 
 export function AdminIAInsights({ dateRange }) {
-  const { trends, recommendations, alerts } = useMemo(() => getIAInsights(dateRange), [dateRange]);
-  const kpis = useMemo(() => getPlatformKPIs(dateRange), [dateRange]);
-  const waitlist = kpis.waitlistCount;
+  const { kpis, topCategories, topRegions } = usePlatformAnalytics(dateRange);
   const contacts = filterByDateRange(getContactMessages(), dateRange.startDate, dateRange.endDate, 'date').length;
+
+  const trends = useMemo(() => {
+    const items = [];
+    if (topCategories?.[0]) items.push(`${topCategories[0].name} — catégorie la plus représentée (${topCategories[0].count} pro${topCategories[0].count > 1 ? 's' : ''})`);
+    if (topRegions?.[0]) items.push(`${topRegions[0].name} — région la plus active`);
+    if (kpis?.totalViews > 0) items.push(`${kpis.totalViews} vues annuaire sur la période`);
+    return items;
+  }, [topCategories, topRegions, kpis]);
+
+  const recommendations = useMemo(() => {
+    const items = [];
+    if ((kpis?.premium ?? 0) === 0) items.push('Aucun abonné Premium — prioriser l\'activation des demandes en attente.');
+    if ((kpis?.verified ?? 0) < (kpis?.totalPros ?? 0)) items.push('Des profils ne sont pas encore vérifiés — renforcer la confiance.');
+    return items;
+  }, [kpis]);
+
+  const alerts = useMemo(() => {
+    const items = [];
+    if ((kpis?.newPros ?? 0) === 0) items.push('Aucune nouvelle inscription pro sur la période.');
+    if ((kpis?.totalViews ?? 0) === 0) items.push('Aucune vue annuaire enregistrée — vérifier le tracking.');
+    return items;
+  }, [kpis]);
 
   const insightPanels = [
     { title: 'Tendances', items: trends, icon: TrendingUp, accent: '#F5C518', bg: '#FFFBEB' },
@@ -860,7 +1182,6 @@ export function AdminIAInsights({ dateRange }) {
         subtitle="Tendances automatiques, recommandations et alertes plateforme."
       />
       <div className={styles.kpiGrid}>
-        <MetricCard value={waitlist} label="Liste d'attente" accent="#F5C518" />
         <MetricCard value={contacts} label="Messages contact" accent="#5C9EFF" />
         <MetricCard value={recommendations.length} label="Recommandations IA" accent="#AB47BC" />
       </div>
@@ -1004,15 +1325,17 @@ export function AdminReports({ dateRange }) {
 
 export function AdminRevenue({ dateRange }) {
   const [annual, setAnnual] = useState(false);
-  const { revenue: rev, loading } = usePlatformAnalytics(dateRange);
+  const { kpis } = usePlatformAnalytics(dateRange);
   const advPrice = getPlanMonthlyPrice('advanced');
   const premPrice = getPlanMonthlyPrice('premium');
-  const safeRev = rev || { free: 0, advanced: 0, premium: 0, mrr: 0, series: [] };
-  const total = annual ? safeRev.mrr * 12 : safeRev.mrr;
-
-  if (loading) {
-    return <div className={styles.section}><p>Chargement…</p></div>;
-  }
+  const rev = {
+    free: Math.max(0, (kpis?.totalPros ?? 0) - (kpis?.advanced ?? 0) - (kpis?.premium ?? 0)),
+    advanced: kpis?.advanced ?? 0,
+    premium: kpis?.premium ?? 0,
+    mrr: (kpis?.advanced ?? 0) * advPrice + (kpis?.premium ?? 0) * premPrice,
+    series: (kpis?.daily || []).map((d) => ({ label: d.day, value: d.views || 0 })),
+  };
+  const total = annual ? rev.mrr * 12 : rev.mrr;
 
   return (
     <div className={styles.section}>
@@ -1038,22 +1361,22 @@ export function AdminRevenue({ dateRange }) {
         </div>
       </AdminPageHeader>
       <div className={styles.kpiGrid}>
-        <MetricCard value={safeRev.free} label="Comptes Free" accent="#8A8A7A" />
-        <MetricCard value={safeRev.advanced} label={`Advanced × ${formatGNF(advPrice)}`} accent="#5C9EFF" />
-        <MetricCard value={safeRev.premium} label={`Premium × ${formatGNF(premPrice)}`} accent="#F5C518" />
+        <MetricCard value={rev.free} label="Comptes Free" accent="#8A8A7A" />
+        <MetricCard value={rev.advanced} label={`Advanced × ${formatGNF(advPrice)}`} accent="#5C9EFF" />
+        <MetricCard value={rev.premium} label={`Premium × ${formatGNF(premPrice)}`} accent="#F5C518" />
         <MetricCard value={`${formatGNF(total)} GNF`} label={annual ? 'Revenu annuel' : 'MRR'} accent="#4CAF50" />
       </div>
-      <AdminCard title="Évolution revenus" subtitle="Période sélectionnée">
-        <BarChart data={safeRev.series} height={160} color="#F5C518" />
-        <p className={styles.hint} style={{ marginTop: 12 }}>Basé sur les abonnements Advanced et Premium actifs en base.</p>
+      <AdminCard title="Évolution revenus" subtitle="Période sélectionnée (estimation)">
+        <BarChart data={rev.series} height={160} color="#F5C518" />
+        <p className={styles.hint} style={{ marginTop: 12 }}>Estimation basée sur les plans Advanced et Premium actifs.</p>
       </AdminCard>
 
       <AdminCard title="Répartition par plan" subtitle="Détail des abonnements actifs">
         <div className={styles.revenueBreakdown}>
           {[
-            { label: 'Free', count: safeRev.free, price: 0, color: '#9CA3AF' },
-            { label: 'Advanced', count: safeRev.advanced, price: advPrice, color: '#3B82F6' },
-            { label: 'Premium', count: safeRev.premium, price: premPrice, color: '#F5C518' },
+            { label: 'Free', count: rev.free, price: 0, color: '#9CA3AF' },
+            { label: 'Advanced', count: rev.advanced, price: advPrice, color: '#3B82F6' },
+            { label: 'Premium', count: rev.premium, price: premPrice, color: '#F5C518' },
           ].map(({ label, count, price, color }) => (
             <div key={label} className={styles.revenueRow}>
               <div className={styles.revenueRowHead}>
@@ -1172,6 +1495,8 @@ export function AdminFeedback({
         )}
       </AdminCard>
 
+      <AdminPlatformReviewsModeration />
+
       <AdminCard title="Suggestions" subtitle="Idées envoyées sur la période">
         {suggestions.length > 0 ? (
           <ul className={styles.suggestionList}>
@@ -1225,7 +1550,29 @@ export function AdminNotifications() {
 
   const recipientEstimate = estimateBroadcastRecipients(form.audience);
 
-  const refresh = () => setBroadcasts(getAdminBroadcasts());
+  const refresh = () => {
+    setBroadcasts(getAdminBroadcasts());
+    import('../api/supabaseBroadcasts.js').then(({ fetchAllBroadcastsAdmin }) => (
+      fetchAllBroadcastsAdmin()
+    )).then((remote) => {
+      if (Array.isArray(remote) && remote.length > 0) {
+        setBroadcasts(remote.map((b) => ({
+          id: b.id,
+          title: b.title,
+          message: b.message,
+          type: b.type,
+          audience: b.audience,
+          active: b.active,
+          pinned: b.pinned,
+          dismissible: b.dismissible,
+          createdAt: b.created_at,
+          expiresAt: b.expires_at,
+        })));
+      }
+    }).catch(() => {});
+  };
+
+  useEffect(() => { refresh(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1254,14 +1601,26 @@ export function AdminNotifications() {
 
   const toggleActive = (id, active) => {
     adminToggleBroadcast(id, active);
+    setBroadcasts((prev) => prev.map((b) => (b.id === id ? { ...b, active } : b)));
+    // Also update in Supabase if id is numeric (Supabase-sourced broadcast)
+    if (typeof id === 'number') {
+      import('../api/supabaseBroadcasts.js')
+        .then((m) => m.updateBroadcastRemote(id, { active }))
+        .catch(() => {});
+    }
     show(active ? 'Notification réactivée' : 'Notification désactivée');
-    refresh();
   };
 
   const remove = (id) => {
     adminDeleteBroadcast(id);
+    setBroadcasts((prev) => prev.filter((b) => b.id !== id));
+    // Also delete from Supabase if id is numeric (Supabase-sourced broadcast)
+    if (typeof id === 'number') {
+      import('../api/supabaseBroadcasts.js')
+        .then((m) => m.deleteBroadcastRemote(id))
+        .catch(() => {});
+    }
     show('Notification supprimée');
-    refresh();
   };
 
   return (
@@ -1393,7 +1752,7 @@ export function AdminNotifications() {
 export function AdminAuditLog({ dateRange }) {
   const { show, Toast } = useToast();
   const [filter, setFilter] = useState('');
-  const logs = useMemo(
+  const localLogs = useMemo(
     () => getAuditLog({
       limit: 200,
       actorType: filter || undefined,
@@ -1402,6 +1761,33 @@ export function AdminAuditLog({ dateRange }) {
     }),
     [filter, dateRange.startDate, dateRange.endDate],
   );
+  const [remoteLogs, setRemoteLogs] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    import('../api/supabaseAuditLog.js').then(({ fetchAuditLogRemote }) => (
+      fetchAuditLogRemote({
+        limit: 200,
+        actorType: filter || undefined,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+    )).then((entries) => {
+      if (!cancelled && Array.isArray(entries)) setRemoteLogs(entries);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [filter, dateRange.startDate, dateRange.endDate]);
+
+  const logs = (remoteLogs && remoteLogs.length > 0) ? remoteLogs.map((e) => ({
+    id: e.id,
+    actor: e.details?.actor || e.actor_type || 'system',
+    actorType: e.actor_type,
+    action: e.action,
+    target: e.target || '',
+    details: e.details?.info || '',
+    timestamp: e.created_at,
+  })) : localLogs;
+  const deletionFeedbacks = useMemo(() => getAccountDeletionFeedbacks(15), [logs.length]);
 
   return (
     <div className={styles.section}>
@@ -1421,6 +1807,23 @@ export function AdminAuditLog({ dateRange }) {
           ))}
         </div>
       </AdminCard>
+
+      {deletionFeedbacks.length > 0 && (
+        <AdminCard title="Motifs de suppression de compte" subtitle="Raisons communiquées par les utilisateurs">
+          <ul className={styles.alertList}>
+            {deletionFeedbacks.map((entry) => (
+              <li key={entry.id} className={styles.alertItem}>
+                <div>
+                  <strong>{entry.displayName}</strong>
+                  <span className={styles.auditActor}> ({entry.userType === 'pro' ? 'Pro' : 'Visiteur'})</span>
+                  <p>{entry.reason}</p>
+                  <time>{new Date(entry.createdAt).toLocaleString('fr-FR')}</time>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </AdminCard>
+      )}
 
       <AdminCard title="Événements" subtitle={`${logs.length} entrée${logs.length > 1 ? 's' : ''}`}>
         <div className={styles.filters} style={{ marginBottom: 16 }}>

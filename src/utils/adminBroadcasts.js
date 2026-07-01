@@ -4,6 +4,7 @@ import {
   KEYS,
 } from './storage';
 import { pushSystemNotification } from './notificationInbox';
+import { useSupabase } from '../lib/supabaseClient';
 
 const BROADCASTS_KEY = KEYS.ADMIN_BROADCASTS;
 const DISMISSED_KEY = KEYS.BROADCAST_DISMISSED;
@@ -118,6 +119,7 @@ export function adminCreateBroadcast({ title, message, type = 'info', audience =
   const trimmedMessage = message?.trim();
   if (!trimmedTitle || !trimmedMessage) return null;
 
+  const isDismissible = type === 'maintenance' ? false : dismissible !== false;
   const entry = {
     id: `bc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     title: trimmedTitle,
@@ -126,7 +128,7 @@ export function adminCreateBroadcast({ title, message, type = 'info', audience =
     audience,
     active: true,
     pinned: Boolean(pinned),
-    dismissible: type === 'maintenance' ? false : dismissible !== false,
+    dismissible: isDismissible,
     createdAt: new Date().toISOString(),
     expiresAt: expiresAt || null,
     createdBy: 'admin',
@@ -139,6 +141,19 @@ export function adminCreateBroadcast({ title, message, type = 'info', audience =
     window.dispatchEvent(new CustomEvent('glist-broadcasts-updated'));
   }
   deliverBroadcastToInboxes(entry);
+  if (useSupabase) {
+    import('../api/supabaseBroadcasts.js').then((m) => m.createBroadcastRemote({
+      title: trimmedTitle, message: trimmedMessage, type, audience,
+      expiresAt: expiresAt || null, pinned: Boolean(pinned), dismissible: isDismissible,
+    })).then((result) => {
+      if (result?.id) {
+        const updated = getAdminBroadcasts().map((b) =>
+          b.id === entry.id ? { ...b, supabaseId: result.id } : b
+        );
+        setItem(BROADCASTS_KEY, updated);
+      }
+    }).catch(() => {});
+  }
   import('./platformEvents.js').then((m) => m.onAdminBroadcast(trimmedTitle, audience)).catch(() => {});
   return entry;
 }
@@ -173,14 +188,30 @@ function deliverBroadcastToInboxes(broadcast) {
 }
 
 export function adminToggleBroadcast(id, active) {
-  const list = getAdminBroadcasts().map((b) => (b.id === id ? { ...b, active } : b));
+  const all = getAdminBroadcasts();
+  const entry = all.find((b) => b.id === id);
+  const list = all.map((b) => (b.id === id ? { ...b, active } : b));
   setItem(BROADCASTS_KEY, list);
+  const sid = entry?.supabaseId;
+  if (useSupabase && sid) {
+    import('../api/supabaseBroadcasts.js')
+      .then((m) => m.updateBroadcastRemote(sid, { active }))
+      .catch(() => {});
+  }
   return list;
 }
 
 export function adminDeleteBroadcast(id) {
-  const list = getAdminBroadcasts().filter((b) => b.id !== id);
+  const all = getAdminBroadcasts();
+  const entry = all.find((b) => b.id === id);
+  const list = all.filter((b) => b.id !== id);
   setItem(BROADCASTS_KEY, list);
+  const sid = entry?.supabaseId;
+  if (useSupabase && sid) {
+    import('../api/supabaseBroadcasts.js')
+      .then((m) => m.deleteBroadcastRemote(sid))
+      .catch(() => {});
+  }
   return list;
 }
 
