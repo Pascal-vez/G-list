@@ -242,6 +242,7 @@ export async function fetchProProfileByEmailFromSupabase(email) {
       p_email: email,
     });
     if (error || !data?.found) return null;
+    const plan = data.plan || 'free';
     return {
       id: data.id,
       nom: data.nom || '',
@@ -254,8 +255,12 @@ export async function fetchProProfileByEmailFromSupabase(email) {
       whatsapp: data.whatsapp || data.telephone || '',
       description: data.description || '',
       slogan: data.slogan || '',
-      plan: data.plan || 'free',
-      premium: data.plan === 'premium',
+      plan,
+      planActif: data.plan_actif === true,
+      planDebut: data.premium_since || null,
+      planFin: data.premium_expires || null,
+      premium: plan === 'premium',
+      premiumExpires: data.premium_expires || null,
       horaires: data.horaires || 'Lun-Sam 8h-18h',
       specialites: parseJsonArray(data.specialites),
       services: parseJsonArray(data.services),

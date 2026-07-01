@@ -204,7 +204,10 @@ export default function ProDashboard() {
         : remotePlan === 'pro_premium' ? 'premium'
         : remotePlan === 'pro' ? 'advanced'
         : remotePlan;
-      if (normalizedPlan && normalizedPlan !== account.plan) {
+      const needsSync = normalizedPlan !== account.plan
+        || status.plan_actif !== account.planActif
+        || status.plan_fin !== account.planFin;
+      if (normalizedPlan && needsSync) {
         const updated = {
           ...account,
           plan: normalizedPlan,
