@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { consumePendingWelcome, setPendingWelcome, showWelcomeFor } from '../utils/welcomeToast';
 import {
   Briefcase, MapPin, Phone, Search, Crown, BadgeCheck,
   Save, Smartphone, AlertCircle, CheckCircle, Star,
@@ -7,7 +8,6 @@ import {
   LayoutDashboard, Image, Bell, HelpCircle, Menu, X, Users, Globe, FileText,
   Award, TrendingUp, Zap, History, CreditCard, User, Home,
 } from 'lucide-react';
-import { REGIONS } from '../data/constants';
 import ProfessionSelect, { resolveProfessionValue, professionToFormFields } from '../components/ProfessionSelect';
 import { AUTH_VISUAL } from '../data/authVisualImages';
 import { useProReviews } from '../hooks/useProReviews';
@@ -19,20 +19,23 @@ import {
   getProPlanLevel, isPremiumActive,
   BILLING_CYCLE_MONTHLY, BILLING_CYCLE_ANNUAL,
 } from '../utils/storage';
-import { getInitials, getAvatarColor } from '../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor } from '../utils/helpers';
 import { getUnreadCount } from '../utils/notificationInbox';
 import { StarDisplay } from '../components/StarRating';
 import { NETWORKS } from '../components/SocialLinks';
 import { usePageMeta } from '../hooks/usePageMeta';
 import ModalAbonnement, { ToastAbonnement } from '../components/Abonnement/ModalAbonnement';
+import { fetchSubscriptionStatus } from '../api/abonnement';
 import { peutSouscrire, isAbonnementActif } from '../utils/plans';
 import DateRangePicker, { defaultDateRange } from '../components/dashboard/DateRangePicker';
 import ThemeToggle from '../components/ThemeToggle';
 import PasswordInput from '../components/PasswordInput';
 import SidebarCollapseToggle from '../components/dashboard/SidebarCollapseToggle';
 import AuthTermsAcceptance from '../components/AuthTermsAcceptance';
+import LocaliteInput from '../components/LocaliteInput';
 import WelcomeToast from '../components/WelcomeToast';
-import { setPendingWelcome, showWelcomeFor } from '../utils/welcomeToast';
+import { upsertLocalitePersonnalisee } from '../api/localites';
+import { estPrefectureOfficielle } from '../utils/localite';
 import { useSidebar } from '../context/SidebarContext';
 import styles from './ProDashboard.module.css';
 import {
@@ -166,6 +169,7 @@ export default function ProDashboard() {
   const [abonnementModalPlan, setAbonnementModalPlan] = useState('advanced');
   const [abonnementToast, setAbonnementToast] = useState(null);
   const [abonnementAlert, setAbonnementAlert] = useState('');
+  const [subscriptionRefreshKey, setSubscriptionRefreshKey] = useState(0);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const isLoggedIn = !!account;
   const authVisual = AUTH_VISUAL[accountType];
@@ -180,6 +184,43 @@ export default function ProDashboard() {
       setTab(t);
     }
   }, [searchParams, plan]);
+
+  useEffect(() => {
+    if (!account?.id) return;
+    const pending = consumePendingWelcome();
+    if (pending?.type === 'pro') {
+      showWelcomeFor(8000, setWelcomeMessage, pending);
+    }
+  }, [account?.id]);
+
+  // Sync plan depuis Supabase au chargement (l'admin peut avoir activé depuis un autre appareil)
+  useEffect(() => {
+    if (!account?.id) return;
+    let cancelled = false;
+    fetchSubscriptionStatus(account).then((status) => {
+      if (cancelled || !status) return;
+      const remotePlan = status.plan_actif ? (status.plan || account.plan) : 'free';
+      const normalizedPlan = remotePlan === 'pro_advanced' ? 'advanced'
+        : remotePlan === 'pro_premium' ? 'premium'
+        : remotePlan === 'pro' ? 'advanced'
+        : remotePlan;
+      if (normalizedPlan && normalizedPlan !== account.plan) {
+        const updated = {
+          ...account,
+          plan: normalizedPlan,
+          planAbonnement: status.plan,
+          planActif: status.plan_actif,
+          planFin: status.plan_fin,
+          planDebut: status.plan_debut,
+          premium: normalizedPlan === 'premium',
+          premiumExpires: status.plan_fin,
+        };
+        saveProAccount(updated);
+        setAccount(updated);
+      }
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const { reviews } = useProReviews(account?.id);
   const avgRating = reviews.length
     ? reviews.reduce((s, r) => s + r.note, 0) / reviews.length
@@ -208,6 +249,10 @@ export default function ProDashboard() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegionChange = (value) => {
+    setForm((prev) => ({ ...prev, region: value }));
   };
 
   const handleSocialChange = (key, value) => {
@@ -245,24 +290,38 @@ export default function ProDashboard() {
       return;
     }
     try {
+      if (form.region && !estPrefectureOfficielle(form.region)) {
+        await upsertLocalitePersonnalisee(form.region);
+      }
       const created = await createProAccount({ ...form, profession });
+      setPendingWelcome({ type: 'pro', name: created.nom });
       setAccount(created);
       setForm(accountToForm(created));
-      setAuthMode('login');
-      showWelcomeFor(8000, setWelcomeMessage, { type: 'pro', name: created.nom });
     } catch (err) {
       if (err.message === 'EMAIL_EXISTS_LOGIN_INSTEAD') {
-        setAuthError('Un compte existe déjà avec cet email et ce mot de passe. Connectez-vous.');
-        setAuthMode('login');
-        setLoginForm((prev) => ({ ...prev, email: form.email, password: form.password }));
+        // Compte existant avec le bon mot de passe → connexion automatique
+        const logged = await loginProAccount(form.email, form.password);
+        if (logged) {
+          setPendingWelcome({ type: 'pro', name: logged.nom });
+          setAccount(logged);
+          setForm(accountToForm(logged));
+        } else {
+          setAuthError('Un compte existe déjà. Connectez-vous.');
+          setAuthMode('login');
+          setLoginForm((prev) => ({ ...prev, email: form.email, password: form.password }));
+        }
       } else if (err.message === 'EMAIL_EXISTS') {
         setAuthError('Un compte existe déjà avec cet email. Connectez-vous ou réinitialisez votre mot de passe.');
         setAuthMode('login');
         setLoginForm((prev) => ({ ...prev, email: form.email }));
       } else if (err.message === 'PASSWORD_TOO_SHORT') {
         setAuthError('Le mot de passe doit contenir au moins 6 caractères.');
+      } else if (err.message === 'EMAIL_REQUIRED') {
+        setAuthError('L\'email est obligatoire.');
+      } else if (err.message === 'PASSWORD_REQUIRED') {
+        setAuthError('Le mot de passe est obligatoire.');
       } else {
-        setAuthError('Email et mot de passe sont obligatoires pour créer un compte.');
+        setAuthError(err.message || 'Une erreur est survenue lors de la création du compte.');
       }
     }
   };
@@ -326,9 +385,9 @@ export default function ProDashboard() {
     setAuthError('');
   };
 
-  const handleDeleteAccount = async (password) => {
+  const handleDeleteAccount = async ({ password, reason }) => {
     if (!account?.email) return { ok: false, error: 'NOT_FOUND' };
-    const result = await deleteProAccount(account.email, password);
+    const result = await deleteProAccount(account.email, password, { reason, requireReason: true });
     if (result.ok) {
       setAccount(null);
       setForm(EMPTY_FORM);
@@ -339,9 +398,12 @@ export default function ProDashboard() {
     return result;
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const updated = buildAccount();
+    if (updated.region && !estPrefectureOfficielle(updated.region)) {
+      await upsertLocalitePersonnalisee(updated.region);
+    }
     saveProAccount(updated);
     import('../utils/platformEvents.js').then((m) => m.onProProfileSave(updated.id)).catch(() => {});
     setAccount(updated);
@@ -363,7 +425,7 @@ export default function ProDashboard() {
     }
   };
 
-  const handleSubscribeRequest = (planId) => {
+  const handleSubscribeRequest = async (planId) => {
     if (!planId || planId === 'free') return;
     const actif = isAbonnementActif(account);
     const planActuel = actif ? plan : 'free';
@@ -373,6 +435,14 @@ export default function ProDashboard() {
       window.setTimeout(() => setAbonnementAlert(''), 7000);
       return;
     }
+    try {
+      const status = await fetchSubscriptionStatus(account);
+      if (status?.demandes_en_attente > 0) {
+        setAbonnementAlert('Vous avez déjà une demande en cours de traitement. Patientez ou contactez le support.');
+        window.setTimeout(() => setAbonnementAlert(''), 8000);
+        return;
+      }
+    } catch { /* ouvrir le modal si statut indisponible */ }
     setAbonnementModalPlan(planId);
     setShowAbonnementModal(true);
   };
@@ -584,11 +654,13 @@ export default function ProDashboard() {
                 inputClassName={styles.input}
               />
               <label>
-                Villes *
-                <select name="region" value={form.region} onChange={handleChange} required className={styles.input}>
-                  <option value="">Sélectionner</option>
-                  {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
+                Localité *
+                <LocaliteInput
+                  value={form.region}
+                  onChange={handleRegionChange}
+                  required
+                  inputClassName={styles.input}
+                />
               </label>
               <label>
                 Quartier
@@ -634,7 +706,7 @@ export default function ProDashboard() {
           </button>
           <div
             className={styles.sidebarAvatar}
-            style={{ background: getAvatarColor(account.categorie || account.profession) }}
+            style={{ background: getAvatarColor(account.categorie || account.profession), color: getAvatarTextColor(getAvatarColor(account.categorie || account.profession)) }}
           >
             {getInitials(account.nom)}
           </div>
@@ -779,7 +851,14 @@ export default function ProDashboard() {
 
         {tab === 'profile' && (
           <div className={styles.tabContent}>
-            <ProfileTabExtended account={account} form={form} handleSave={handleSave} handleChange={handleChange} handleSocialChange={handleSocialChange} />
+            <ProfileTabExtended
+              account={account}
+              form={form}
+              handleSave={handleSave}
+              handleChange={handleChange}
+              handleRegionChange={handleRegionChange}
+              handleSocialChange={handleSocialChange}
+            />
           </div>
         )}
 
@@ -798,7 +877,7 @@ export default function ProDashboard() {
         )}
 
         {tab === 'upgrade' && (
-          <div className={styles.tabContent}><UpgradeTab account={account} plan={plan} onSubscribe={handleSubscribeRequest} /></div>
+          <div className={styles.tabContent}><UpgradeTab account={account} plan={plan} onSubscribe={handleSubscribeRequest} subscriptionRefreshKey={subscriptionRefreshKey} /></div>
         )}
 
         {tab === 'analytics' && (plan === 'advanced' || plan === 'premium') && (
@@ -913,9 +992,10 @@ export default function ProDashboard() {
         planId={abonnementModalPlan}
         account={account}
         onSuccess={() => {
+          setSubscriptionRefreshKey((k) => k + 1);
           setAbonnementToast({
             title: 'Demande envoyée',
-            body: 'Votre demande a été envoyée. Elle sera traitée sous peu par notre équipe. Vous recevrez une notification dès l\'activation.',
+            body: 'Votre demande a été enregistrée. Notre équipe la traite sous peu — vous serez notifié dès l\'activation.',
           });
         }}
       />

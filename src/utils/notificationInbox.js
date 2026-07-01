@@ -1,6 +1,7 @@
 import { getItem, setItem, KEYS } from './storage';
 import { getActiveBroadcastsForUser } from './adminBroadcasts';
 import { getUserBroadcastContext } from './adminBroadcasts';
+import { useSupabase } from '../lib/supabaseClient';
 
 export function getInboxMessages(context = getUserBroadcastContext()) {
   const userKey = context.userKey || 'anonymous';
@@ -61,8 +62,14 @@ export function pushSystemNotification(userKey, { type = 'info', title, message 
   return entry;
 }
 
-/** Notification in-app pour un compte pro (clé `pro:{id}`) */
-export function notifyProInbox(proId, payload) {
+/** Notification in-app pour un compte pro — écrit localStorage ET Supabase (cross-device). */
+export function notifyProInbox(proId, { type = 'info', title, message } = {}) {
   if (!proId) return null;
-  return pushSystemNotification(`pro:${proId}`, payload);
+  const entry = pushSystemNotification(`pro:${proId}`, { type, title, message });
+  if (useSupabase) {
+    import('../api/supabaseProNotifications.js')
+      .then((m) => m.pushProNotificationRemote(proId, { type, title, message }))
+      .catch(() => {});
+  }
+  return entry;
 }
