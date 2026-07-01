@@ -1,5 +1,9 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { SITE_CONTACT_EMAIL } from '../data/constants';
+import {
+  SITE_CONTACT_EMAIL,
+  SITE_LEGAL,
+  formatLegalId,
+} from '../data/constants';
 import SeoHead from '../components/SEO/SeoHead';
 
 export default function MentionsLegales() {
@@ -13,21 +17,31 @@ export default function MentionsLegales() {
     <InfoPageLayout title="Mentions légales" subtitle="Informations légales" pageKey="conditions">
       <InfoSection title="Éditeur du site">
         <p>
-          <strong>G-List</strong><br />
-          Annuaire professionnel — République de Guinée<br />
-          Siège : Conakry, Guinée<br />
+          <strong>{SITE_LEGAL.entityName}</strong><br />
+          {SITE_LEGAL.tagline}<br />
+          Siège : {SITE_LEGAL.headquarters}<br />
+          RCCM : {formatLegalId('RCCM', SITE_LEGAL.rc)}<br />
+          NIF : {formatLegalId('NIF', SITE_LEGAL.nif)}<br />
           Email : <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a><br />
-          WhatsApp : +224 626 41 93 31
+          WhatsApp : <a href={SITE_LEGAL.whatsappLink}>{SITE_LEGAL.whatsapp}</a>
         </p>
       </InfoSection>
       <InfoSection title="Directeur de la publication">
-        <p>Le responsable de la publication est le représentant légal de G-List.</p>
+        <p>{SITE_LEGAL.publisherName}</p>
       </InfoSection>
       <InfoSection title="Hébergement">
-        <p>
-          Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis.
-          L&apos;hébergeur peut être modifié lors du passage en production définitive.
-        </p>
+        {SITE_LEGAL.hosts.map((host) => (
+          <p key={host.name}>
+            <strong>{host.role}</strong> — {host.name}<br />
+            {host.address}
+            {host.url ? (
+              <>
+                {' '}
+                — <a href={host.url} target="_blank" rel="noopener noreferrer">{host.url.replace('https://', '')}</a>
+              </>
+            ) : null}
+          </p>
+        ))}
       </InfoSection>
       <InfoSection title="Propriété intellectuelle">
         <p>

@@ -1,5 +1,5 @@
 .page {
-  background: var(--cream);
+  background: var(--bg-primary);
   min-height: 60vh;
 }
 
@@ -46,7 +46,7 @@
 
 .count {
   font-size: 14px;
-  color: #888;
+  color: var(--text-muted);
   font-weight: 500;
   margin: 0 0 16px;
 }
@@ -65,8 +65,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
   align-items: start;
   width: 100%;
 }
@@ -80,7 +80,7 @@
 .emptyIcon {
   display: block;
   margin: 0 auto 16px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 .resetLink {
@@ -100,6 +100,14 @@
 
 @media (max-width: 640px) {
   .heroTitle {
-    font-size: clamp(24px, 7vw, 32px);
+    font-size: clamp(22px, 7vw, 30px);
+  }
+
+  .hero {
+    padding: calc(var(--header-height) + 20px) 16px 24px;
+  }
+
+  .section {
+    padding: clamp(20px, 4vw, 32px) clamp(16px, 4vw, 60px);
   }
 }

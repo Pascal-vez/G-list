@@ -32,13 +32,13 @@
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: #999;
+  color: var(--text-muted);
 }
 
 .searchInput {
   width: 100%;
   padding: 10px 10px 10px 34px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 10px;
   font-family: inherit;
   font-size: 13px;
@@ -59,7 +59,7 @@
 .ratingLabel {
   font-size: 12px;
   font-weight: 600;
-  color: #888;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -82,21 +82,21 @@
   align-items: center;
   gap: 6px;
   padding: 9px 14px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 10px;
   background: var(--input-bg);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  color: #555;
+  color: var(--text-secondary);
   white-space: nowrap;
   margin-left: auto;
 }
 
 .resetBtn:hover {
   border-color: #F5C518;
-  color: #0E1208;
+  color: var(--text-primary);
 }
 
 .groupsRow {
@@ -106,7 +106,7 @@
   align-items: center;
   gap: 4px;
   padding-top: 4px;
-  border-top: 1px solid #F0F0F0;
+  border-top: 1px solid var(--border-color);
 }
 
 .groupTab {
@@ -135,11 +135,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .groupTabActive .groupLabel {
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .tabBadge {
@@ -148,7 +148,7 @@
   padding: 0 5px;
   border-radius: 50px;
   background: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
   font-size: 10px;
   font-weight: 700;
   display: inline-flex;
@@ -157,14 +157,32 @@
 }
 
 .tabChevron {
-  color: #AAA;
+  color: var(--text-muted);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
 
 .tabChevronOpen {
   transform: rotate(180deg);
-  color: #888;
+  color: var(--text-muted);
+}
+
+.localitePicker {
+  margin-bottom: 12px;
+}
+
+.activeRegions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.regionHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
 }
 
 .expandPanel {
@@ -210,13 +228,13 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 20px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   background: var(--input-bg);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  color: #333;
+  color: var(--text-primary);
   transition: all 0.15s ease;
   white-space: nowrap;
   flex-shrink: 0;
@@ -229,7 +247,7 @@
 .chipActive {
   background: #F5C518;
   border-color: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
 }
 
 .chipCount {
@@ -241,7 +259,7 @@
 .tagBtn {
   padding: 6px 12px;
   border-radius: 20px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   background: var(--input-bg);
   font-size: 12px;
   font-weight: 600;
@@ -259,7 +277,7 @@
 .tagActive {
   background: #F5C518;
   border-color: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
 }
 
 .mobileToggle {
@@ -286,7 +304,7 @@
   width: 16px;
   height: 16px;
   background: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
   border-radius: 50%;
   font-size: 10px;
   display: flex;
@@ -318,6 +336,7 @@
 
   .drawer {
     background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
     width: 100%;
     max-height: 85vh;
     border-radius: 16px 16px 0 0;
@@ -361,4 +380,29 @@
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .drawer {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+:global(html[data-theme="light"]) .chip:hover {
+  background: var(--hover-bg);
+  border-color: #D0D0C5;
+}
+:global(html[data-theme="light"]) .chipActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
+}
+:global(html[data-theme="light"]) .tagActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
 }

@@ -4,7 +4,7 @@ import { MapPin, Phone, Clock, MessageCircle, Star, BadgeCheck, ArrowLeft, Eye, 
 import { getProAccount, incrementProProfileViews, getMinisiteSlugForPro, getProPlanLevel } from '../utils/storage';
 import { useProReviews } from '../hooks/useProReviews';
 import { getMinisitePublicPath } from '../utils/minisite';
-import { getInitials, getAvatarColor, formatWhatsAppLink } from '../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor, formatWhatsAppLink } from '../utils/helpers';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { StarDisplay } from '../components/StarRating';
 import SocialLinks from '../components/SocialLinks';
@@ -55,7 +55,7 @@ export default function ProPublicProfile() {
         <div className={styles.heroContent}>
           <div
             className={styles.avatar}
-            style={{ background: getAvatarColor(account.profession) }}
+            style={{ background: getAvatarColor(account.categorie || account.profession), color: getAvatarTextColor(getAvatarColor(account.categorie || account.profession)) }}
           >
             {getInitials(account.nom)}
           </div>

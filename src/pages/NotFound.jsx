@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Home, Search } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useTranslation } from '../i18n/I18nContext';
 import styles from './NotFound.module.css';
 
 export default function NotFound() {
+  const { t } = useTranslation();
   usePageMeta({
-    title: 'Page introuvable',
-    description: 'La page demandée n\'existe pas sur G-List.',
+    title: t('notFound.title'),
+    description: t('notFound.meta.description'),
     path: '/404',
     noIndex: true,
   });
@@ -14,11 +16,11 @@ export default function NotFound() {
   return (
     <div className={styles.page}>
       <span className={styles.code}>404</span>
-      <h1>Page introuvable</h1>
-      <p>La page que vous cherchez n&apos;existe pas ou a été déplacée.</p>
+      <h1>{t('notFound.title')}</h1>
+      <p>{t('notFound.message')}</p>
       <div className={styles.actions}>
-        <Link to="/" className="btn-primary"><Home size={18} /> Accueil</Link>
-        <Link to="/annuaire" className={styles.secondary}><Search size={18} /> Annuaire</Link>
+        <Link to="/" className="btn-primary"><Home size={18} /> {t('nav.home')}</Link>
+        <Link to="/annuaire" className={styles.secondary}><Search size={18} /> {t('nav.directory')}</Link>
       </div>
     </div>
   );

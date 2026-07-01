@@ -1,4 +1,4 @@
-import { getInitials, getAvatarColor } from '../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor } from '../utils/helpers';
 import { getPlanBadgeLabel } from '../utils/proEnhancements';
 import styles from './ProCardPreview.module.css';
 
@@ -7,7 +7,7 @@ export default function ProCardPreview({ account }) {
   return (
     <div className={styles.card}>
       <div className={styles.topBar} />
-      <div className={styles.avatar} style={{ background: getAvatarColor(account.categorie) }}>
+      <div className={styles.avatar} style={{ background: getAvatarColor(account.categorie), color: getAvatarTextColor(getAvatarColor(account.categorie)) }}>
         {getInitials(account.nom || 'Pro')}
       </div>
       <h3>{account.nom}</h3>

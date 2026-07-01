@@ -113,7 +113,7 @@
   background: #F5C518;
   border: none;
   border-radius: 8px;
-  color: #0E1208;
+  color: var(--texte-sur-or);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -253,13 +253,13 @@
 .sectionItemActive { border-color: var(--or-principal) !important; background: var(--or-clair); }
 .sectionHidden { opacity: 0.45; }
 
-.grip { color: #CCC; cursor: grab; flex-shrink: 0; }
+.grip { color: var(--text-muted); cursor: grab; flex-shrink: 0; }
 
 .visBtn {
   margin-left: auto;
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 2px;
   display: flex;
@@ -268,7 +268,7 @@
 .themeBlock h4 {
   font-size: 11px;
   text-transform: uppercase;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 10px;
   letter-spacing: 0.04em;
 }
@@ -366,13 +366,13 @@
   align-items: center;
   font-size: 12px;
   font-weight: 700;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .repeatHead button {
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
@@ -607,7 +607,7 @@
 .deviceActive { background: var(--bg-card) !important; color: var(--text-primary) !important; box-shadow: 0 1px 4px var(--shadow-color); }
 
 .templateBtn:hover { border-color: var(--or-principal); }
-.templateBtnActive { background: #0E1208; color: #F5C518; border-color: #0E1208; }
+.templateBtnActive { background: #0E1208; color: #F5C518; border-color: var(--text-primary); }
 
 .templateRow svg { color: #F5C518; flex-shrink: 0; }
 .templateRow > span { flex-shrink: 0; }
@@ -643,13 +643,13 @@
   background: none;
   font-size: 12px;
   font-weight: 600;
-  color: #888;
+  color: var(--text-muted);
   cursor: pointer;
   border-radius: 8px;
   font-family: inherit;
 }
 
-.tabActive { background: #F8F6F0 !important; color: #0E1208 !important; }
+.tabActive { background: var(--cream) !important; color: var(--text-primary) !important; }
 
 .editorHeadActions { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -658,8 +658,8 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #F8F6F0;
-  border: 1px solid #E5E5E5;
+  background: var(--cream);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
@@ -671,7 +671,7 @@
   font-size: 13px;
   font-weight: 700;
   margin: 16px 0 12px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .designPanel h4:first-child { margin-top: 0; }
@@ -717,28 +717,28 @@
 
 .pageList { list-style: none; padding: 0 0 12px; margin: 0 0 12px; border-bottom: 1px solid #EFEFEF; }
 .pageList li { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
-.pageItem { flex: 1; text-align: left; padding: 8px 10px; border: none; background: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; color: #555; }
-.pageItemActive { background: #F8F6F0; color: #0E1208; }
-.pageRemove { background: none; border: none; color: #ccc; cursor: pointer; padding: 4px; }
+.pageItem { flex: 1; text-align: left; padding: 8px 10px; border: none; background: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--text-secondary); }
+.pageItemActive { background: var(--cream); color: var(--text-primary); }
+.pageRemove { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
 .pageRemove:hover { color: #DC2626; }
 
 .templateRowInner { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 
 .analyticsGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-.analyticsCard { padding: 14px; background: #F8F6F0; border-radius: 10px; text-align: center; }
-.analyticsCard strong { display: block; font-size: 22px; color: #0E1208; }
-.analyticsCard span { font-size: 11px; color: #888; }
+.analyticsCard { padding: 14px; background: var(--cream); border-radius: 10px; text-align: center; }
+.analyticsCard strong { display: block; font-size: 22px; font-weight: 700; color: var(--or-texte); }
+.analyticsCard span { font-size: 11px; color: var(--text-muted); }
 
 .submissionList { list-style: none; padding: 0; margin: 0; }
 .submissionList li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-.submissionList time { color: #999; font-size: 11px; }
+.submissionList time { color: var(--text-muted); font-size: 11px; }
 
-.codeArea { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; }
+.codeArea { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; resize: vertical; }
 .advancedActions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 
 .levelList { list-style: none; padding: 0; margin: 0; }
-.levelList li { padding: 8px 0; font-size: 12px; color: #aaa; border-bottom: 1px solid #f5f5f5; }
-.levelUnlocked { color: #333; }
+.levelList li { padding: 8px 0; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid #f5f5f5; }
+.levelUnlocked { color: var(--text-primary); }
 .levelUnlocked strong { color: #F5C518; }
 
 .levelHintUltra {
@@ -751,7 +751,7 @@
 
 .snapshotList { list-style: none; padding: 0; margin-top: 12px; }
 .snapshotList li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-.snapshotList button { padding: 6px 12px; background: #F8F6F0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; }
+.snapshotList button { padding: 6px 12px; background: var(--cream); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; }
 
 .editorHead {
   display: flex;
@@ -770,10 +770,25 @@
   gap: 12px;
   padding: 48px 24px;
   text-align: center;
-  color: #888;
+  color: var(--text-muted);
   font-size: 14px;
   min-height: 200px;
 }
 
-.emptyEditor svg { color: #ccc; }
+.emptyEditor svg { color: var(--text-muted); }
 
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .analyticsCard {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .tabActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
+}
+:global(html[data-theme="light"]) .sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+}

@@ -53,8 +53,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 .card {
@@ -131,6 +131,7 @@
   gap: 10px;
   padding: 18px 24px;
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   border: 1px solid var(--border-color);
   border-radius: 14px;
   max-width: 480px;
@@ -166,32 +167,54 @@
   font-weight: 700;
 }
 
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* Mobile base: single column, horizontal card layout */
+.card {
+  flex-direction: row;
+  text-align: left;
+  align-items: flex-start;
+  padding: 18px 16px;
 }
 
-@media (max-width: 520px) {
+.cardBody {
+  align-items: flex-start;
+}
+
+.iconWrap {
+  width: 40px;
+  height: 40px;
+}
+
+@media (min-width: 521px) {
   .grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 
   .card {
-    flex-direction: row;
-    text-align: left;
-    align-items: flex-start;
-    padding: 18px 16px;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    padding: clamp(20px, 2.5vw, 28px) clamp(14px, 2vw, 20px);
   }
 
   .cardBody {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .iconWrap {
-    width: 40px;
-    height: 40px;
-    margin-top: 2px;
+    width: 44px;
+    height: 44px;
   }
+}
+
+@media (min-width: 901px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
 }

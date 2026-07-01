@@ -80,6 +80,7 @@ const KEYS = {
   NOTIFICATION_READ: 'glist_notification_read',
   SYSTEM_NOTIFICATIONS: 'glist_system_notifications',
   SECURITY_SESSIONS: 'glist_security_sessions',
+  VISITOR_KEY: 'glist_visitor_key',
 };
 
 export const PREMIUM_PRICE_GNF = 120000;
@@ -96,6 +97,16 @@ export function getItem(key, fallback = null) {
 
 export function setItem(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+/** Clé visiteur persistante (UUID anonyme) — identifie le navigateur pour favoris/dismissals. */
+export function getVisitorKey() {
+  let key = localStorage.getItem(KEYS.VISITOR_KEY);
+  if (!key) {
+    key = `vk_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(KEYS.VISITOR_KEY, key);
+  }
+  return key;
 }
 
 function stripPassword(entry) {
@@ -1104,6 +1115,12 @@ export function toggleFavorite(proId) {
     const s = getProStats(id);
     setProStats(id, { ...s, favorites: (s.favorites || 0) + 1 });
   }
+  if (useSupabase) {
+    const key = getVisitorKey();
+    import('../api/supabaseFavorites.js')
+      .then((m) => m.toggleFavoriteRemote(key, id))
+      .catch(() => {});
+  }
   return next.includes(id);
 }
 
@@ -1128,6 +1145,11 @@ export function addSearchHistory(query) {
   const filtered = history.filter((q) => q !== query);
   filtered.unshift(query);
   setItem(KEYS.SEARCH_HISTORY, filtered.slice(0, 20));
+  if (useSupabase) {
+    import('../lib/supabaseClient.js').then(({ supabase }) => {
+      if (supabase) supabase.rpc('app_record_search', { p_query: query.trim() }).catch(() => {});
+    }).catch(() => {});
+  }
 }
 
 export function getSearchHistory() {
@@ -1191,6 +1213,14 @@ export function addQuoteRequest(proId, request) {
   all[proId].unshift(entry);
   setItem(KEYS.QUOTE_REQUESTS, all);
   addCrmProspect(proId, entry);
+  if (useSupabase) {
+    import('../api/supabaseQuoteRequests.js').then((m) => m.submitQuoteRemote(proId, {
+      nom: request.nom || request.prenom || 'Visiteur',
+      service: request.service || '',
+      message: request.message || '',
+      visitorEmail: request.visitorEmail || request.email || null,
+    })).catch(() => {});
+  }
   return entry;
 }
 
@@ -1243,15 +1273,24 @@ export function getCrmProspects(proId) {
 export function addCrmProspect(proId, entry) {
   const all = getItem(KEYS.CRM_PROSPECTS, {});
   if (!all[proId]) all[proId] = [...DEFAULT_CRM];
-  all[proId].unshift({
+  const localEntry = {
     id: Date.now(),
     prenom: entry.nom || entry.prenom || 'Visiteur',
     service: entry.service || 'Demande de devis',
     date: new Date().toISOString().split('T')[0],
     note: entry.message?.slice(0, 50) || '',
     column: 'nouveau',
-  });
+  };
+  all[proId].unshift(localEntry);
   setItem(KEYS.CRM_PROSPECTS, all);
+  if (useSupabase) {
+    import('../api/supabaseCrm.js').then((m) => m.addCrmProspectRemote(proId, {
+      prenom: localEntry.prenom,
+      telephone: entry.telephone || null,
+      email: entry.visitorEmail || entry.email || null,
+      note: localEntry.note,
+    })).catch(() => {});
+  }
 }
 
 export function moveCrmProspect(proId, prospectId, column) {
@@ -1259,6 +1298,11 @@ export function moveCrmProspect(proId, prospectId, column) {
   if (!all[proId]) return;
   all[proId] = all[proId].map((p) => (p.id === prospectId ? { ...p, column } : p));
   setItem(KEYS.CRM_PROSPECTS, all);
+  if (useSupabase) {
+    import('../api/supabaseCrm.js')
+      .then((m) => m.moveCrmProspectRemote(prospectId, column))
+      .catch(() => {});
+  }
 }
 
 // ── Mini-site ──

@@ -24,11 +24,17 @@
 
 .label {
   font-size: 9px;
-  color: #888;
+  color: var(--text-muted);
   margin-top: 4px;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .bar {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
 }

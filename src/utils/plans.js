@@ -10,15 +10,15 @@ export const HIERARCHIE_PLANS = {
 
 export const PLANS_INFO = {
   pro: {
-    nom: 'Pro',
-    prix: 15000,
+    nom: 'Advanced',
+    prix: 50000,
     devise: 'GNF',
     duree_jours: 30,
     appPlanId: 'advanced',
   },
   premium: {
     nom: 'Premium',
-    prix: 50000,
+    prix: 120000,
     devise: 'GNF',
     duree_jours: 30,
     appPlanId: 'premium',
@@ -45,7 +45,7 @@ export function toPlanActuel(planId) {
 
 export function planLabel(planDemandeOrApp) {
   if (planDemandeOrApp === 'gratuit' || planDemandeOrApp === 'free') return 'Gratuit';
-  if (planDemandeOrApp === 'pro' || planDemandeOrApp === 'advanced') return 'Pro';
+  if (planDemandeOrApp === 'pro' || planDemandeOrApp === 'advanced') return 'Advanced';
   if (planDemandeOrApp === 'premium') return 'Premium';
   return planDemandeOrApp;
 }

@@ -39,8 +39,18 @@ export function onProProfileSave(proId) {
   logActivity('pro', proId, { type: 'PROFILE_UPDATE', label: 'Profil mis à jour' });
 }
 
-export function onProDelete(proId, email) {
-  logAuditEvent({ actor: email, actorType: 'pro', action: AUDIT_ACTIONS.PRO_DELETE_ACCOUNT, target: String(proId) });
+export function onProDelete(proId, email, reason = '') {
+  logActivity('pro', proId, {
+    type: 'ACCOUNT_DELETE',
+    label: reason ? `Compte supprimé — ${reason.slice(0, 120)}` : 'Compte supprimé',
+  });
+}
+
+export function onVisitorDelete(email, reason = '') {
+  logActivity('visitor', email, {
+    type: 'ACCOUNT_DELETE',
+    label: reason ? `Compte supprimé — ${reason.slice(0, 120)}` : 'Compte supprimé',
+  });
 }
 
 export function onAdminBroadcast(title, audience) {

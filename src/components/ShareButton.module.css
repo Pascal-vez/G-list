@@ -6,6 +6,7 @@
   border-radius: 8px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   color: var(--text-primary);
   font-family: inherit;
   font-size: 14px;

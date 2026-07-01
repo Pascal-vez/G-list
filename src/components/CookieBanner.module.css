@@ -57,5 +57,5 @@
 
 .accept {
   background: #F5C518;
-  color: #1A1A1A;
+  color: var(--texte-sur-or);
 }

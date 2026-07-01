@@ -10,7 +10,7 @@
   height: 40px;
   border-radius: 50%;
   background: rgba(245, 197, 24, 0.92);
-  color: #0E1208;
+  color: var(--texte-sur-or);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,6 +20,7 @@
 
 .fab:hover {
   background: #F5C518;
+  color: var(--texte-sur-or);
 }
 
 .popup {
@@ -27,7 +28,7 @@
   bottom: calc(40px + 10px);
   right: 0;
   width: clamp(240px, 22vw, 300px);
-  background: #FAFAFA;
+  background: var(--bg-secondary);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   padding: clamp(14px, 1.5vw, 22px);
@@ -42,7 +43,7 @@
 
 .popupText {
   font-size: clamp(12px, 1.1vw, 14px);
-  color: #555555;
+  color: var(--text-secondary);
   margin-bottom: clamp(12px, 1.5vw, 16px);
 }
 
@@ -85,7 +86,7 @@
   width: 100%;
   padding: clamp(8px, 0.9vw, 10px);
   font-size: clamp(12px, 1vw, 13px);
-  color: #555555;
+  color: var(--text-secondary);
   text-align: center;
   border-top: 1px solid #E0E0E0;
   padding-top: clamp(10px, 1.2vw, 12px);
@@ -97,7 +98,7 @@
 }
 
 .suggestBtn:hover {
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .textarea {
@@ -154,4 +155,10 @@
   .popup {
     bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 40px + 8px + 40px + 10px);
   }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .popup {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
 }

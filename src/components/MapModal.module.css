@@ -11,7 +11,7 @@
 }
 
 .modal {
-  background: #FAFAFA;
+  background: var(--bg-secondary);
   border-radius: clamp(14px, 1.5vw, 16px) clamp(14px, 1.5vw, 16px) 0 0;
   width: 100%;
   max-width: clamp(480px, 45vw, 600px);
@@ -37,7 +37,7 @@
 
 .address {
   font-size: clamp(12px, 1vw, 14px);
-  color: #555555;
+  color: var(--text-secondary);
 }
 
 .distance {
@@ -57,13 +57,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555555;
+  color: var(--text-secondary);
   flex-shrink: 0;
   transition: background 0.2s ease;
 }
 
 .close:hover {
-  background: #F0F0F0;
+  background: var(--hover-bg);
 }
 
 .mapWrap {
@@ -77,7 +77,7 @@
   height: clamp(200px, 22vw, 240px);
   border: none;
   border-radius: clamp(10px, 1vw, 12px);
-  background: #F0F0F0;
+  background: var(--hover-bg);
 }
 
 .directionsBtn {
@@ -88,7 +88,7 @@
   margin: clamp(10px, 1.2vw, 12px) clamp(14px, 1.5vw, 16px) clamp(16px, 2vw, 20px);
   padding: clamp(12px, 1.3vw, 14px);
   background: #F5C518;
-  color: #1A1A1A;
+  color: var(--texte-sur-or);
   font-weight: 700;
   font-size: clamp(12px, 1vw, 14px);
   border-radius: clamp(8px, 1vw, 10px);
@@ -113,4 +113,10 @@
   .map {
     height: clamp(280px, 28vw, 320px);
   }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .modal {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
 }

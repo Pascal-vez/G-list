@@ -11,7 +11,7 @@
 
 .card {
   position: relative;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border-radius: clamp(16px, 1.8vw, 20px);
   padding: clamp(24px, 3vw, 44px) clamp(20px, 2.5vw, 32px);
   max-width: clamp(380px, 36vw, 520px);
@@ -26,7 +26,7 @@
   right: clamp(12px, 1.5vw, 16px);
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -45,19 +45,19 @@
 }
 
 .logoList {
-  color: #0E1208;
+  color: var(--text-primary);
 }
 
 .title {
   font-size: clamp(17px, 1.8vw, 24px);
   font-weight: 700;
-  color: #0E1208;
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
 .subtitle {
   font-size: clamp(12px, 1.1vw, 13px);
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: clamp(20px, 2.5vw, 28px);
   line-height: 1.5;
 }
@@ -78,7 +78,7 @@
   display: block;
   font-size: clamp(13px, 1.1vw, 15px);
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
@@ -89,39 +89,53 @@
 }
 
 .choiceBtn {
-  border: 1.5px solid #E0E0E0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid var(--border-color);
   border-radius: clamp(6px, 0.8vw, 8px);
   padding: clamp(8px, 0.9vw, 10px) clamp(12px, 1.4vw, 16px);
   font-size: clamp(12px, 1.1vw, 13px);
   font-weight: 500;
-  background: #F5F5F0;
+  background-color: var(--surface-subtle);
+  color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   font-family: inherit;
 }
 
-.choiceBtn:hover {
+.choiceBtn:hover:not(.choiceBtnActive) {
   border-color: #F5C518;
+  background-color: var(--or-clair);
+  color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
 }
 
 .choiceBtnActive {
   border-color: #F5C518;
-  background: #FFFBEA;
-  color: #0E1208;
+  background: var(--or-principal) !important;
+  color: #1A1A1A !important;
+  -webkit-text-fill-color: #1A1A1A !important;
   font-weight: 700;
 }
 
 .textarea {
   width: 100%;
   min-height: clamp(72px, 8vw, 80px);
-  border: 1.5px solid #E0E0E0;
+  border: 1.5px solid var(--border-color);
   border-radius: clamp(8px, 1vw, 10px);
   padding: clamp(10px, 1.2vw, 12px);
   font-size: clamp(13px, 1.1vw, 15px);
   font-family: inherit;
   resize: vertical;
   outline: none;
+  background: var(--input-bg);
+  color: var(--text-primary);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .textarea:focus {
@@ -157,7 +171,8 @@
   width: 100%;
   height: clamp(44px, 4.5vw, 56px);
   background: #F5C518;
-  color: #0E1208;
+  color: #1A1A1A !important;
+  -webkit-text-fill-color: #1A1A1A !important;
   border-radius: clamp(8px, 1vw, 10px);
   font-size: clamp(13px, 1.2vw, 16px);
   font-weight: 700;
@@ -166,6 +181,11 @@
   margin-top: 4px;
   transition: background 0.2s ease;
   font-family: inherit;
+}
+
+.submitBtn svg {
+  color: #1A1A1A;
+  stroke: #1A1A1A;
 }
 
 .submitBtn:hover:not(:disabled) {
@@ -191,13 +211,13 @@
 .successTitle {
   font-size: clamp(17px, 1.8vw, 20px);
   font-weight: 700;
-  color: #0E1208;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
 .successText {
   font-size: clamp(13px, 1.1vw, 14px);
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 8px;
 }
@@ -211,7 +231,7 @@
 .closeLink {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-muted);
   font-size: clamp(12px, 1vw, 13px);
   cursor: pointer;
   text-decoration: underline;
@@ -219,5 +239,19 @@
 }
 
 .closeLink:hover {
-  color: #0E1208;
+  color: var(--text-primary);
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+
+:global(html[data-theme="dark"]) .choiceBtnActive,
+:global(html.dark-mode) .choiceBtnActive {
+  background: var(--or-principal) !important;
+  border-color: var(--or-principal);
+  color: var(--texte-sur-or) !important;
+  -webkit-text-fill-color: var(--texte-sur-or) !important;
 }

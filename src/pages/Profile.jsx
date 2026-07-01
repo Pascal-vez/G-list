@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useProfessionalById } from '../hooks/useProfessionalById';
 import { useProReviews } from '../hooks/useProReviews';
-import { getInitials, getAvatarColor, formatWhatsAppLink, formatDate } from '../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor, formatWhatsAppLink, formatDate } from '../utils/helpers';
 import {
   toggleFavorite, isFavorite, addQuoteRequest, getVisitorAccount,
 } from '../utils/storage';
@@ -18,6 +18,7 @@ import {
 import { addViewHistory } from '../utils/storage';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useFavoritesSync } from '../hooks/useFavoritesSync';
 import { sortByDistance } from '../utils/geo';
 import StarRating, { StarDisplay } from '../components/StarRating';
 import ShareButton from '../components/ShareButton';
@@ -61,6 +62,7 @@ function RatingBars({ reviews }) {
 }
 
 export default function Profile() {
+  useFavoritesSync();
   const { id } = useParams();
   const { pro, loading } = useProfessionalById(id);
   const { reviews, reload: reloadReviews } = useProReviews(id);
@@ -192,7 +194,7 @@ export default function Profile() {
       <header className={styles.hero}>
         <div className={styles.cover} style={{ background: getAvatarColor(pro.categorie) }} />
         <div className={styles.heroContent}>
-          <div className={styles.avatarLarge} style={{ background: getAvatarColor(pro.categorie) }}>
+          <div className={styles.avatarLarge} style={{ background: getAvatarColor(pro.categorie), color: getAvatarTextColor(getAvatarColor(pro.categorie)) }}>
             {getInitials(pro.nom)}
           </div>
           <div className={styles.heroInfo}>
@@ -266,19 +268,21 @@ export default function Profile() {
       <div className={styles.tabContent}>
         {tab === 'about' && (
           <section>
-            <p className={styles.description}>{pro.description}</p>
+            {pro.description && <p className={styles.description}>{pro.description}</p>}
             <div className={styles.infoGrid}>
-              <p><Clock size={16} /> {pro.horaires}</p>
-              <p><Star size={16} /> {pro.experience} ans d&apos;expérience</p>
+              {pro.horaires && <p><Clock size={16} /> {pro.horaires}</p>}
+              {!!pro.experience && <p><Star size={16} /> {pro.experience} ans d&apos;expérience</p>}
             </div>
             {pro.specialites?.length > 0 && (
               <div className={styles.tags}>
                 {pro.specialites.map((s) => <span key={s} className={styles.tag}>{s}</span>)}
               </div>
             )}
-            <div className={styles.langues}>
-              <strong>Langues :</strong> {(pro.langues || []).join(' · ')}
-            </div>
+            {(pro.langues || []).length > 0 && (
+              <div className={styles.langues}>
+                <strong>Langues :</strong> {(pro.langues || []).join(' · ')}
+              </div>
+            )}
           </section>
         )}
 

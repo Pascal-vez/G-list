@@ -1,7 +1,7 @@
 .card {
   position: relative;
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -57,13 +57,13 @@
 .name {
   font-size: 16px;
   font-weight: 700;
-  color: #1A1A1A;
+  color: var(--text-primary);
   line-height: 1.3;
 }
 
 .profession {
   font-size: 13px;
-  color: #888;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -72,7 +72,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .rating {
@@ -80,7 +80,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .star {
@@ -89,7 +89,7 @@
 }
 
 .rating strong {
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .status {
@@ -115,7 +115,7 @@
 }
 
 .statusOff {
-  color: #888;
+  color: var(--text-muted);
 }
 
 .statusOff .statusDot {
@@ -133,7 +133,7 @@
   margin-top: 4px;
   border-radius: 50px;
   background: #F5C518;
-  color: #1A1A1A;
+  color: var(--texte-sur-or);
   font-size: 14px;
   font-weight: 700;
   transition: background 0.2s ease;
@@ -141,5 +141,40 @@
 
 .cta:hover {
   background: #D4A800;
-  color: #1A1A1A;
+  color: var(--text-primary);
+}
+
+/* ── Mode clair ── */
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+
+/* ── Mode sombre ── */
+:global(html[data-theme="dark"]) .card,
+:global(html.dark-mode) .card {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-card);
+}
+
+:global(html[data-theme="dark"]) .statusOn,
+:global(html.dark-mode) .statusOn {
+  color: #4ADE80;
+}
+
+:global(html[data-theme="dark"]) .statusOn .statusDot,
+:global(html.dark-mode) .statusOn .statusDot {
+  background: #4ADE80;
+}
+
+:global(html[data-theme="dark"]) .statusOff .statusDot,
+:global(html.dark-mode) .statusOff .statusDot {
+  background: var(--text-muted);
+}
+
+:global(html[data-theme="dark"]) .sponsored,
+:global(html.dark-mode) .sponsored {
+  color: var(--or-texte);
+  background: rgba(245, 197, 24, 0.15);
 }

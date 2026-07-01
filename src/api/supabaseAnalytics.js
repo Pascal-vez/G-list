@@ -13,21 +13,18 @@ const EMPTY_PRO_METRICS = {
 
 const EMPTY_PLATFORM = {
   totalPros: 0,
+  totalUsers: 0,
   verified: 0,
   premium: 0,
   advanced: 0,
-  free: 0,
   totalViews: 0,
   whatsappClicks: 0,
   totalReviews: 0,
+  platformReviews: 0,
   newPros: 0,
-  totalUsers: 0,
-  totalSearches: 0,
-  mrr: 0,
   daily: [],
   byCategory: [],
   byRegion: [],
-  opportunities: [],
 };
 
 export async function fetchProAnalytics(legacyProId, startDate, endDate) {

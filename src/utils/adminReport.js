@@ -94,7 +94,6 @@ function sectionBlocks(metrics, selectedSections) {
         ['Vérifiés', metrics.verified],
         ['Plan Premium', metrics.premium],
         ['Plan Advanced', metrics.advanced],
-        ['Liste d\'attente', metrics.waitlistCount],
       ],
     });
   }
@@ -105,7 +104,6 @@ function sectionBlocks(metrics, selectedSections) {
       rows: [
         ['Comptes inscrits', metrics.totalUsers],
         ['Évaluations plateforme', metrics.evalCount],
-        ['Liste d\'attente', metrics.waitlistCount],
       ],
     });
   }

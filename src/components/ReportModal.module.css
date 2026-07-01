@@ -10,7 +10,7 @@
 }
 
 .modal {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 14px;
   padding: 24px;
   width: 100%;
@@ -52,7 +52,7 @@
   width: 100%;
   margin-top: 6px;
   padding: 10px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
   font-family: inherit;
 }
@@ -66,4 +66,10 @@
   color: #DC2626;
   font-size: 14px;
   margin-bottom: 10px;
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .modal {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
 }

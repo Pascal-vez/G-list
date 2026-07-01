@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin, Star, Eye, Heart, Navigation } from 'lucide-react';
-import { getInitials, getAvatarColor } from '../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor } from '../utils/helpers';
 import { formatDistance } from '../utils/geo';
 import { useLazyVisible } from '../hooks/useLazyVisible';
 import { toggleFavorite, isFavorite } from '../utils/storage';
 import { getPlanBadgeLabel } from '../utils/proEnhancements';
+import { useTranslation } from '../i18n/I18nContext';
 import styles from './ProCard.module.css';
 
 export default function ProCard({ pro, userLocation, compact = false }) {
+  const { t } = useTranslation();
   const [ref, visible] = useLazyVisible();
   const [fav, setFav] = useState(() => isFavorite(pro.id));
 
@@ -22,7 +24,7 @@ export default function ProCard({ pro, userLocation, compact = false }) {
     setFav(toggleFavorite(pro.id));
   };
 
-  const planLabel = getPlanBadgeLabel(pro.plan, pro.topGList);
+  const planLabel = pro.topGList ? t('proCard.badge.top') : getPlanBadgeLabel(pro.plan, pro.topGList);
   const planClass = pro.topGList ? styles.badgeTop : styles[`badge${(pro.plan || 'free').charAt(0).toUpperCase() + (pro.plan || 'free').slice(1)}`] || styles.badgeFree;
 
   return (
@@ -33,7 +35,7 @@ export default function ProCard({ pro, userLocation, compact = false }) {
         type="button"
         className={`${styles.favBtn} ${fav ? styles.favActive : ''}`}
         onClick={handleFav}
-        aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        aria-label={fav ? t('proCard.favorite.remove') : t('proCard.favorite.add')}
       >
         <Heart size={16} fill={fav ? 'currentColor' : 'none'} />
       </button>
@@ -41,7 +43,7 @@ export default function ProCard({ pro, userLocation, compact = false }) {
       <div className={styles.top}>
         <div
           className={styles.avatar}
-          style={{ background: getAvatarColor(pro.categorie) }}
+          style={{ background: getAvatarColor(pro.categorie), color: getAvatarTextColor(getAvatarColor(pro.categorie)) }}
           aria-hidden="true"
         >
           {getInitials(pro.nom)}
@@ -66,7 +68,7 @@ export default function ProCard({ pro, userLocation, compact = false }) {
         <div className={styles.rating}>
           <Star size={14} className={styles.starIcon} aria-hidden="true" />
           <span className={styles.ratingValue}>{pro.note}</span>
-          <span className={styles.reviewCount}>({pro.nombreAvis} avis)</span>
+          <span className={styles.reviewCount}>{t('proCard.reviewCount', { count: pro.nombreAvis })}</span>
         </div>
         <span className={`${styles.planBadge} ${planClass}`}>{planLabel}</span>
       </div>
@@ -78,7 +80,7 @@ export default function ProCard({ pro, userLocation, compact = false }) {
 
       <div className={styles.actions}>
         <Link to={`/profil/${pro.id}`} className={styles.profile}>
-          Voir le profil
+          {t('proCard.viewProfile')}
           <ArrowRight size={14} aria-hidden="true" />
         </Link>
       </div>

@@ -11,6 +11,8 @@ import { filterProfessionals, getCategoryCounts, getRegionCounts } from '../util
 import { sortByDistance } from '../utils/geo';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useTranslation } from '../i18n/I18nContext';
+import { categoryDescription, categoryLabel } from '../i18n/helpers';
 import styles from './CategoryPage.module.css';
 
 const DEFAULT_FILTERS = {
@@ -27,6 +29,7 @@ const DEFAULT_FILTERS = {
 
 export default function CategoryPage() {
   const { id } = useParams();
+  const { t } = useTranslation();
   const category = getCategoryById(id);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const { location, error, loading, requestLocation, clearLocation } = useGeolocation();
@@ -36,12 +39,12 @@ export default function CategoryPage() {
   const regionCounts = useMemo(() => getRegionCounts(professionals), [professionals.length]);
   const categoryName = category?.name ?? '';
   const description = category
-    ? (CATEGORY_DESCRIPTIONS[category.id] || CATEGORY_DESCRIPTIONS.autre)
+    ? categoryDescription(t, category.id, CATEGORY_DESCRIPTIONS[category.id] || CATEGORY_DESCRIPTIONS.autre)
     : '';
 
   usePageMeta({
-    title: category?.name,
-    description: description || 'Professionnels par catégorie en Guinée',
+    title: category ? categoryLabel(t, category) : undefined,
+    description: description || t('category.meta.fallbackDescription'),
     path: category ? `/categorie/${category.id}` : undefined,
   });
 
@@ -76,8 +79,8 @@ export default function CategoryPage() {
           />
           <div className={styles.resultsArea}>
             <p className={styles.count}>
-              {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
-              {location && ' · triés par proximité'}
+              {t(filtered.length === 1 ? 'category.results.count' : 'category.results.count_plural', { count: filtered.length })}
+              {location && t('annuaire.results.sortedByProximity')}
             </p>
             {filtered.length > 0 ? (
               <div className={styles.grid}>
@@ -88,10 +91,10 @@ export default function CategoryPage() {
             ) : (
               <div className={styles.empty}>
                 <SearchX size={40} className={styles.emptyIcon} aria-hidden="true" />
-                <p>Aucun professionnel trouvé pour ces critères.</p>
+                <p>{t('category.empty.message')}</p>
                 {hasActiveFilters && (
                   <button type="button" className={styles.resetLink} onClick={() => setFilters(DEFAULT_FILTERS)}>
-                    Réinitialiser les filtres
+                    {t('filters.resetAll')}
                   </button>
                 )}
               </div>

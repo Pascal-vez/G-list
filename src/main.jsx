@@ -8,6 +8,12 @@ import App from './App.jsx';
 
 rebuildMinisitePublishedIndex();
 
+if (import.meta.env.PROD) {
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>

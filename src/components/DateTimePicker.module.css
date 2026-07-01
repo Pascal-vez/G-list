@@ -221,3 +221,53 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+:global(html[data-theme="dark"]) .popover,
+:global(html.dark-mode) .popover {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+}
+
+:global(html[data-theme="dark"]) .calHead strong,
+:global(html.dark-mode) .calHead strong,
+:global(html[data-theme="dark"]) .dayBtn,
+:global(html.dark-mode) .dayBtn {
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .navBtn,
+:global(html.dark-mode) .navBtn {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .navBtn:hover,
+:global(html.dark-mode) .navBtn:hover,
+:global(html[data-theme="dark"]) .dayBtn:hover:not(:disabled),
+:global(html.dark-mode) .dayBtn:hover:not(:disabled) {
+  background: var(--active-bg);
+}
+
+:global(html[data-theme="dark"]) .weekday,
+:global(html.dark-mode) .weekday,
+:global(html[data-theme="dark"]) .timeRow label,
+:global(html.dark-mode) .timeRow label,
+:global(html[data-theme="dark"]) .timeSep,
+:global(html.dark-mode) .timeSep {
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .timeRow,
+:global(html.dark-mode) .timeRow {
+  border-top-color: var(--border-color);
+}
+
+:global(html[data-theme="dark"]) .timeInput,
+:global(html.dark-mode) .timeInput {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  color-scheme: dark;
+}

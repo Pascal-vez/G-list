@@ -32,3 +32,24 @@
 .display .empty {
   color: #E0E0E0;
 }
+
+/* Mode sombre — étoiles visibles sur fond sombre */
+:global(html[data-theme="dark"]) .star,
+:global(html.dark-mode) .star {
+  color: var(--border-color);
+}
+
+:global(html[data-theme="dark"]) .star.filled,
+:global(html.dark-mode) .star.filled {
+  color: var(--or-principal);
+}
+
+:global(html[data-theme="dark"]) .display .empty,
+:global(html.dark-mode) .display .empty {
+  color: var(--border-color);
+}
+
+:global(html[data-theme="dark"]) .display .filled,
+:global(html.dark-mode) .display .filled {
+  color: var(--or-principal);
+}

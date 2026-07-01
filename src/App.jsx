@@ -28,6 +28,7 @@ import VisitorDashboard from './pages/VisitorDashboard';
 import DashboardRoute from './components/dashboard/DashboardRoute';
 import { EvaluationProvider } from './context/EvaluationContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { I18nProvider } from './i18n/I18nContext';
 import { hasVisited, markVisited } from './utils/storage';
 
 function GatedLayout({ children }) {
@@ -91,10 +92,12 @@ function AppShell() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <EvaluationProvider>
-        <AppShell />
-      </EvaluationProvider>
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider>
+        <EvaluationProvider>
+          <AppShell />
+        </EvaluationProvider>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }

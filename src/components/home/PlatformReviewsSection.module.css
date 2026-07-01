@@ -1,0 +1,231 @@
+.section {
+  padding: 3rem 1.5rem 4rem;
+  background: var(--bg-secondary, #f8f8f6);
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.head {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.head h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+}
+
+.head p {
+  margin: 0;
+  color: var(--text-muted, #666);
+  font-size: 0.95rem;
+}
+
+.list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.card time {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.loadMoreBtn {
+  background: transparent;
+  border: 1px solid var(--accent, #f5c518);
+  color: var(--text-primary, #0e1208);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.loadMoreBtn:hover {
+  background: rgba(245, 197, 24, 0.15);
+}
+
+.form {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.form h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.25rem;
+}
+
+.formHint {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.form label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form input,
+.form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.submitBtn {
+  background: var(--accent, #f5c518);
+  color: var(--texte-sur-or);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.success { color: #16a34a; margin-bottom: 0.75rem; }
+.error { color: #dc2626; margin-bottom: 0.75rem; }
+
+@media (min-width: 640px) {
+  .list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Mode sombre uniquement — mode clair inchangé ── */
+:global(html[data-theme="dark"]) .card,
+:global(html.dark-mode) .card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+:global(html[data-theme="dark"]) .cardHead strong,
+:global(html.dark-mode) .cardHead strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+:global(html[data-theme="dark"]) .card p,
+:global(html.dark-mode) .card p {
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .card time,
+:global(html.dark-mode) .card time {
+  color: var(--text-muted);
+}
+
+:global(html[data-theme="dark"]) .pagination,
+:global(html.dark-mode) .pagination {
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .form,
+:global(html.dark-mode) .form {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+:global(html[data-theme="dark"]) .form h4,
+:global(html.dark-mode) .form h4 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+:global(html[data-theme="dark"]) .formHint,
+:global(html.dark-mode) .formHint {
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .form label,
+:global(html.dark-mode) .form label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+:global(html[data-theme="dark"]) .form input,
+:global(html[data-theme="dark"]) .form textarea,
+:global(html.dark-mode) .form input,
+:global(html.dark-mode) .form textarea {
+  background: var(--input-bg);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .form input::placeholder,
+:global(html[data-theme="dark"]) .form textarea::placeholder,
+:global(html.dark-mode) .form input::placeholder,
+:global(html.dark-mode) .form textarea::placeholder {
+  color: var(--text-muted);
+}
+
+:global(html[data-theme="dark"]) .form input:focus,
+:global(html[data-theme="dark"]) .form textarea:focus,
+:global(html.dark-mode) .form input:focus,
+:global(html.dark-mode) .form textarea:focus {
+  border-color: var(--or-principal);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}

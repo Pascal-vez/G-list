@@ -1,9 +1,9 @@
 .page {
-  min-height: calc(100dvh - var(--header-height));
+  min-height: 100dvh;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: clamp(48px, 8vh, 96px) 20px clamp(48px, 5vw, 64px);
+  padding: calc(var(--header-height, 64px) + clamp(32px, 5vh, 64px)) 20px clamp(48px, 5vw, 64px);
   box-sizing: border-box;
   background: var(--bg-secondary);
 }
@@ -11,10 +11,10 @@
 .box {
   width: 100%;
   max-width: 420px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 14px;
-  padding: 32px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: clamp(24px, 5vw, 32px);
+  box-shadow: var(--shadow-card, 0 4px 24px rgba(0, 0, 0, 0.08));
 }
 
 .box h1 {
@@ -26,7 +26,7 @@
 }
 
 .sub {
-  color: #555;
+  color: var(--text-secondary);
   margin-bottom: 20px;
   font-size: 14px;
 }
@@ -40,16 +40,18 @@
 .tabs button {
   flex: 1;
   padding: 10px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   font-family: inherit;
   cursor: pointer;
 }
 
 .tabActive {
-  border-color: #F5C518 !important;
-  background: rgba(245, 197, 24, 0.1) !important;
+  border-color: var(--or-principal) !important;
+  background: var(--or-principal) !important;
+  color: var(--texte-sur-or) !important;
   font-weight: 600;
 }
 
@@ -65,7 +67,7 @@
   width: 100%;
   margin-top: 6px;
   padding: 10px 12px;
-  border: 1.5px solid #E5E5E5;
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
   font-family: inherit;
 }
@@ -89,7 +91,7 @@
 
 .tokenHint {
   font-size: 13px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .back {
@@ -98,6 +100,47 @@
 }
 
 .back a {
-  color: #555;
+  color: var(--text-secondary);
   text-decoration: underline;
+}
+
+/* ── Mode clair ── */
+:global(html[data-theme="light"]) .tabs button.tabActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
+}
+
+/* ── Mode sombre ── */
+:global(html[data-theme="dark"]) .tabs button.tabActive,
+:global(html.dark-mode) .tabs button.tabActive {
+  background: var(--or-principal) !important;
+  color: var(--texte-sur-or) !important;
+  border-color: var(--or-principal) !important;
+}
+
+:global(html[data-theme="dark"]) .box,
+:global(html.dark-mode) .box {
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+}
+
+:global(html[data-theme="dark"]) .tabs button,
+:global(html.dark-mode) .tabs button {
+  background: var(--surface-subtle);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .success,
+:global(html.dark-mode) .success {
+  color: #4ADE80;
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .page {
+    padding: calc(var(--header-height, 64px) + 24px) 16px 48px;
+    align-items: flex-start;
+  }
 }

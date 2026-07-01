@@ -2,7 +2,7 @@ import {
   getPlatformKPIs, getRevenueStats, getProsWithAdminState,
   findDuplicateGroups, getIAInsights, getOpportunityGaps,
 } from '../utils/adminAnalytics';
-import { getSubscriptionPlans, getReports, getWaitlistEntries } from '../utils/storage';
+import { getSubscriptionPlans, getReports } from '../utils/storage';
 import { DEFAULT_SUBSCRIPTION_PLANS, ANNUAL_PAID_MONTHS } from '../utils/planConfig';
 
 function formatGNF(n) {
@@ -22,7 +22,7 @@ export const ADMIN_BOT_QUICK_PROMPTS = [
 export const ADMIN_TABS_BOT = [
   { id: 'overview', label: 'Overview', keywords: ['overview', 'apercu', 'accueil admin', 'vue ensemble', 'tableau de bord admin'] },
   { id: 'pros', label: 'Professionnels', keywords: ['professionnels', 'pros', 'fiches pro', 'liste pros', 'gerer pros'] },
-  { id: 'users', label: 'Utilisateurs', keywords: ['utilisateurs', 'visiteurs', 'comptes', 'liste d attente', 'waitlist'] },
+  { id: 'users', label: 'Utilisateurs', keywords: ['utilisateurs', 'visiteurs', 'comptes', 'inscrits'] },
   { id: 'analytics', label: 'Analytics', keywords: ['analytics', 'analyses', 'statistiques detaillees'] },
   { id: 'map', label: 'Carte Guinée', keywords: ['carte', 'guinee', 'densite', 'regions carte'] },
   { id: 'opportunities', label: 'Opportunités', keywords: ['opportunites', 'zones blanches', 'marches'] },
@@ -48,7 +48,7 @@ function liveStatsAnswer(ctx) {
     `• ${kpis.totalPros} professionnels actifs · ${kpis.verified} vérifiés`,
     `• ${kpis.premium} Premium · ${kpis.advanced} Advanced`,
     `• ${kpis.totalViews.toLocaleString('fr-FR')} vues · ${kpis.totalSearches} recherches`,
-    `• ${kpis.pendingReports} signalement(s) en attente · ${kpis.waitlistCount} waitlist`,
+    `• ${kpis.pendingReports} signalement(s) en attente`,
     `• MRR estimé : ${formatGNF(rev.mrr)} GNF (${rev.advanced} Adv. + ${rev.premium} Prem.)`,
     '',
     `Prix actuels : Advanced ${formatGNF(plans.advanced?.priceMonthly || DEFAULT_SUBSCRIPTION_PLANS.advanced.priceMonthly)} GNF/mois · Premium ${formatGNF(plans.premium?.priceMonthly || DEFAULT_SUBSCRIPTION_PLANS.premium.priceMonthly)} GNF/mois`,
@@ -221,12 +221,9 @@ export const ADMIN_BOT_KNOWLEDGE = [
   },
   {
     id: 'admin-users',
-    keywords: ['utilisateur', 'visiteur', 'waitlist', 'liste attente', 'inscrits'],
+    keywords: ['utilisateur', 'visiteur', 'inscrits', 'comptes'],
     priority: 9,
-    answer: () => {
-      const waitlist = getWaitlistEntries().length;
-      return `Onglet Utilisateurs : comptes visiteurs et pros enregistrés, bascule de rôle. Liste d'attente : ${waitlist} entrée(s).`;
-    },
+    answer: 'Onglet Utilisateurs : comptes visiteurs et pros inscrits, gestion des rôles et activation d\'abonnements.',
     links: [{ label: 'Utilisateurs', adminTab: 'users' }],
   },
   {

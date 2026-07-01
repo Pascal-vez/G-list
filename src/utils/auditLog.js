@@ -1,4 +1,5 @@
 import { getItem, setItem, KEYS } from './storage';
+import { useSupabase } from '../lib/supabaseClient';
 
 const MAX_ENTRIES = 500;
 
@@ -33,6 +34,11 @@ export function logAuditEvent({ actor = 'system', actorType = 'system', action, 
   };
   list.unshift(entry);
   setItem(KEYS.AUDIT_LOG, list.slice(0, MAX_ENTRIES));
+  if (useSupabase) {
+    import('../api/supabaseAuditLog.js')
+      .then((m) => m.logAuditRemote({ actor, actorType, action, target, details }))
+      .catch(() => {});
+  }
   return entry;
 }
 
@@ -58,6 +64,7 @@ export function getAuditActionLabel(action) {
     'pro.profile_save': 'Profil mis à jour',
     'pro.delete_account': 'Compte pro supprimé',
     'pro.minisite_publish': 'Mini-site publié',
+    'pro.register': 'Inscription pro',
     'visitor.register': 'Inscription visiteur',
     'visitor.delete': 'Compte visiteur supprimé',
     system: 'Système',

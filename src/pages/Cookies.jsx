@@ -1,5 +1,6 @@
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
-import { SITE_CONTACT_EMAIL } from '../data/constants';
+import { SITE_CONTACT_EMAIL, SITE_LEGAL } from '../data/constants';
+import { isPlatformAnalyticsConfigured } from '../utils/platformAnalytics';
 import SeoHead from '../components/SEO/SeoHead';
 
 export default function Cookies() {
@@ -19,8 +20,12 @@ export default function Cookies() {
       </InfoSection>
       <InfoSection title="Cookies utilisés par G-List">
         <ul>
-          <li><strong>Cookies essentiels</strong> — session, préférences (mode sombre), consentement cookies.</li>
-          <li><strong>Cookies de performance</strong> — mesure d&apos;audience anonymisée (uniquement si vous acceptez « Tout accepter »).</li>
+          <li><strong>Cookies essentiels</strong> — session, préférences (mode sombre), consentement cookies, compte local.</li>
+          <li>
+            <strong>Cookies de performance</strong> — mesure d&apos;audience anonymisée via Google Analytics 4
+            {isPlatformAnalyticsConfigured() ? ' (activé si vous acceptez « Tout accepter »)' : ' (sera activé après configuration du site en production)'}.
+            Les statistiques internes (vues profil, recherches) sont aussi enregistrées côté serveur pour l&apos;annuaire.
+          </li>
           <li><strong>Cookies tiers</strong> — Google Fonts, cartes Google Maps sur les fiches pro (chargement à la demande).</li>
         </ul>
       </InfoSection>
@@ -38,7 +43,8 @@ export default function Cookies() {
       </InfoSection>
       <InfoSection title="Contact">
         <p>
-          Pour toute question : <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a> ou WhatsApp +224 626 41 93 31.
+          Pour toute question : <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>
+          {' '}ou WhatsApp <a href={SITE_LEGAL.whatsappLink}>{SITE_LEGAL.whatsapp}</a>.
         </p>
       </InfoSection>
     </InfoPageLayout>

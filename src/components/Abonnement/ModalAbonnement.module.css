@@ -16,7 +16,7 @@
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 28px 24px 24px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
@@ -90,7 +90,7 @@
   margin-top: 10px;
   padding: 14px;
   background: #F9FAFB;
-  border: 1px solid #E8E8E8;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   list-style: none;
 }
@@ -105,9 +105,9 @@
   align-items: center;
   gap: 4px;
   padding: 6px 10px;
-  border: 1px solid #E8E8E8;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-card);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -125,17 +125,20 @@
   color: #444;
 }
 
-.field input {
+.field input,
+.field .datetimeInput {
   padding: 11px 12px;
   border: 1.5px solid #E5E5E5;
   border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
-  background: #fff;
+  background: var(--bg-card);
   color: #1A1A1A;
+  color-scheme: light;
 }
 
-.field input:focus {
+.field input:focus,
+.field .datetimeInput:focus {
   outline: none;
   border-color: #F5C518;
 }
@@ -183,7 +186,7 @@
   align-items: center;
   gap: 6px;
   padding: 11px 16px;
-  background: #fff;
+  background: var(--bg-card);
   border: 1.5px solid #E5E5E5;
   border-radius: 10px;
   font-size: 13px;
@@ -232,4 +235,74 @@
 @media (max-width: 480px) {
   .actions { flex-direction: column; }
   .secondaryBtn { justify-content: center; }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .modal {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+
+:global(html[data-theme="dark"]) .modal,
+:global(html.dark-mode) .modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .modal h2,
+:global(html.dark-mode) .modal h2,
+:global(html[data-theme="dark"]) .steps,
+:global(html.dark-mode) .steps,
+:global(html[data-theme="dark"]) .field,
+:global(html.dark-mode) .field,
+:global(html[data-theme="dark"]) .depotCard strong,
+:global(html.dark-mode) .depotCard strong {
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .subtitle,
+:global(html.dark-mode) .subtitle,
+:global(html[data-theme="dark"]) .depotCard span,
+:global(html.dark-mode) .depotCard span,
+:global(html[data-theme="dark"]) .field small,
+:global(html.dark-mode) .field small {
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .closeBtn,
+:global(html.dark-mode) .closeBtn,
+:global(html[data-theme="dark"]) .depotCard,
+:global(html.dark-mode) .depotCard,
+:global(html[data-theme="dark"]) .secondaryBtn,
+:global(html.dark-mode) .secondaryBtn {
+  background: var(--surface-subtle);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .amountBox,
+:global(html.dark-mode) .amountBox {
+  background: var(--or-clair);
+  border-color: rgba(245, 197, 24, 0.38);
+}
+
+:global(html[data-theme="dark"]) .amountBox span,
+:global(html.dark-mode) .amountBox span {
+  color: #FACC15;
+}
+
+:global(html[data-theme="dark"]) .amountBox strong,
+:global(html.dark-mode) .amountBox strong {
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .field input,
+:global(html[data-theme="dark"]) .field .datetimeInput,
+:global(html.dark-mode) .field input,
+:global(html.dark-mode) .field .datetimeInput {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  color-scheme: dark;
 }

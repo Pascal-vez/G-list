@@ -1,9 +1,12 @@
+/* ── Hero — Mobile First ── */
+
 .hero {
   position: relative;
   overflow: hidden;
-  background: #0A0A0A;
-  padding: calc(var(--header-height) + clamp(32px, 5vw, 56px)) clamp(20px, 4vw, 60px) clamp(40px, 5vw, 64px);
+  background: var(--bg-deep);
+  padding: calc(var(--header-height) + 28px) 16px 36px;
   color: var(--white);
+  box-sizing: border-box;
 }
 
 .hero::before {
@@ -35,14 +38,14 @@
 .auroraShape {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(50px);
   opacity: 0.35;
   will-change: transform;
 }
 
 .shape1 {
-  width: 500px;
-  height: 500px;
+  width: 240px;
+  height: 240px;
   background: radial-gradient(circle, #F5C518 0%, transparent 70%);
   top: -10%;
   left: 10%;
@@ -50,8 +53,8 @@
 }
 
 .shape2 {
-  width: 600px;
-  height: 600px;
+  width: 280px;
+  height: 280px;
   background: radial-gradient(circle, #FFB800 0%, transparent 70%);
   top: 20%;
   right: -5%;
@@ -59,8 +62,8 @@
 }
 
 .shape3 {
-  width: 450px;
-  height: 450px;
+  width: 220px;
+  height: 220px;
   background: radial-gradient(circle, #FFA000 0%, transparent 70%);
   bottom: -15%;
   left: 35%;
@@ -90,23 +93,29 @@
   max-width: 960px;
   margin: 0 auto;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
 }
 
 .title {
-  font-size: clamp(42px, 7.5vw, 76px);
-  margin-bottom: 16px;
+  font-size: clamp(28px, 8vw, 76px);
+  margin-bottom: 0;
   color: #FAFAFA;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.06em;
+  line-height: 1.15;
 }
 
 .titleLine1,
 .titleLine2,
 .titleLine3 {
   display: block;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .titleAccent {
@@ -114,16 +123,17 @@
 }
 
 .subtitle {
-  font-size: clamp(14px, 1.4vw, 17px);
-  font-weight: var(--font-weight-medium, 500);
+  font-size: clamp(13px, 1.4vw, 17px);
+  font-weight: 500;
   color: rgba(240, 237, 230, 0.75);
-  margin-bottom: clamp(24px, 3vw, 32px);
-  letter-spacing: var(--tracking-normal, -0.011em);
-  line-height: var(--leading-snug, 1.35);
+  margin: 0;
+  letter-spacing: -0.011em;
+  line-height: 1.35;
 }
 
 .searchWrap {
-  margin: 0 auto;
+  margin: 0;
+  width: 100%;
 }
 
 .quickLinks {
@@ -131,11 +141,13 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin-top: 20px;
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
 }
 
 .quickPill {
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 50px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -152,27 +164,53 @@
   color: #F5C518;
 }
 
-@media (max-width: 768px) {
-  .auroraShape {
-    filter: blur(50px);
+/* ── Tablet & Desktop ── */
+@media (min-width: 769px) {
+  .hero {
+    padding: calc(var(--header-height) + clamp(32px, 5vw, 56px)) clamp(20px, 4vw, 60px) clamp(40px, 5vw, 64px);
   }
 
-  .shape1,
-  .shape2,
+  .inner {
+    gap: 20px;
+  }
+
+  .title {
+    font-size: clamp(42px, 7.5vw, 76px);
+    line-height: 1.1;
+  }
+
+  .titleLine1,
+  .titleLine2,
+  .titleLine3 {
+    white-space: nowrap;
+  }
+
+  .auroraShape {
+    filter: blur(80px);
+  }
+
+  .shape1 {
+    width: 500px;
+    height: 500px;
+  }
+
+  .shape2 {
+    width: 600px;
+    height: 600px;
+  }
+
   .shape3 {
-    width: 280px;
-    height: 280px;
+    width: 450px;
+    height: 450px;
+  }
+
+  .quickPill {
+    padding: 8px 16px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .auroraShape {
     animation: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .title {
-    font-size: clamp(34px, 9.5vw, 46px);
   }
 }

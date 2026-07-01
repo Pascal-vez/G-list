@@ -7,7 +7,7 @@ export function useGeolocation() {
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setError('Géolocalisation non supportée');
+      setError('unsupported');
       return;
     }
     setLoading(true);
@@ -21,11 +21,7 @@ export function useGeolocation() {
         setLoading(false);
       },
       (err) => {
-        setError(
-          err.code === 1
-            ? 'Autorisez la localisation pour voir les pros proches'
-            : 'Impossible d\'obtenir votre position'
-        );
+        setError(err.code === 1 ? 'denied' : 'failed');
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }

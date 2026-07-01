@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { CATEGORIES } from '../data/constants';
+import { useTranslation } from '../i18n/I18nContext';
+import { categoryLabel } from '../i18n/helpers';
 import CategoryIcon, { CATEGORY_COLORS } from './CategoryIcon';
 import styles from './Categories.module.css';
 
 export default function Categories({ categoryCounts = {}, limit, layout = 'grid' }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
 
   const isHorizontal = layout === 'horizontal';
@@ -19,15 +22,15 @@ export default function Categories({ categoryCounts = {}, limit, layout = 'grid'
       <div className={styles.head}>
         <div>
           <h2 className={styles.title}>
-            {isHorizontal ? 'Parcourir par spécialité' : 'Parcourir par catégorie'}
+            {isHorizontal ? t('categories.title.specialty') : t('categories.title.category')}
           </h2>
           {!isHorizontal && (
-            <p className={styles.subtitle}>Cliquez sur une catégorie pour voir les professionnels</p>
+            <p className={styles.subtitle}>{t('categories.subtitle')}</p>
           )}
         </div>
         {isHorizontal && !showAll && CATEGORIES.length > (limit || 8) && (
           <button type="button" className={styles.seeAll} onClick={() => setShowAll(true)}>
-            Voir toutes les spécialités
+            {t('categories.seeAllSpecialties')}
             <ArrowRight size={16} aria-hidden="true" />
           </button>
         )}
@@ -37,6 +40,7 @@ export default function Categories({ categoryCounts = {}, limit, layout = 'grid'
         {visibleCats.map((cat) => {
           const count = categoryCounts[cat.name] ?? 0;
           const colors = CATEGORY_COLORS[cat.id] || CATEGORY_COLORS.autre;
+          const countLabel = t(count === 1 ? 'categories.proCount' : 'categories.proCount_plural', { count });
           return (
             <button
               key={cat.id}
@@ -56,8 +60,8 @@ export default function Categories({ categoryCounts = {}, limit, layout = 'grid'
                 />
               </span>
               <span className={styles.textCol}>
-                <span className={styles.name}>{cat.name}</span>
-                <span className={styles.count}>{count} pro{count !== 1 ? 's' : ''}</span>
+                <span className={styles.name}>{categoryLabel(t, cat)}</span>
+                <span className={styles.count}>{countLabel}</span>
               </span>
             </button>
           );

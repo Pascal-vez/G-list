@@ -107,7 +107,7 @@ export function getOpenStatus(horaires, now = new Date()) {
   const norm = horaires.toLowerCase().replace(/[·•—–]/g, ' ').replace(/\s+/g, ' ');
 
   if (/24\s*h\s*\/?\s*24|24\s*\/\s*24/.test(norm)) {
-    return { isOpen: true, hint: 'Ouvert en permanence' };
+    return { isOpen: true, hintKey: 'openStatus.hint.alwaysOpen' };
   }
 
   const times = parseTimeRange(horaires);
@@ -123,19 +123,17 @@ export function getOpenStatus(horaires, now = new Date()) {
   const isOpen = isOpenDay && isOpenTime;
 
   if (isOpen) {
-    return { isOpen: true, hint: `Ferme à ${closeLabel}` };
+    return { isOpen: true, hintKey: 'openStatus.hint.closesAt', hintVars: { time: closeLabel } };
   }
 
   if (isOpenDay && minutes < times.open) {
-    return { isOpen: false, hint: `Ouvre à ${openLabel}` };
+    return { isOpen: false, hintKey: 'openStatus.hint.opensAt', hintVars: { time: openLabel } };
   }
 
   const nextDay = nextOpenDay(day, startDay, endDay);
   if (nextDay === day) {
-    return { isOpen: false, hint: `Ouvre à ${openLabel}` };
+    return { isOpen: false, hintKey: 'openStatus.hint.opensAt', hintVars: { time: openLabel } };
   }
 
-  const dayLabel = DAY_LABELS[nextDay];
-  const capitalized = dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1);
-  return { isOpen: false, hint: `Ouvre ${capitalized.toLowerCase()} à ${openLabel}` };
+  return { isOpen: false, hintKey: 'openStatus.hint.opensOnDay', hintVars: { day: nextDay, time: openLabel } };
 }

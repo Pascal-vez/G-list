@@ -35,6 +35,11 @@ export function getDemandesAbonnement() {
   return getItem(ABONNEMENT_KEYS.DEMANDES, []);
 }
 
+export function purgeLocalDemandesEnAttente() {
+  const next = getDemandesAbonnement().filter((d) => d.statut !== 'en_attente');
+  saveDemandes(next);
+}
+
 function saveDemandes(list) {
   setItem(ABONNEMENT_KEYS.DEMANDES, list);
 }

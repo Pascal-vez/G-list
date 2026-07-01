@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle, XCircle, Phone, CreditCard, RefreshCw, Save, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Phone, CreditCard, RefreshCw, Save, Clock, Copy } from 'lucide-react';
 import {
   fetchPendingDemandes,
   activerDemande,
@@ -37,6 +37,7 @@ export default function AdminAbonnements() {
   const [motif, setMotif] = useState('');
   const [loading, setLoading] = useState(false);
   const [configForm, setConfigForm] = useState({ numero_depot: '', nom_titulaire: '', operateur: '', email_admin: '' });
+  const [emailCopied, setEmailCopied] = useState(false);
 
   const refresh = useCallback(async () => {
     const [pending, cfg] = await Promise.all([
@@ -55,28 +56,56 @@ export default function AdminAbonnements() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const handleActiver = async (id) => {
+  useEffect(() => {
+    if (refuseId && !demandes.some((d) => d.id === refuseId)) {
+      setRefuseId(null);
+      setMotif('');
+    }
+  }, [demandes, refuseId]);
+
+  const handleActiver = async (demande) => {
     setLoading(true);
-    const result = await activerDemande(id);
-    setLoading(false);
-    if (result.ok) {
-      show('Abonnement activé');
-      refresh();
-    } else {
-      show(result.error || 'Erreur activation');
+    try {
+      const result = await activerDemande(demande.id, demande);
+      if (result.ok) {
+        show('Abonnement activé');
+        await refresh();
+      } else if (result.stale) {
+        show('Demande déjà traitée — liste actualisée');
+        await refresh();
+      } else {
+        show(result.error || 'Erreur activation');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRefuser = async () => {
     if (!refuseId) return;
+    if (!motif.trim()) {
+      show('Indiquez un motif de refus');
+      return;
+    }
+    const demande = demandes.find((d) => d.id === refuseId);
     setLoading(true);
-    const result = await refuserDemande(refuseId, motif);
-    setLoading(false);
-    if (result.ok) {
-      show('Demande refusée');
-      setRefuseId(null);
-      setMotif('');
-      refresh();
+    try {
+      const result = await refuserDemande(refuseId, motif, demande);
+      if (result.ok) {
+        show('Demande refusée');
+        setRefuseId(null);
+        setMotif('');
+        await refresh();
+      } else if (result.stale) {
+        show('Demande déjà traitée — liste actualisée');
+        setRefuseId(null);
+        setMotif('');
+        await refresh();
+      } else {
+        show(result.error || 'Erreur lors du refus');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,6 +115,18 @@ export default function AdminAbonnements() {
     if (result.ok) {
       show('Abonnement désactivé');
       refresh();
+    }
+  };
+
+  const handleCopyAdminEmail = async () => {
+    const email = configForm.email_admin?.trim();
+    if (!email) return;
+    try {
+      await navigator.clipboard.writeText(email);
+      setEmailCopied(true);
+      window.setTimeout(() => setEmailCopied(false), 2000);
+    } catch {
+      show('Copie impossible — sélectionnez le texte manuellement');
     }
   };
 
@@ -132,12 +173,25 @@ export default function AdminAbonnements() {
           </label>
           <label className={styles.planAdminField}>
             Email admin (notifications)
-            <input
-              type="email"
-              value={configForm.email_admin}
-              onChange={(e) => setConfigForm({ ...configForm, email_admin: e.target.value })}
-              placeholder="contactglist224@gmail.com"
-            />
+            <div className={styles.copyFieldRow}>
+              <input
+                type="email"
+                className={styles.copyableInput}
+                value={configForm.email_admin}
+                onChange={(e) => setConfigForm({ ...configForm, email_admin: e.target.value })}
+                placeholder="contactglist224@gmail.com"
+                spellCheck={false}
+              />
+              <button
+                type="button"
+                className={styles.copyFieldBtn}
+                onClick={handleCopyAdminEmail}
+                disabled={!configForm.email_admin?.trim()}
+                title="Copier l'email"
+              >
+                <Copy size={14} /> {emailCopied ? 'Copié' : 'Copier'}
+              </button>
+            </div>
           </label>
         </div>
         <button type="button" className={styles.planAdminSave} onClick={handleSaveConfig}>
@@ -146,6 +200,11 @@ export default function AdminAbonnements() {
       </AdminCard>
 
       <AdminCard title={`Demandes en attente (${demandes.length})`} subtitle="Validez ou refusez après vérification du dépôt">
+        <div className={styles.footerActions} style={{ marginBottom: 12 }}>
+          <button type="button" className={styles.exportBtn} onClick={() => refresh()} disabled={loading}>
+            <RefreshCw size={16} /> Actualiser la liste
+          </button>
+        </div>
         {demandes.length === 0 ? (
           <p className={styles.empty}>Aucune demande en attente.</p>
         ) : (
@@ -168,11 +227,11 @@ export default function AdminAbonnements() {
                   )}
                   {d.id_transaction && <span><CreditCard size={12} aria-hidden /> {d.id_transaction}</span>}
                 </div>
-                <small style={{ color: '#999' }}>
+                <small className={styles.itemMeta}>
                   Demandé le {new Date(d.created_at).toLocaleString('fr-FR')}
                 </small>
                 <div className={styles.modActions} style={{ flexDirection: 'row', marginTop: 12 }}>
-                  <button type="button" disabled={loading} onClick={() => handleActiver(d.id)}>
+                  <button type="button" disabled={loading} onClick={() => handleActiver(d)}>
                     <CheckCircle size={14} /> Activer
                   </button>
                   <button type="button" className={styles.btnMuted} disabled={loading} onClick={() => setRefuseId(d.id)}>
@@ -187,13 +246,15 @@ export default function AdminAbonnements() {
 
       {refuseId && (
         <AdminCard title="Motif de refus" subtitle="Sera communiqué au professionnel">
-          <textarea
-            rows={3}
-            value={motif}
-            onChange={(e) => setMotif(e.target.value)}
-            placeholder="Ex. : montant incorrect, numéro émetteur non reconnu…"
-            className={styles.planAdminField}
-          />
+          <label className={styles.planAdminField}>
+            Motif
+            <textarea
+              rows={3}
+              value={motif}
+              onChange={(e) => setMotif(e.target.value)}
+              placeholder="Ex. : montant incorrect, numéro émetteur non reconnu…"
+            />
+          </label>
           <div className={styles.modActions} style={{ flexDirection: 'row' }}>
             <button type="button" onClick={handleRefuser} disabled={loading}>Confirmer le refus</button>
             <button type="button" className={styles.btnMuted} onClick={() => { setRefuseId(null); setMotif(''); }}>Annuler</button>

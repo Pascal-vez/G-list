@@ -1,5 +1,5 @@
 .page {
-  background: #FAFAFA;
+  background: var(--bg-secondary);
   min-height: 60vh;
 }
 
@@ -126,7 +126,7 @@
 
 .desc {
   font-size: clamp(13px, 1.1vw, 15px);
-  color: #555555;
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
@@ -137,7 +137,7 @@
 }
 
 .tag {
-  background: #F0F0F0;
+  background: var(--hover-bg);
   padding: clamp(5px, 0.6vw, 6px) clamp(12px, 1.2vw, 14px);
   border-radius: 20px;
   font-size: clamp(11px, 1vw, 14px);
@@ -146,7 +146,7 @@
 
 .tagGold {
   background: #F5C518;
-  color: #1A1A1A;
+  color: var(--texte-sur-or);
   padding: clamp(5px, 0.6vw, 6px) clamp(12px, 1.2vw, 14px);
   border-radius: 20px;
   font-size: clamp(11px, 1vw, 14px);
@@ -165,7 +165,7 @@
   align-items: center;
   gap: 8px;
   font-size: clamp(13px, 1.1vw, 15px);
-  color: #555555;
+  color: var(--text-secondary);
 }
 
 .horairesRow {
@@ -173,7 +173,7 @@
   align-items: center;
   gap: 8px;
   font-size: clamp(13px, 1.1vw, 15px);
-  color: #555555;
+  color: var(--text-secondary);
 }
 
 .whatsapp {
@@ -202,7 +202,7 @@
 }
 
 .review {
-  background: white;
+  background: var(--bg-card);
   padding: clamp(12px, 1.5vw, 14px);
   border-radius: clamp(10px, 1vw, 12px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
@@ -222,13 +222,13 @@
 
 .review p {
   font-size: clamp(12px, 1vw, 14px);
-  color: #555555;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .reviewDate {
   font-size: clamp(10px, 0.9vw, 12px);
-  color: #999;
+  color: var(--text-muted);
   margin-top: 6px;
   display: block;
 }
@@ -270,4 +270,21 @@
 .visitSiteBanner span {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .tag {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+:global(html[data-theme="light"]) .tag:hover {
+  background: var(--hover-bg);
+  border-color: #D0D0C5;
+}
+
+:global(html[data-theme="dark"]) .statBar,
+:global(html.dark-mode) .statBar {
+  background: var(--surface-info);
+  color: var(--text-info);
 }

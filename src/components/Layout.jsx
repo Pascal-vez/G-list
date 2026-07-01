@@ -7,6 +7,7 @@ import EngagementModal from './EngagementModal';
 import EvaluateButton from './EvaluateButton';
 import SkipLink from './SkipLink';
 import CookieBanner from './CookieBanner';
+import PlatformAnalytics from './PlatformAnalytics';
 import GlistBot from './GlistBot';
 import SystemBroadcastBanner from './SystemBroadcastBanner';
 import RouteScrollManager from './RouteScrollManager';
@@ -85,6 +86,7 @@ export default function Layout({ children }) {
       {!hideNavbar && <SystemBroadcastBanner />}
       <main id="main-content" className={styles.main}>{children}</main>
       {!hideFooter && <Footer />}
+      <PlatformAnalytics />
       <CookieBanner />
       {!hideNavbar && showFloaters && (
         <>

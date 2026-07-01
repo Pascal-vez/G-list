@@ -1,0 +1,182 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.55;
+}
+
+.link {
+  fill: none;
+  stroke: #F5C518;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 14;
+  stroke-linecap: round;
+  stroke-opacity: 0.35;
+  animation: linkFlow 5s linear infinite;
+}
+
+.linkOut {
+  stroke-opacity: 0.45;
+}
+
+.pulse {
+  fill: #F5C518;
+  opacity: 0.85;
+}
+
+.pulsePro {
+  fill: #FFE566;
+}
+
+.hubGroup {
+  transform-origin: 500px 300px;
+  animation: hubBreathe 6s ease-in-out infinite;
+}
+
+.hubRing {
+  fill: none;
+  stroke: #F5C518;
+  stroke-width: 1.5;
+  stroke-opacity: 0.4;
+  animation: hubRingPulse 3s ease-in-out infinite;
+}
+
+.hubCore {
+  fill: #F5C518;
+  animation: hubCorePulse 2.5s ease-in-out infinite;
+}
+
+.userHalo {
+  fill: rgba(96, 165, 250, 0.08);
+  stroke: rgba(96, 165, 250, 0.25);
+  stroke-width: 1;
+}
+
+.userDot {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(96, 165, 250, 0.55);
+  stroke-width: 1.5;
+}
+
+.userGlyph {
+  color: #2563EB;
+}
+
+.proHalo {
+  fill: rgba(245, 197, 24, 0.1);
+  stroke: rgba(245, 197, 24, 0.3);
+  stroke-width: 1;
+}
+
+.proDot {
+  fill: rgba(245, 197, 24, 0.95);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1;
+}
+
+.proGlyph {
+  color: #1A1A1A;
+}
+
+.userNode,
+.proNode {
+  animation: nodeFloat 5s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+.labels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 clamp(12px, 4vw, 48px) clamp(20px, 5vw, 48px);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.labelUsers {
+  color: rgba(147, 197, 253, 0.9);
+}
+
+.labelHub {
+  color: #F5C518;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(20px, 5vw, 48px);
+}
+
+.labelPros {
+  color: #F5C518;
+}
+
+@keyframes linkFlow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+@keyframes hubBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes hubRingPulse {
+  0%, 100% { stroke-opacity: 0.25; }
+  50% { stroke-opacity: 0.55; }
+}
+
+@keyframes hubCorePulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+@keyframes nodeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@media (max-width: 768px) {
+  .svg {
+    opacity: 0.32;
+    transform: scale(1.2);
+    transform-origin: center center;
+  }
+
+  .labels {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link,
+  .hubGroup,
+  .hubRing,
+  .hubCore,
+  .userNode,
+  .proNode {
+    animation: none;
+  }
+
+  .link {
+    stroke-opacity: 0.25;
+    stroke-dasharray: none;
+  }
+
+  .pulse {
+    display: none;
+  }
+}

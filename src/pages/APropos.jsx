@@ -2,105 +2,78 @@ import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
 import { SITE_CONTACT_EMAIL } from '../data/constants';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useTranslation } from '../i18n/I18nContext';
 import styles from '../components/InfoPageLayout.module.css';
 
 const WHATSAPP_URL = 'https://wa.me/224626419331';
 
 export default function APropos() {
+  const { t } = useTranslation();
   usePageMeta({
-    title: 'À propos',
-    description: 'Découvrez la mission de G-List — l\'annuaire professionnel de référence en Guinée.',
+    title: t('about.meta.title'),
+    description: t('about.meta.description'),
     path: '/a-propos',
   });
 
   return (
     <InfoPageLayout
-      title="À propos de G-List"
-      subtitle="L'annuaire professionnel de la Guinée"
+      title={t('about.title')}
+      subtitle={t('about.subtitle')}
       pageKey="apropos"
     >
-      <InfoSection title="L'idée">
-        <p>
-          G-List est né d&apos;un constat simple : en Guinée, trouver un professionnel de confiance
-          relève souvent du bouche-à-oreille. Un bon médecin, un électricien sérieux, un restaurant
-          de qualité — ces informations existent, mais elles sont éparpillées. G-List centralise
-          tout au même endroit.
-        </p>
+      <InfoSection title={t('about.idea.title')}>
+        <p>{t('about.idea.body')}</p>
       </InfoSection>
 
-      <InfoSection title="Notre mission">
-        <p>
-          Connecter chaque guinéen aux meilleurs professionnels de sa ville — rapidement,
-          simplement, en toute confiance. Que vous soyez à Conakry, Labé, Kankan ou Nzérékoré,
-          G-List vous permet de trouver le bon professionnel en quelques secondes et de le
-          contacter directement sur WhatsApp.
-        </p>
+      <InfoSection title={t('about.mission.title')}>
+        <p>{t('about.mission.body')}</p>
       </InfoSection>
 
-      <InfoSection title="Comment ça marche ?">
+      <InfoSection title={t('about.how.title')}>
         <div className={styles.cards}>
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Pour les visiteurs</h3>
-            <p className={styles.cardText}>
-              Recherchez par catégorie, ville ou mot-clé. Consultez les avis, la carte et les
-              horaires. Contactez le pro par WhatsApp ou demandez un devis.
-            </p>
+            <h3 className={styles.cardTitle}>{t('about.how.visitors.title')}</h3>
+            <p className={styles.cardText}>{t('about.how.visitors.body')}</p>
           </div>
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Pour les professionnels</h3>
-            <p className={styles.cardText}>
-              Créez votre espace pro, complétez votre fiche, gérez vos services et vos avis.
-              Passez en Advanced ou Premium pour débloquer analytics, CRM et mini-site.
-            </p>
+            <h3 className={styles.cardTitle}>{t('about.how.pros.title')}</h3>
+            <p className={styles.cardText}>{t('about.how.pros.body')}</p>
           </div>
         </div>
       </InfoSection>
 
-      <InfoSection title="Le créateur">
-        <p>
-          G-List est un projet entrepreneurial développé en Guinée, avec la conviction que la
-          technologie peut résoudre des problèmes concrets et quotidiens pour les citoyens et
-          les entreprises locales.
-        </p>
+      <InfoSection title={t('about.creator.title')}>
+        <p>{t('about.creator.body')}</p>
       </InfoSection>
 
-      <InfoSection title="Nos valeurs">
+      <InfoSection title={t('about.values.title')}>
         <div className={styles.cards}>
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Confiance</h3>
-            <p className={styles.cardText}>
-              Profils vérifiés, avis transparents et modération active pour garantir la qualité
-              de l&apos;annuaire.
-            </p>
+            <h3 className={styles.cardTitle}>{t('about.values.trust.title')}</h3>
+            <p className={styles.cardText}>{t('about.values.trust.body')}</p>
           </div>
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Local d&apos;abord</h3>
-            <p className={styles.cardText}>
-              WhatsApp comme canal principal, interface légère adaptée à la 3G, couverture des
-              14 villes couvertes.
-            </p>
+            <h3 className={styles.cardTitle}>{t('about.values.local.title')}</h3>
+            <p className={styles.cardText}>{t('about.values.local.body')}</p>
           </div>
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Innovation africaine</h3>
-            <p className={styles.cardText}>
-              Une solution pensée par et pour les Guinéens, avec des tarifs en GNF et un support
-              en français.
-            </p>
+            <h3 className={styles.cardTitle}>{t('about.values.innovation.title')}</h3>
+            <p className={styles.cardText}>{t('about.values.innovation.body')}</p>
           </div>
         </div>
       </InfoSection>
 
-      <InfoSection title="Contact">
+      <InfoSection title={t('about.contact.title')}>
         <div className={styles.contactBlock}>
-          <p>Une question, un partenariat ou une suggestion ? Écrivez-nous à{' '}
+          <p>{t('about.contact.body')}{' '}
             <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>.
           </p>
           <div className={styles.contactActions}>
             <a href={WHATSAPP_URL} className={styles.whatsappBtn} target="_blank" rel="noopener noreferrer">
-              WhatsApp
+              {t('about.contact.whatsapp')}
             </a>
             <Link to="/contact" className={styles.whatsappBtn} style={{ background: '#1A1A1A' }}>
-              Formulaire de contact
+              {t('about.contact.formLink')}
             </Link>
           </div>
         </div>

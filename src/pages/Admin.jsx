@@ -9,6 +9,9 @@ import {
   LayoutDashboard, UserCircle, BarChart3, Map,
   FileText, FileBarChart, ShieldAlert, Sparkles, Wallet, Crown, Menu, X, ScrollText, Home,
 } from 'lucide-react';
+import { getAdminUnreadCount, markAllAdminNotificationsRead } from '../utils/adminNotifications';
+import { fetchPendingDemandes } from '../api/abonnement';
+import { syncPlatformFormsCache } from '../api/platformForms';
 import {
   getItem,
   exportAllData,
@@ -31,6 +34,7 @@ import GlistBot, { GlistBotAdminTrigger } from '../components/GlistBot';
 import PasswordInput from '../components/PasswordInput';
 import { filterByDateRange } from '../utils/dateRange';
 import styles from './Admin.module.css';
+import AdminAbonnements from './AdminAbonnements';
 import {
   AdminOverview, AdminProfessionals, AdminUsers, AdminAnalytics,
   AdminMap, AdminOpportunities, AdminContent, AdminModeration,
@@ -49,6 +53,7 @@ const ADMIN_TABS = [
   { id: 'overview', label: 'Vue d\'ensemble', icon: LayoutDashboard, section: 'menu' },
   { id: 'pros', label: 'Professionnels', icon: Users, section: 'menu' },
   { id: 'users', label: 'Utilisateurs', icon: UserCircle, section: 'menu' },
+  { id: 'abonnements', label: 'Abonnements', icon: Crown, section: 'menu' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, section: 'analyse' },
   { id: 'map', label: 'Carte Guinée', icon: Map, section: 'analyse' },
   { id: 'opportunities', label: 'Opportunités', icon: Lightbulb, section: 'analyse' },
@@ -67,6 +72,7 @@ const ADMIN_TAB_SUBTITLES = {
   overview: 'Indicateurs clés de la plateforme G-List',
   pros: 'Gérez les fiches, plans et statuts de vérification',
   users: 'Comptes visiteurs, professionnels et liste d\'attente',
+  abonnements: 'Demandes de paiement et activation manuelle',
   analytics: 'Répartition du trafic et tendances',
   map: 'Densité des professionnels par région',
   opportunities: 'Zones à fort potentiel commercial',
@@ -322,6 +328,17 @@ export default function Admin() {
   const { collapsed } = useSidebar();
   const [botOpen, setBotOpen] = useState(false);
   const [dateRange, setDateRange] = useState(defaultDateRange);
+  const [adminUnread, setAdminUnread] = useState(() => getAdminUnreadCount());
+  const [pendingAbos, setPendingAbos] = useState(0);
+
+  const refreshPendingAbos = useCallback(async () => {
+    try {
+      const pending = await fetchPendingDemandes();
+      setPendingAbos((pending || []).filter((d) => d.statut === 'en_attente').length);
+    } catch {
+      setPendingAbos(0);
+    }
+  }, []);
 
   const filteredEvaluations = useMemo(
     () => filterByDateRange(evaluations, dateRange.startDate, dateRange.endDate, 'date'),
@@ -329,8 +346,11 @@ export default function Admin() {
   );
   const evalStats = useMemo(() => buildEvaluationStats(filteredEvaluations), [filteredEvaluations]);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
+    await syncPlatformFormsCache();
     setEvaluations(getEvaluations());
+    setAdminUnread(getAdminUnreadCount());
+    refreshPendingAbos();
     setData({
       thumbsUp: getItem(KEYS.FEEDBACK_THUMBS_UP, 0),
       thumbsDown: getItem(KEYS.FEEDBACK_THUMBS_DOWN, 0),
@@ -340,7 +360,14 @@ export default function Admin() {
       engagementSearching: getItem(KEYS.ENGAGEMENT_SEARCHING, 0),
       engagementTesting: getItem(KEYS.ENGAGEMENT_TESTING, 0),
     });
-  }, []);
+  }, [refreshPendingAbos]);
+
+  useEffect(() => {
+    if (!authenticated) return undefined;
+    refreshPendingAbos();
+    const timer = window.setInterval(refreshPendingAbos, 45000);
+    return () => window.clearInterval(timer);
+  }, [authenticated, refreshPendingAbos, adminTab]);
 
   useEffect(() => {
     if (!isAdminSessionValid()) {
@@ -444,6 +471,9 @@ export default function Admin() {
                 {label && <span className={styles.sidebarGroupLabel}>{label}</span>}
                 {items.map((t) => {
                   const Icon = t.icon;
+                  const badge = t.id === 'abonnements' && (pendingAbos > 0 || adminUnread > 0)
+                    ? Math.max(pendingAbos, adminUnread)
+                    : null;
                   return (
                     <button
                       key={t.id}
@@ -453,10 +483,18 @@ export default function Admin() {
                       onClick={() => {
                         setAdminTab(t.id);
                         setSidebarOpen(false);
+                        if (t.id === 'abonnements') {
+                          markAllAdminNotificationsRead();
+                          setAdminUnread(0);
+                          refreshPendingAbos();
+                        }
                       }}
                     >
                       <Icon size={18} className={styles.navIcon} aria-hidden="true" />
                       <span className={styles.navLabel}>{t.label}</span>
+                      {badge != null && (
+                        <span className={styles.sidebarBadge} aria-label={`${badge} notification(s)`}>{badge}</span>
+                      )}
                     </button>
                   );
                 })}
@@ -509,10 +547,17 @@ export default function Admin() {
           <DateRangePicker value={dateRange} onChange={setDateRange} />
         )}
 
-      {adminTab === 'overview' && <AdminOverview evalStats={evalStats} dateRange={dateRange} />}
+      {adminTab === 'overview' && (
+        <AdminOverview
+          evalStats={evalStats}
+          dateRange={dateRange}
+          onNavigateTab={(tab) => setAdminTab(tab)}
+        />
+      )}
 
       {adminTab === 'pros' && <AdminProfessionals />}
       {adminTab === 'users' && <AdminUsers dateRange={dateRange} />}
+      {adminTab === 'abonnements' && <AdminAbonnements />}
       {adminTab === 'analytics' && <AdminAnalytics dateRange={dateRange} />}
       {adminTab === 'map' && <AdminMap />}
       {adminTab === 'opportunities' && <AdminOpportunities dateRange={dateRange} />}

@@ -62,9 +62,15 @@
 }
 
 .presetBtnActive {
-  background: var(--text-primary);
-  border-color: var(--text-primary);
-  color: var(--or-principal);
+  background: var(--or-principal);
+  border-color: var(--or-principal);
+  color: var(--texte-sur-or);
+}
+
+.presetBtnActive:hover {
+  background: var(--gold-hover);
+  border-color: var(--gold-hover);
+  color: var(--texte-sur-or);
 }
 
 .dates {
@@ -140,4 +146,24 @@
     width: 100%;
     min-width: 0;
   }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .bar {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .presetBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+:global(html[data-theme="light"]) .presetBtn:hover {
+  background: var(--hover-bg);
+  border-color: #D0D0C5;
+}
+:global(html[data-theme="light"]) .presetBtnActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
 }

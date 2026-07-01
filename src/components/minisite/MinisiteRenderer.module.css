@@ -592,28 +592,77 @@ a.contactItem:hover { background: #f0f0f0; }
 .siteDark .blogCard,
 .siteDark .shopCard,
 .siteDark .eventCard,
-.siteDark .certCard {
+.siteDark .certCard,
+.siteDark .serviceCard,
+.siteDark .statCard,
+.siteDark .testimonial,
+.siteDark .contactItem,
+.siteDark .filesList a,
+.siteDark .bookingSlots li,
+.siteDark .partnerPlaceholder,
+.siteDark .footerSocial a,
+.siteDark .popupClose,
+.siteDark .pageTab,
+.siteDark .filterBtn {
   background: var(--ms-surface);
-  border-color: var(--ms-border);
-}
-
-.siteDark .pricingFeatures li,
-.siteDark .faqA,
-.siteDark .mapAddress {
-  color: var(--ms-text-secondary);
-}
-
-.siteDark .faqItem { border-bottom-color: var(--ms-border); }
-
-.siteDark .formField input,
-.siteDark .formField textarea {
-  background: #1A1A1A;
   border-color: var(--ms-border);
   color: var(--ms-accent);
 }
 
+.siteDark .pricingFeatures li,
+.siteDark .faqA,
+.siteDark .mapAddress,
+.siteDark .bodyText,
+.siteDark .navLinks a,
+.siteDark .serviceCard p,
+.siteDark .statLabel,
+.siteDark .teamCard p,
+.siteDark .testimonial cite,
+.siteDark .menuItem p,
+.siteDark .galleryItem figcaption,
+.siteDark .footerCopy,
+.siteDark .pricingPrice span,
+.siteDark .bookingNote,
+.siteDark .portfolioCard p,
+.siteDark .eventLoc,
+.siteDark .socialCard span,
+.siteDark .quoteSection cite,
+.siteDark .shopCartClear {
+  color: var(--ms-text-secondary);
+}
+
+.siteDark .siteNav,
+.siteDark .pageTabs,
+.siteDark .faqItem,
+.siteDark .menuItem,
+.siteDark .mapFrame,
+.siteDark .portfolioCard,
+.siteDark .audioItem,
+.siteDark .siteFooter {
+  border-color: var(--ms-border);
+}
+
+.siteDark .pageTabActive,
+.siteDark .filterActive {
+  background: var(--ms-primary);
+  border-color: var(--ms-primary);
+  color: var(--ms-accent);
+}
+
+.siteDark .formField input,
+.siteDark .formField textarea,
+.siteDark .newsletterForm input,
+.siteDark .passwordGate input {
+  background: #1A1A1A;
+  border-color: var(--ms-border);
+  color: var(--ms-accent);
+  color-scheme: dark;
+}
+
 .siteDark .formField input:focus,
-.siteDark .formField textarea:focus {
+.siteDark .formField textarea:focus,
+.siteDark .newsletterForm input:focus,
+.siteDark .passwordGate input:focus {
   border-color: var(--ms-primary);
   outline: none;
 }
@@ -628,37 +677,16 @@ a.contactItem:hover { background: #f0f0f0; }
   color: var(--ms-accent);
 }
 
-.siteDark .filterBtn {
-  background: var(--ms-surface);
-  border-color: var(--ms-border);
-  color: var(--ms-text-secondary);
-}
-
 .siteDark .portfolioCard { border-color: var(--ms-border); }
 
 .siteDark .siteFooter {
+  background: var(--ms-surface);
   border-top-color: var(--ms-border);
   color: var(--ms-text-secondary);
 }
 
-.siteDark .serviceCard,
-.siteDark .teamCard,
-.siteDark .testimonialCard,
-.siteDark .statCard,
-.siteDark .menuItem,
-.siteDark .contactCard {
-  background: var(--ms-surface);
-  border-color: var(--ms-border);
-}
-
 .siteDark .passwordGate form {
   background: var(--ms-surface);
-  color: var(--ms-accent);
-}
-
-.siteDark .passwordGate input {
-  background: #1A1A1A;
-  border-color: var(--ms-border);
   color: var(--ms-accent);
 }
 
@@ -792,11 +820,13 @@ a.contactItem:hover { background: #f0f0f0; }
 .audioPlayer { width: 100%; margin-top: 8px; }
 
 .cookieBanner { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; z-index: 400; font-size: 13px; flex-wrap: wrap; }
-.cookieBanner button { padding: 8px 20px; background: var(--ms-primary, #F5C518); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.cookieBanner button { padding: 8px 20px; background: var(--ms-primary, #F5C518);
+  color: var(--texte-sur-or); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
 .passwordGate { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0E1208; padding: 20px; }
 .passwordGate form { background: #fff; padding: 32px; border-radius: 16px; max-width: 360px; width: 100%; text-align: center; }
 .passwordGate .wrap { margin: 16px 0; }
 .passwordGate input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-.passwordGate button { width: 100%; padding: 12px; background: #F5C518; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.passwordGate button { width: 100%; padding: 12px; background: #F5C518;
+  color: var(--texte-sur-or); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
 .passwordErr { color: #DC2626; font-size: 13px; }

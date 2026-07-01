@@ -112,7 +112,7 @@
 
 .sectionBody {
   font-size: clamp(14px, 1.1vw, 16px);
-  color: #444;
+  color: var(--text-secondary);
   line-height: 1.75;
 }
 
@@ -153,11 +153,11 @@
 
 .intro {
   font-size: clamp(15px, 1.15vw, 17px);
-  color: #333;
+  color: var(--text-primary);
   line-height: 1.75;
   margin-bottom: clamp(28px, 3vw, 40px);
   padding: 18px 20px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid #EBEBEB;
   border-left: 3px solid var(--yellow);
@@ -171,7 +171,7 @@
 }
 
 .card {
-  background: #FFFFFF;
+  background: var(--bg-card);
   border: 1px solid #EBEBEB;
   border-top: 3px solid var(--yellow);
   border-radius: 12px;
@@ -188,14 +188,14 @@
 
 .cardText {
   font-size: 14px;
-  color: #555;
+  color: var(--text-secondary);
   line-height: 1.65;
 }
 
 .contactBlock {
   margin-top: 8px;
   padding: 24px;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border: 1px solid #EBEBEB;
   border-radius: 12px;
   text-align: center;
@@ -203,7 +203,7 @@
 
 .contactBlock p {
   margin-bottom: 16px;
-  color: #444;
+  color: var(--text-secondary);
   line-height: 1.65;
 }
 
@@ -278,4 +278,10 @@
   .cards {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
 }

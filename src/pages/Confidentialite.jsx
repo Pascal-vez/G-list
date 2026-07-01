@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import InfoPageLayout, { InfoSection } from '../components/InfoPageLayout';
 import infoStyles from '../components/InfoPageLayout.module.css';
-import { SITE_CONTACT_EMAIL } from '../data/constants';
+import { SITE_CONTACT_EMAIL, SITE_LEGAL } from '../data/constants';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 export default function Confidentialite() {
@@ -29,11 +29,11 @@ export default function Confidentialite() {
           Le responsable du traitement des données personnelles collectées via g-list.gn est :
         </p>
         <p>
-          <strong>G-List</strong><br />
-          Annuaire professionnel — République de Guinée<br />
-          Siège : Conakry, Guinée<br />
+          <strong>{SITE_LEGAL.entityName}</strong><br />
+          {SITE_LEGAL.tagline}<br />
+          Siège : {SITE_LEGAL.headquarters}<br />
           Email : <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a><br />
-          WhatsApp : <a href="https://wa.me/224626419331">+224 626 41 93 31</a>
+          WhatsApp : <a href={SITE_LEGAL.whatsappLink}>{SITE_LEGAL.whatsapp}</a>
         </p>
         <p>
           Pour toute question relative à vos données personnelles, vous pouvez nous contacter aux coordonnées ci-dessus.

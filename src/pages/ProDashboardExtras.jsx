@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Crown, ArrowRight, Lightbulb, TrendingUp, AlertTriangle,
@@ -30,18 +30,21 @@ import {
 } from '../utils/proAnalytics';
 import { filterByDateRange, formatPeriodShort } from '../utils/dateRange';
 import AbonnementStatus from '../components/Abonnement/AbonnementStatus';
+import LocaliteInput from '../components/LocaliteInput';
+import { fetchSubscriptionStatus } from '../api/abonnement';
 import { isAbonnementActif } from '../utils/plans';
 import { getActiveBroadcastsForUser, dismissBroadcast } from '../utils/adminBroadcasts';
 import { getActivityHistory } from '../utils/activityHistory';
 import { getBillingHistory, getBillingStatusLabel } from '../utils/billingHistory';
 import { getSecuritySessions, exportProGdprData } from '../utils/platformEvents';
 import NotificationInbox from '../components/NotificationInbox';
-import { getInitials, getAvatarColor } from '../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor } from '../utils/helpers';
 import { StarDisplay } from '../components/StarRating';
 import ProCardPreview from '../components/ProCardPreview';
 import MinisiteEditor from '../components/minisite/MinisiteEditor';
 import ProReportGenerator from '../components/pro/ProReportGenerator';
 import PasswordInput from '../components/PasswordInput';
+import AccountDeletionFlow from '../components/AccountDeletionFlow';
 import { NETWORKS } from '../components/SocialLinks';
 import styles from './ProDashboardExtras.module.css';
 
@@ -337,8 +340,9 @@ const PLAN_VISUALS = {
   premium: { icon: Crown, cardClass: 'billingCardPremium', label: 'Performance' },
 };
 
-export function UpgradeTab({ account, plan, onSubscribe }) {
+export function UpgradeTab({ account, plan, onSubscribe, subscriptionRefreshKey = 0 }) {
   const [billingCycle, setBillingCycle] = useState(BILLING_CYCLE_MONTHLY);
+  const [pendingDemandes, setPendingDemandes] = useState(0);
   const abonnementActif = isAbonnementActif(account);
   const plans = useMemo(() => getSubscriptionPlans(), []);
   const tiers = useMemo(() => [
@@ -346,6 +350,15 @@ export function UpgradeTab({ account, plan, onSubscribe }) {
     plans.advanced,
     plans.premium,
   ], [plans]);
+
+  useEffect(() => {
+    if (!account) return;
+    fetchSubscriptionStatus(account)
+      .then((status) => setPendingDemandes(status?.demandes_en_attente || 0))
+      .catch(() => setPendingDemandes(0));
+  }, [account, subscriptionRefreshKey]);
+
+  const hasPending = pendingDemandes > 0;
 
   return (
     <div className={styles.billingPage}>
@@ -382,6 +395,13 @@ export function UpgradeTab({ account, plan, onSubscribe }) {
           </button>
         </div>
       </div>
+
+      {hasPending && (
+        <div className={styles.billingPendingBanner} role="status">
+          <Clock size={16} aria-hidden />
+          Vous avez déjà une demande d&apos;abonnement en cours de traitement. Patientez — notre équipe la valide sous peu.
+        </div>
+      )}
 
       <div className={styles.billingGrid}>
         {tiers.map((t) => {
@@ -482,10 +502,15 @@ export function UpgradeTab({ account, plan, onSubscribe }) {
                     Abonnement actif
                   </span>
                 ) : isUpgrade ? (
-                  <button type="button" onClick={() => onSubscribe?.(t.id)} className={styles.billingCtaPrimary}>
+                  <button
+                    type="button"
+                    onClick={() => onSubscribe?.(t.id)}
+                    className={styles.billingCtaPrimary}
+                    disabled={hasPending}
+                  >
                     <Crown size={16} aria-hidden="true" />
-                    S&apos;abonner — {t.name}
-                    <ArrowRight size={16} aria-hidden="true" />
+                    {hasPending ? 'Demande en cours…' : `S'abonner — ${t.name}`}
+                    {!hasPending && <ArrowRight size={16} aria-hidden="true" />}
                   </button>
                 ) : isDowngrade && abonnementActif ? (
                   <span className={styles.billingFootCurrent}>
@@ -793,7 +818,7 @@ export function ConcurrenceTab({ account }) {
                       <div className={styles.concurrenceName}>
                         <span
                           className={styles.concurrenceAvatar}
-                          style={{ background: getAvatarColor(c.categorie || account.categorie) }}
+                          style={{ background: getAvatarColor(c.categorie || account.categorie), color: getAvatarTextColor(getAvatarColor(c.categorie || account.categorie)) }}
                         >
                           {getInitials(c.nom)}
                         </span>
@@ -886,6 +911,26 @@ export function SuggestionsTab({ account, onTabChange }) {
 
 export function CrmTab({ account, dateRange }) {
   const [allProspects, setAllProspects] = useState(() => getCrmProspects(account.id));
+
+  useEffect(() => {
+    let cancelled = false;
+    import('../api/supabaseCrm.js').then(({ fetchCrmProspects }) => (
+      fetchCrmProspects(account.id)
+    )).then((remote) => {
+      if (cancelled || !Array.isArray(remote) || remote.length === 0) return;
+      const normalized = remote.map((p) => ({
+        id: p.id,
+        prenom: p.prenom,
+        service: p.service || 'Prospect',
+        date: p.created_at ? p.created_at.split('T')[0] : '',
+        note: p.note || '',
+        column: p.status || 'nouveau',
+      }));
+      setAllProspects(normalized);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [account.id]);
+
   const prospects = useMemo(
     () => filterByDateRange(allProspects, dateRange.startDate, dateRange.endDate),
     [allProspects, dateRange.startDate, dateRange.endDate],
@@ -901,7 +946,7 @@ export function CrmTab({ account, dateRange }) {
 
   const move = (id, col) => {
     moveCrmProspect(account.id, id, col);
-    setAllProspects(getCrmProspects(account.id));
+    setAllProspects((prev) => prev.map((p) => (p.id === id ? { ...p, column: col } : p)));
   };
 
   return (
@@ -1406,7 +1451,7 @@ export function ProfileDashboardHeader({ account, reviews, avgRating, onEditProf
       <div className={styles.profileHeaderBody}>
         <div className={styles.profileHeaderMain}>
           <div className={styles.profileAvatarWrap}>
-            <div className={styles.profileAvatar} style={{ background: getAvatarColor(account.categorie || account.profession) }}>
+            <div className={styles.profileAvatar} style={{ background: getAvatarColor(account.categorie || account.profession), color: getAvatarTextColor(getAvatarColor(account.categorie || account.profession)) }}>
               {getInitials(account.nom)}
             </div>
           </div>
@@ -1471,6 +1516,8 @@ export function OverviewFreeTab({
     ? (periodReviews.reduce((s, r) => s + r.note, 0) / periodReviews.length).toFixed(1)
     : '—';
   const completion = getProfileCompletion(account);
+  const checklist = getProfileChecklist(account, reviews.length);
+  const pendingItems = checklist.filter((item) => !item.done);
   const recentReviews = periodReviews.slice(0, 3);
 
   const handleToggleAvailable = (disponible) => {
@@ -1538,6 +1585,17 @@ export function OverviewFreeTab({
               <div style={{ width: `${completion}%` }} />
             </div>
             <p className={styles.completionTip}>{getCompletionTip(account)}</p>
+            {pendingItems.length > 0 && (
+              <ul className={styles.profileChecklist}>
+                {pendingItems.map((item) => (
+                  <li key={item.id}>
+                    <button type="button" onClick={() => onTabChange?.(item.tab)}>
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {account.description && (
@@ -1602,7 +1660,9 @@ export function OverviewFreeTab({
   );
 }
 
-export function ProfileTabExtended({ account, form, handleSave, handleChange, handleSocialChange }) {
+export function ProfileTabExtended({
+  account, form, handleSave, handleChange, handleRegionChange, handleSocialChange,
+}) {
   const completion = getProfileCompletion({ ...account, ...form, specialites: form.specialitesStr?.split(',').map((s) => s.trim()).filter(Boolean) });
 
   return (
@@ -1626,6 +1686,14 @@ export function ProfileTabExtended({ account, form, handleSave, handleChange, ha
                   <input name={f} value={form[f] || ''} onChange={handleChange} className={styles.premiumInput} />
                 </label>
               ))}
+              <label className={styles.premiumField}>
+                <span>Localité</span>
+                <LocaliteInput
+                  value={form.region || ''}
+                  onChange={handleRegionChange}
+                  inputClassName={styles.premiumInput}
+                />
+              </label>
             </div>
           </PremiumPanel>
 
@@ -1688,40 +1756,6 @@ export function ProfileTabExtended({ account, form, handleSave, handleChange, ha
 }
 
 export function SettingsTab({ account, onLogout, onDeleteAccount, onSubscribe }) {
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [showDeleteWarning, setShowDeleteWarning] = useState(false);
-
-  const openDeleteWarning = () => {
-    setDeleteError('');
-    if (!deletePassword) {
-      setDeleteError('Saisissez votre mot de passe pour continuer.');
-      return;
-    }
-    setShowDeleteWarning(true);
-  };
-
-  const closeDeleteWarning = () => {
-    if (deleting) return;
-    setShowDeleteWarning(false);
-    setDeleteError('');
-  };
-
-  const handleConfirmDelete = async () => {
-    setDeleteError('');
-    setDeleting(true);
-    const result = await onDeleteAccount?.(deletePassword);
-    setDeleting(false);
-
-    if (result?.ok === false) {
-      setDeleteError(result.error === 'PASSWORD_INVALID' ? 'Mot de passe incorrect.' : 'Impossible de supprimer le compte.');
-      return;
-    }
-
-    setShowDeleteWarning(false);
-  };
-
   return (
     <div className={styles.tab}>
       <div className={styles.premiumIntro}>
@@ -1811,70 +1845,12 @@ export function SettingsTab({ account, onLogout, onDeleteAccount, onSubscribe })
       </PremiumPanel>
 
       <PremiumPanel title="Zone de danger" subtitle="Suppression définitive du compte">
-        <p className={styles.settingsHintPremium}>
-          La suppression efface votre profil, vos avis, votre mini-site et toutes les données associées. Cette action ne peut pas être annulée.
-        </p>
-        <label className={styles.deleteField}>
-          <span>Confirmer avec votre mot de passe</span>
-          <PasswordInput
-            inLabel
-            value={deletePassword}
-            onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
-            className={styles.deleteInput}
-            placeholder="Votre mot de passe"
-            autoComplete="current-password"
-          />
-        </label>
-        {deleteError && !showDeleteWarning && <p className={styles.deleteError}>{deleteError}</p>}
-        <button
-          type="button"
-          className={styles.deleteAccountBtn}
-          onClick={openDeleteWarning}
-          disabled={deleting}
-        >
-          <Trash2 size={16} aria-hidden="true" />
-          Supprimer mon compte
-        </button>
+        <AccountDeletionFlow
+          accountLabel={account.nom}
+          hint="La suppression efface votre profil, vos avis, votre mini-site et toutes les données associées. Indiquez obligatoirement la raison — elle est transmise à l&apos;équipe G-List."
+          onDelete={({ password, reason }) => onDeleteAccount?.({ password, reason })}
+        />
       </PremiumPanel>
-
-      {showDeleteWarning && (
-        <div className={styles.deleteModalOverlay} onClick={closeDeleteWarning} role="presentation">
-          <div
-            className={styles.deleteModal}
-            onClick={(e) => e.stopPropagation()}
-            role="alertdialog"
-            aria-labelledby="delete-modal-title"
-            aria-describedby="delete-modal-desc"
-          >
-            <div className={styles.deleteModalIconWrap} aria-hidden="true">
-              <AlertTriangle size={40} />
-            </div>
-            <h3 id="delete-modal-title">Supprimer définitivement votre compte ?</h3>
-            <p id="delete-modal-desc" className={styles.deleteModalLead}>
-              Vous êtes sur le point de supprimer le compte <strong>{account.nom}</strong>.
-              Cette action est <strong>irréversible</strong> et vos données seront <strong>définitivement effacées</strong>.
-            </p>
-            <ul className={styles.deleteModalList}>
-              <li>Votre profil public et votre fiche annuaire</li>
-              <li>Vos avis, statistiques et historique d&apos;activité</li>
-              <li>Votre mini-site portfolio et son lien personnalisé</li>
-              <li>Vos prospects CRM, services et photos</li>
-            </ul>
-            <p className={styles.deleteModalWarn}>
-              Aucune récupération ne sera possible après confirmation. Assurez-vous d&apos;avoir sauvegardé ce dont vous avez besoin.
-            </p>
-            {deleteError && <p className={styles.deleteModalError}>{deleteError}</p>}
-            <div className={styles.deleteModalActions}>
-              <button type="button" className={styles.deleteModalCancel} onClick={closeDeleteWarning} disabled={deleting}>
-                Annuler
-              </button>
-              <button type="button" className={styles.deleteModalConfirm} onClick={handleConfirmDelete} disabled={deleting}>
-                {deleting ? 'Suppression…' : 'Oui, supprimer mon compte'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

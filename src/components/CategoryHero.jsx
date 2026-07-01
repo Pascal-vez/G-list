@@ -3,12 +3,17 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import CategoryIcon, { CATEGORY_COLORS } from './CategoryIcon';
 import { getCategoryHero, CATEGORY_HERO_FALLBACK } from '../data/categoryHeroImages';
+import { useTranslation } from '../i18n/I18nContext';
+import { categoryLabel, categoryDescription } from '../i18n/helpers';
 import styles from './CategoryHero.module.css';
 
 export default function CategoryHero({ category, description, count }) {
+  const { t } = useTranslation();
   const colors = CATEGORY_COLORS[category.id] || CATEGORY_COLORS.autre;
   const hero = getCategoryHero(category.id);
   const [imgSrc, setImgSrc] = useState(hero.image);
+  const localizedDescription = categoryDescription(t, category.id, description);
+  const localizedName = categoryLabel(t, category);
 
   return (
     <header
@@ -36,7 +41,7 @@ export default function CategoryHero({ category, description, count }) {
       <div className={styles.inner}>
         <Link to="/" className={styles.back}>
           <ArrowLeft size={16} aria-hidden="true" />
-          Retour à l&apos;accueil
+          {t('category.backHome')}
         </Link>
 
         <div className={styles.content}>
@@ -50,16 +55,16 @@ export default function CategoryHero({ category, description, count }) {
           </span>
 
           <div className={styles.textBlock}>
-            <p className={styles.eyebrow}>Catégorie · G-List</p>
-            <h1 className={`${styles.title} hero-display`}>{category.name}</h1>
-            <p className={styles.description}>{description}</p>
+            <p className={styles.eyebrow}>{t('category.eyebrow')}</p>
+            <h1 className={`${styles.title} hero-display`}>{localizedName}</h1>
+            <p className={styles.description}>{localizedDescription}</p>
 
             <div className={styles.meta}>
               <span className={styles.count}>
-                {count} professionnel{count !== 1 ? 's' : ''}
+                {t(count === 1 ? 'category.proCount' : 'category.proCount_plural', { count })}
               </span>
               <span className={styles.dot} aria-hidden="true" />
-              <span className={styles.regionHint}>Partout en Guinée</span>
+              <span className={styles.regionHint}>{t('category.regionHint')}</span>
             </div>
           </div>
         </div>

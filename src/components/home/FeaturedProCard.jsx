@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Star, ArrowRight } from 'lucide-react';
-import { getInitials, getAvatarColor } from '../../utils/helpers';
+import { getInitials, getAvatarColor, getAvatarTextColor } from '../../utils/helpers';
 import styles from './FeaturedProCard.module.css';
 
 export default function FeaturedProCard({ pro, sponsored = false }) {
@@ -13,7 +13,7 @@ export default function FeaturedProCard({ pro, sponsored = false }) {
       <div className={styles.top}>
         <div
           className={styles.avatar}
-          style={{ background: getAvatarColor(pro.categorie) }}
+          style={{ background: getAvatarColor(pro.categorie), color: getAvatarTextColor(getAvatarColor(pro.categorie)) }}
           aria-hidden="true"
         >
           {getInitials(pro.nom)}

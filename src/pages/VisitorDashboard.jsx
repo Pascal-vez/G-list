@@ -8,18 +8,21 @@ import { useProfessionalsList } from '../hooks/useProfessionalsList';
 import { getProfessionalById } from '../api/professionals';
 import {
   getVisitorAccount, createVisitorAccount, loginVisitorAccount, logoutVisitorAccount,
+  deleteVisitorAccount,
   getFavorites, toggleFavorite, getViewHistory, getSearchHistory, clearSearchHistory,
   getVisitorQuoteRequests, getVisitorSettings, saveVisitorSettings,
 } from '../utils/storage';
 import { getInitials } from '../utils/helpers';
+import { useFavoritesSync } from '../hooks/useFavoritesSync';
 import { getActiveBroadcastsForUser, dismissBroadcast } from '../utils/adminBroadcasts';
 import { exportVisitorGdprData } from '../utils/platformEvents';
 import NotificationInbox from '../components/NotificationInbox';
 import ThemeToggle from '../components/ThemeToggle';
 import PasswordInput from '../components/PasswordInput';
 import AuthTermsAcceptance from '../components/AuthTermsAcceptance';
+import AccountDeletionFlow from '../components/AccountDeletionFlow';
 import WelcomeToast from '../components/WelcomeToast';
-import { consumePendingWelcome, showWelcomeFor } from '../utils/welcomeToast';
+import { consumePendingWelcome, setPendingWelcome, showWelcomeFor } from '../utils/welcomeToast';
 import { useTheme } from '../context/ThemeContext';
 import { usePageMeta } from '../hooks/usePageMeta';
 import styles from './VisitorDashboard.module.css';
@@ -48,6 +51,7 @@ function resolveProFromList(pros, proId) {
 }
 
 export default function VisitorDashboard() {
+  useFavoritesSync();
   usePageMeta({
     title: 'Espace visiteur',
     description: 'Gérez vos favoris, votre historique et vos demandes de devis sur G-List.',
@@ -96,8 +100,8 @@ export default function VisitorDashboard() {
       }
       try {
         const created = createVisitorAccount(registerForm);
+        setPendingWelcome({ type: 'visitor', name: created.prenom });
         setAccount(created);
-        showWelcomeFor(8000, setWelcomeMessage, { type: 'visitor', name: created.prenom });
       } catch (err) {
         if (err.message === 'PASSWORD_TOO_SHORT') {
           setAuthError('Le mot de passe doit contenir au moins 6 caractères.');
@@ -173,6 +177,15 @@ export default function VisitorDashboard() {
   const handleLogout = () => {
     logoutVisitorAccount();
     setAccount(null);
+  };
+
+  const handleDeleteAccount = async ({ password, reason }) => {
+    if (!account?.email) return { ok: false, error: 'NOT_FOUND' };
+    const result = await deleteVisitorAccount(account.email, password, { reason, requireReason: true });
+    if (result.ok) {
+      setAccount(null);
+    }
+    return result;
   };
 
   const handleSetting = (key, val) => {
@@ -335,6 +348,11 @@ export default function VisitorDashboard() {
               >
                 <Download size={16} /> Exporter mes données (RGPD)
               </button>
+              <AccountDeletionFlow
+                accountLabel={`${account.prenom} ${account.nom}`.trim() || account.email}
+                hint="Votre compte visiteur, favoris et historique seront supprimés. La raison est obligatoire et transmise à l&apos;équipe G-List."
+                onDelete={handleDeleteAccount}
+              />
             </section>
             <button type="button" className={styles.logoutBtn} onClick={handleLogout}><LogOut size={18} /> Se déconnecter</button>
           </div>

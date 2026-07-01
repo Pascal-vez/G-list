@@ -1,19 +1,28 @@
 :root,
 [data-theme="light"] {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F8F8F8;
-  --bg-sidebar: #FFFFFF;
+  --bg-primary: #F5F5F0;
+  --bg-secondary: #F5F5F0;
+  --bg-sidebar: #FAFAF7;
   --bg-card: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-subtle: #F8F8F4;
+  --surface-info: #E7F3FF;
+  --text-info: #1877F2;
   --text-primary: #1A1A1A;
   --text-secondary: #555555;
   --text-muted: #999999;
-  --border-color: #E5E5E5;
+  --border-color: #ECECE5;
   --or-principal: #F5C518;
+  --texte-sur-or: #1A1A1A;
+  --text-on-light: #1A1A1A;
+  --text-on-light-muted: #555555;
+  --or-texte: #F5C518;
   --or-clair: #FFF8E1;
-  --hover-bg: #F8F8F8;
+  --hover-bg: #F0F0E8;
   --active-bg: #FFF3CD;
   --input-bg: #FFFFFF;
-  --shadow-color: rgba(0, 0, 0, 0.06);
+  --shadow-color: rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
 
   --bg-deep: #0E1208;
   --bg-mid: #141A0E;
@@ -31,13 +40,13 @@
   --verified-text: #1877F2;
   --unverified-bg: #EEEEEE;
   --unverified-text: #757575;
-  --shadow: 0 2px 8px var(--shadow-color);
-  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
+  --shadow: var(--shadow-card);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
   --radius: 12px;
   --transition: 0.2s ease;
   --header-height: 72px;
   --banner-height: 0px;
-  --cream: #F8F6F0;
+  --cream: #F5F5F0;
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -46,11 +55,19 @@
   --bg-secondary: #161616;
   --bg-sidebar: #141414;
   --bg-card: #1C1C1C;
+  --surface-elevated: #232323;
+  --surface-subtle: #181818;
+  --surface-info: rgba(96, 165, 250, 0.16);
+  --text-info: #93C5FD;
   --text-primary: #F0F0F0;
-  --text-secondary: #B8B8B8;
-  --text-muted: #8A8A8A;
-  --border-color: #333333;
+  --text-secondary: #A8A8A8;
+  --text-muted: #B8B8B8;
+  --border-color: #3A3A3A;
   --or-principal: #F5C518;
+  --texte-sur-or: #1A1A1A;
+  --text-on-light: #1A1A1A;
+  --text-on-light-muted: #555555;
+  --or-texte: #F5C518;
   --or-clair: #2A2410;
   --hover-bg: #202020;
   --active-bg: #2A2410;
@@ -65,8 +82,11 @@
   --cream: var(--bg-secondary);
   --shadow: 0 2px 8px var(--shadow-color);
   --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.45);
-  --verified-bg: rgba(24, 119, 242, 0.15);
+  --verified-bg: var(--surface-info);
+  --verified-text: var(--text-info);
   --unverified-bg: rgba(255, 255, 255, 0.08);
+  --unverified-text: #D1D1D1;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 html.dark-mode {
@@ -74,10 +94,18 @@ html.dark-mode {
   --bg-secondary: #161616;
   --bg-sidebar: #141414;
   --bg-card: #1C1C1C;
+  --surface-elevated: #232323;
+  --surface-subtle: #181818;
+  --surface-info: rgba(96, 165, 250, 0.16);
+  --text-info: #93C5FD;
   --text-primary: #F0F0F0;
-  --text-secondary: #B8B8B8;
-  --text-muted: #8A8A8A;
-  --border-color: #333333;
+  --text-secondary: #A8A8A8;
+  --text-muted: #B8B8B8;
+  --border-color: #3A3A3A;
+  --texte-sur-or: #1A1A1A;
+  --text-on-light: #1A1A1A;
+  --text-on-light-muted: #555555;
+  --or-texte: #F5C518;
   --or-clair: #2A2410;
   --hover-bg: #202020;
   --active-bg: #2A2410;
@@ -91,8 +119,11 @@ html.dark-mode {
   --cream: var(--bg-secondary);
   --shadow: 0 2px 8px var(--shadow-color);
   --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.45);
-  --verified-bg: rgba(24, 119, 242, 0.15);
+  --verified-bg: var(--surface-info);
+  --verified-text: var(--text-info);
   --unverified-bg: rgba(255, 255, 255, 0.08);
+  --unverified-text: #D1D1D1;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 html[data-theme="dark"],
@@ -136,22 +167,16 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@media (min-width: 1280px) {
-  html {
-    min-width: 1280px;
-    font-size: clamp(14px, 1.2vw, 17px);
-  }
-
-  body {
-    min-width: 1280px;
-  }
-}
-
 @media (max-width: 768px) {
+  :root {
+    --header-height: 56px;
+  }
+
   html,
   body {
     min-width: 0;
     font-size: 14px;
+    overflow-x: hidden;
   }
 }
 
@@ -209,26 +234,69 @@ textarea::placeholder {
 /* Panneaux clairs (modales, date pickers) — texte lisible en mode sombre */
 .lightSurface {
   color-scheme: light !important;
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .lightSurface input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]),
 .lightSurface select,
 .lightSurface textarea {
-  background: #fff !important;
-  border-color: #E5E5E5;
-  color: #1A1A1A !important;
-  -webkit-text-fill-color: #1A1A1A;
+  background: var(--bg-card) !important;
+  border-color: var(--border-color);
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary);
 }
 
 .lightSurface select option {
-  background: #fff !important;
-  color: #1A1A1A !important;
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
 }
 
 .lightSurface input::placeholder,
 .lightSurface textarea::placeholder {
-  color: #999;
+  color: var(--text-muted);
+}
+
+/* Fond clair/crème/or FIXE — texte sombre même en mode nuit */
+.onLightBg {
+  color: var(--text-on-light) !important;
+  -webkit-text-fill-color: var(--text-on-light);
+}
+
+.onLightBgMuted {
+  color: var(--text-on-light-muted) !important;
+}
+
+.onGoldBg {
+  color: var(--texte-sur-or) !important;
+  -webkit-text-fill-color: var(--texte-sur-or);
+}
+
+/*
+ * Mode sombre — fond clair/or FIXE : texte noir forcé.
+ * Les sélecteurs [class*="…"] couvrent les classes hashées des CSS modules.
+ */
+html[data-theme="dark"] [class*="choiceBtn"]:not([class*="Active"]),
+html.dark-mode [class*="choiceBtn"]:not([class*="Active"]) {
+  background-color: var(--surface-subtle) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] [class*="choiceBtnActive"],
+html.dark-mode [class*="choiceBtnActive"],
+html[data-theme="dark"] [class*="submitBtn"],
+html.dark-mode [class*="submitBtn"],
+html[data-theme="dark"] [class*="primaryBtn"],
+html.dark-mode [class*="primaryBtn"],
+html[data-theme="dark"] [class*="joinBtn"],
+html.dark-mode [class*="joinBtn"],
+html[data-theme="dark"] [class*="chipActive"],
+html.dark-mode [class*="chipActive"],
+html[data-theme="dark"] [class*="tagActive"],
+html.dark-mode [class*="tagActive"] {
+  color: #1A1A1A !important;
+  -webkit-text-fill-color: #1A1A1A !important;
 }
 
 img {
@@ -265,7 +333,7 @@ h2, h3 {
 
 .btn-primary {
   background: var(--gold);
-  color: var(--black);
+  color: var(--texte-sur-or);
   font-weight: 700;
   padding: clamp(8px, 0.9vw, 12px) clamp(14px, 1.5vw, 22px);
   border-radius: clamp(6px, 0.8vw, 10px);
@@ -331,8 +399,173 @@ h2, h3 {
   border-radius: 20px;
   font-size: clamp(10px, 0.9vw, 12px);
   font-weight: 600;
-  background: #E7F3FF;
-  color: #1877F2;
+  background: var(--surface-info);
+  color: var(--text-info);
+}
+
+/* Mode sombre : aucun panneau clair avec texte clair involontaire */
+html[data-theme="dark"] :where(
+  [class*="card"],
+  [class*="Card"],
+  [class*="modal"],
+  [class*="Modal"],
+  [class*="panel"],
+  [class*="Panel"],
+  [class*="popup"],
+  [class*="Popup"],
+  [class*="popover"],
+  [class*="Popover"],
+  [class*="drawer"],
+  [class*="Drawer"],
+  [class*="tabContent"],
+  [class*="reviewForm"],
+  [class*="quoteForm"],
+  [class*="contactInfo"],
+  [class*="reviewsSummary"],
+  [class*="description"]
+),
+html.dark-mode :where(
+  [class*="card"],
+  [class*="Card"],
+  [class*="modal"],
+  [class*="Modal"],
+  [class*="panel"],
+  [class*="Panel"],
+  [class*="popup"],
+  [class*="Popup"],
+  [class*="popover"],
+  [class*="Popover"],
+  [class*="drawer"],
+  [class*="Drawer"],
+  [class*="tabContent"],
+  [class*="reviewForm"],
+  [class*="quoteForm"],
+  [class*="contactInfo"],
+  [class*="reviewsSummary"],
+  [class*="description"]
+) {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :where(
+  [class*="depotCard"],
+  [class*="amountBox"],
+  [class*="toast"],
+  [class*="status"],
+  [class*="Status"],
+  [class*="banner"],
+  [class*="Banner"],
+  [class*="notice"],
+  [class*="Notice"],
+  [class*="alert"],
+  [class*="Alert"],
+  [class*="summary"],
+  [class*="Summary"]
+),
+html.dark-mode :where(
+  [class*="depotCard"],
+  [class*="amountBox"],
+  [class*="toast"],
+  [class*="status"],
+  [class*="Status"],
+  [class*="banner"],
+  [class*="Banner"],
+  [class*="notice"],
+  [class*="Notice"],
+  [class*="alert"],
+  [class*="Alert"],
+  [class*="summary"],
+  [class*="Summary"]
+) {
+  background-color: var(--surface-subtle);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :where([class*="verified"], [class*="Premium"], [class*="premium"]) {
+  background-color: var(--surface-info);
+  color: var(--text-info);
+}
+
+html.dark-mode :where([class*="verified"], [class*="Premium"], [class*="premium"]) {
+  background-color: var(--surface-info);
+  color: var(--text-info);
+}
+
+html[data-theme="dark"] :where([class*="popover"], [class*="Popover"]) input,
+html[data-theme="dark"] :where([class*="popover"], [class*="Popover"]) select,
+html[data-theme="dark"] :where([class*="popover"], [class*="Popover"]) textarea,
+html.dark-mode :where([class*="popover"], [class*="Popover"]) input,
+html.dark-mode :where([class*="popover"], [class*="Popover"]) select,
+html.dark-mode :where([class*="popover"], [class*="Popover"]) textarea {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] :where(
+  [class*="card"],
+  [class*="Card"],
+  [class*="modal"],
+  [class*="Modal"],
+  [class*="panel"],
+  [class*="Panel"],
+  [class*="popup"],
+  [class*="Popup"],
+  [class*="popover"],
+  [class*="Popover"],
+  [class*="drawer"],
+  [class*="Drawer"]
+) :where(h1, h2, h3, h4, strong, label),
+html.dark-mode :where(
+  [class*="card"],
+  [class*="Card"],
+  [class*="modal"],
+  [class*="Modal"],
+  [class*="panel"],
+  [class*="Panel"],
+  [class*="popup"],
+  [class*="Popup"],
+  [class*="popover"],
+  [class*="Popover"],
+  [class*="drawer"],
+  [class*="Drawer"]
+) :where(h1, h2, h3, h4, strong, label) {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] :where(
+  [class*="card"],
+  [class*="Card"],
+  [class*="modal"],
+  [class*="Modal"],
+  [class*="panel"],
+  [class*="Panel"],
+  [class*="popup"],
+  [class*="Popup"],
+  [class*="popover"],
+  [class*="Popover"],
+  [class*="drawer"],
+  [class*="Drawer"]
+) :where(p, small, span, li),
+html.dark-mode :where(
+  [class*="card"],
+  [class*="Card"],
+  [class*="modal"],
+  [class*="Modal"],
+  [class*="panel"],
+  [class*="Panel"],
+  [class*="popup"],
+  [class*="Popup"],
+  [class*="popover"],
+  [class*="Popover"],
+  [class*="drawer"],
+  [class*="Drawer"]
+) :where(p, small, span, li) {
+  color: inherit;
 }
 
 @keyframes fadeIn {
@@ -386,5 +619,107 @@ h2, h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Texte et icônes sur fond or — toujours foncé (clair et sombre) */
+button[style*="background: var(--or-principal)"],
+button[style*="background: var(--gold)"],
+button[style*="background: var(--yellow)"],
+button[style*="background:#F5C518"],
+button[style*="background: #F5C518"],
+a[style*="background: var(--or-principal)"],
+a[style*="background: var(--gold)"],
+a[style*="background: var(--yellow)"],
+a[style*="background:#F5C518"],
+a[style*="background: #F5C518"] {
+  color: var(--texte-sur-or) !important;
+}
+
+button[style*="background: var(--or-principal)"] svg,
+button[style*="background: var(--gold)"] svg,
+button[style*="background: var(--yellow)"] svg,
+button[style*="background:#F5C518"] svg,
+button[style*="background: #F5C518"] svg,
+a[style*="background: var(--or-principal)"] svg,
+a[style*="background: var(--gold)"] svg,
+a[style*="background: var(--yellow)"] svg,
+a[style*="background:#F5C518"] svg,
+a[style*="background: #F5C518"] svg {
+  color: var(--texte-sur-or);
+  stroke: currentColor;
+}
+
+/* Fond or plein : texte noir partout (évite jaune sur blanc en mode sombre) */
+:where(
+  .presetBtnActive,
+  .authTabActive,
+  .chipActive,
+  .tagActive,
+  .formatBtnActive,
+  .favActive,
+  .tabBadge,
+  .joinBtn,
+  .rankMedal1,
+  .sourceBar,
+  .reviewBtn,
+  .relaunchBtn,
+  .exportBtn,
+  .submitBtn,
+  .acceptBtn,
+  .primaryBtn,
+  .saveBtn,
+  .upgradeBtn,
+  .miniCta,
+  .choiceBtnActive
+) {
+  color: var(--texte-sur-or);
+}
+
+:where(.presetBtnActive, .authTabActive) {
+  background: var(--or-principal);
+  border-color: var(--or-principal);
+}
+
+:where(.presetBtnActive, .authTabActive):hover {
+  background: var(--gold-hover);
+  border-color: var(--gold-hover);
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+html[data-theme="light"] body {
+  background: var(--bg-primary);
+}
+
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]),
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+}
+
+/* ── Badges — dark mode contrast fixes ── */
+html[data-theme="dark"] :where([class*="badgeAdvanced"]),
+html.dark-mode :where([class*="badgeAdvanced"]) {
+  background-color: rgba(96, 165, 250, 0.14) !important;
+  color: #93C5FD !important;
+}
+
+/* Sidebar pro profile card — fond adapté en mode nuit */
+html[data-theme="dark"] :where([class*="sidebarProfile"]),
+html.dark-mode :where([class*="sidebarProfile"]) {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+/* Mobile — no horizontal overflow */
+@media (max-width: 768px) {
+  img,
+  video,
+  iframe,
+  table {
+    max-width: 100%;
+    height: auto;
   }
 }

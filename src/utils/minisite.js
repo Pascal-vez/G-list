@@ -19,6 +19,44 @@ export const FONT_PRESETS = {
   ...EXTRA_FONT_PRESETS,
 };
 
+/** Classe racine stable (non hashée) — préfixe pour le CSS personnalisé */
+export const MINISITE_ROOT_CLASS = 'glist-minisite';
+
+/** Exemple à coller dans Avancé → CSS personnalisé pour vérifier que tout fonctionne */
+export const MINISITE_CUSTOM_CSS_SAMPLE = `/* ── Test G-List : CSS personnalisé mini-site ── */
+
+/* Hero : titre plus grand */
+.glist-minisite .ms-hero h1 {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  letter-spacing: -0.03em;
+}
+
+/* Hero : effet au survol des boutons */
+.glist-minisite .ms-hero a {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.glist-minisite .ms-hero a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Section par ID (remplacez about par l'id de votre section) */
+.glist-minisite #about {
+  border-top: 4px solid var(--ms-primary);
+}
+
+/* Toutes les sections « services » */
+.glist-minisite [data-ms-section="services"] {
+  background: color-mix(in srgb, var(--ms-primary) 10%, var(--ms-bg));
+}
+
+/* Pied de page */
+.glist-minisite .glist-ms-footer {
+  border-top: 2px solid var(--ms-primary);
+}
+`;
+
 export const SITE_TEMPLATES = {
   restaurant: {
     label: 'Restaurant',

@@ -13,6 +13,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('G-List ErrorBoundary:', error, info);
+    this.setState({ error: error?.message || String(error) });
   }
 
   render() {
@@ -21,6 +22,11 @@ export default class ErrorBoundary extends Component {
         <div className={styles.page}>
           <h1>Une erreur est survenue</h1>
           <p>Le chargement de cette page a échoué. Veuillez réessayer ou revenir à l&apos;accueil.</p>
+          {this.state.error && (
+            <pre style={{ fontSize: '11px', color: '#888', whiteSpace: 'pre-wrap', maxWidth: '600px', margin: '8px auto', textAlign: 'left' }}>
+              {this.state.error}
+            </pre>
+          )}
           <div className={styles.actions}>
             <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
               Recharger

@@ -165,7 +165,7 @@
   margin-top: 4px;
   padding: 8px 12px;
   background: #F5C518;
-  color: var(--text-primary);
+  color: var(--texte-sur-or);
   border: none;
   border-radius: 8px;
   font-size: 12px;
@@ -676,7 +676,7 @@
 
 .tabBadge {
   background: #F5C518;
-  color: var(--text-primary);
+  color: var(--texte-sur-or);
   font-size: clamp(9px, 0.85vw, 11px);
   font-weight: 700;
   padding: 1px clamp(5px, 0.6vw, 6px);
@@ -696,13 +696,14 @@
 
 .statCard {
   background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: clamp(10px, 1vw, 12px);
   padding: clamp(14px, 1.5vw, 16px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
 }
 
 .statLocked {
@@ -716,6 +717,7 @@
 .statValue {
   font-size: clamp(20px, 2.2vw, 22px);
   font-weight: 700;
+  color: var(--or-texte);
 }
 
 .statLabel {
@@ -830,7 +832,7 @@
   gap: 8px;
   padding: clamp(12px, 1.3vw, 14px);
   background: #F5C518;
-  color: var(--text-primary);
+  color: var(--texte-sur-or);
   font-weight: 700;
   font-size: clamp(13px, 1.2vw, 16px);
   border-radius: clamp(8px, 1vw, 10px);
@@ -936,6 +938,7 @@
 
 .lockedSection {
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   border-radius: 12px;
   padding: 28px 20px;
   text-align: center;
@@ -992,6 +995,7 @@
   border-radius: 10px;
   border: 1.5px solid #e57373;
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   color: #c0392b;
   font-size: 14px;
   font-weight: 600;
@@ -1090,6 +1094,7 @@
 
 .modal {
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   border-radius: clamp(14px, 1.5vw, 16px);
   padding: clamp(24px, 3vw, 28px) clamp(20px, 2.5vw, 24px);
   max-width: clamp(340px, 32vw, 380px);
@@ -1153,16 +1158,17 @@
   padding: 10px 14px;
   border-radius: 10px;
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   border: 1px solid var(--border-color);
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.authTabActive {
-  background: var(--text-primary);
-  color: var(--or-principal);
-  border-color: var(--text-primary);
+.authTab.authTabActive {
+  background: var(--or-principal) !important;
+  color: var(--texte-sur-or) !important;
+  border-color: var(--or-principal) !important;
 }
 
 .authError {
@@ -1231,7 +1237,7 @@
   align-items: flex-start;
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   font-size: 14px;
 }
 
@@ -1268,6 +1274,7 @@
   border-radius: 10px;
   border: 1.5px solid #e57373;
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   color: #c0392b;
   font-size: 14px;
   font-weight: 600;
@@ -1371,6 +1378,7 @@
   border-radius: 12px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
   color: var(--text-secondary);
   text-align: left;
   transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
@@ -1439,4 +1447,117 @@
   .statsGrid { grid-template-columns: repeat(4, 1fr); }
   .actionRow { flex-direction: row; }
   .actionBtn, .actionBtnOutline { flex: 1; }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .statCard {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .modal {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .tab {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+:global(html[data-theme="light"]) .tab:hover {
+  background: var(--hover-bg);
+  border-color: #D0D0C5;
+}
+:global(html[data-theme="light"]) .authTab {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+:global(html[data-theme="light"]) .authTab:hover {
+  background: var(--hover-bg);
+  border-color: #D0D0C5;
+}
+:global(html[data-theme="light"]) .tabActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
+}
+:global(html[data-theme="light"]) .authTab.authTabActive {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border-color: #1A1A1A !important;
+}
+
+:global(html[data-theme="dark"]) .authTab.authTabActive,
+:global(html.dark-mode) .authTab.authTabActive {
+  background: var(--or-principal) !important;
+  color: var(--texte-sur-or) !important;
+  border-color: var(--or-principal) !important;
+}
+:global(html[data-theme="light"]) .sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+}
+
+:global(html[data-theme="dark"]) .toast,
+:global(html[data-theme="dark"]) .toastPremium,
+:global(html[data-theme="dark"]) .premiumActive,
+:global(html[data-theme="dark"]) .recoveredBox,
+:global(html.dark-mode) .toast,
+:global(html.dark-mode) .toastPremium,
+:global(html.dark-mode) .premiumActive,
+:global(html.dark-mode) .recoveredBox {
+  background: var(--surface-info);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: var(--text-info);
+}
+
+:global(html[data-theme="dark"]) .premiumStatus,
+:global(html[data-theme="dark"]) .blueIcon,
+:global(html.dark-mode) .premiumStatus,
+:global(html.dark-mode) .blueIcon {
+  color: var(--text-info);
+}
+
+/* ── Sidebar profile — fond adapté en mode nuit ── */
+:global(html[data-theme="dark"]) .sidebarProfile,
+:global(html.dark-mode) .sidebarProfile {
+  background: var(--surface-elevated);
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+:global(html[data-theme="dark"]) .sidebarAvatar,
+:global(html.dark-mode) .sidebarAvatar {
+  box-shadow:
+    0 0 0 2px var(--bg-sidebar),
+    0 0 0 3px rgba(245, 197, 24, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Auth error — contraste dark mode ── */
+:global(html[data-theme="dark"]) .authError,
+:global(html.dark-mode) .authError {
+  background: rgba(220, 38, 38, 0.12);
+  color: #FCA5A5;
+}
+
+/* ── Logout hover — dark mode ── */
+:global(html[data-theme="dark"]) .logoutBtn:hover,
+:global(html.dark-mode) .logoutBtn:hover {
+  background: var(--hover-bg);
+}
+
+/* ── Mobile: sidebar prend toute la largeur ── */
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .accountTypePicker {
+    grid-template-columns: 1fr;
+  }
 }

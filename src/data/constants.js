@@ -1,19 +1,9 @@
-export const REGIONS = [
-  'Conakry',
-  'Kindia',
-  'Labé',
-  'Mamou',
-  'Kankan',
-  'Faranah',
-  'Nzérékoré',
-  'Boké',
-  'Coyah',
-  'Fria',
-  'Siguiri',
-  'Guéckédou',
-  'Macenta',
-  'Kissidougou',
-];
+import { TOUTES_PREFECTURES, REGIONS_GUINEE } from './regionsGuinee';
+
+export { REGIONS_GUINEE, TOUTES_PREFECTURES };
+
+/** @deprecated Préférez TOUTES_PREFECTURES — liste des 33 préfectures */
+export const REGIONS = TOUTES_PREFECTURES;
 
 export const CATEGORIES = [
   { id: 'sante', name: 'Santé & Médecine' },
@@ -170,8 +160,40 @@ export const DEFAULT_HORAIRES = 'Lun-Sam 8h-18h';
 /** Email professionnel officiel G-List */
 export const SITE_CONTACT_EMAIL = 'contactglist224@gmail.com';
 
+/** Informations légales — compléter RC/NIF avant lancement public officiel */
+export const SITE_LEGAL = {
+  entityName: 'G-List',
+  tagline: 'Annuaire professionnel — République de Guinée',
+  headquarters: 'Conakry, République de Guinée',
+  whatsapp: '+224 626 41 93 31',
+  whatsappLink: 'https://wa.me/224626419331',
+  /** Numéro RCCM guinéen — null = affiché comme « en cours » */
+  rc: null,
+  /** Numéro d'identification fiscale — null = affiché comme « en cours » */
+  nif: null,
+  publisherName: 'Le responsable légal de G-List',
+  hosts: [
+    {
+      name: 'Vercel Inc.',
+      role: 'Hébergement frontend (site web)',
+      address: '440 N Barranca Ave #4133, Covina, CA 91723, États-Unis',
+      url: 'https://vercel.com',
+    },
+    {
+      name: 'Supabase Inc.',
+      role: 'Hébergement base de données',
+      address: '970 Toa Payoh North #07-04, Singapour',
+      url: 'https://supabase.com',
+    },
+  ],
+};
+
+export function formatLegalId(label, value) {
+  return value?.trim() ? value.trim() : `${label} en cours d'immatriculation`;
+}
+
 export const DEFAULT_AVIS = [
   { prenom: 'Mariam', note: 5, commentaire: 'Excellent service, très professionnel. Je recommande vivement !', date: '2026-03-15' },
-  { prenom: 'Ousmane', note: 4, commentaire: 'Bon travail, ponctuel et à l\'écoute. Petit délai d\'attente mais satisfait.', date: '2026-02-28' },
+  { prenom: 'Siba', note: 4, commentaire: 'Bon travail, ponctuel et à l\'écoute. Petit délai d\'attente mais satisfait.', date: '2026-02-28' },
   { prenom: 'Aminata', note: 5, commentaire: 'Très satisfaite du résultat. Prix correct pour la qualité offerte.', date: '2026-01-10' },
 ];

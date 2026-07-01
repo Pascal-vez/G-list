@@ -1,6 +1,7 @@
 .wrap {
-  background: #fff;
-  border: 1px solid #EFEFEF;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card, 0 2px 8px var(--shadow-color));
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 16px;
@@ -14,8 +15,8 @@
 }
 
 .head svg { color: #F5C518; flex-shrink: 0; margin-top: 2px; }
-.head strong { display: block; font-size: 15px; color: #1A1A1A; }
-.head p { margin: 2px 0 0; font-size: 13px; color: #888; }
+.head strong { display: block; font-size: 15px; color: var(--text-primary); }
+.head p { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); }
 
 .badge {
   margin-left: auto;
@@ -27,9 +28,9 @@
   white-space: nowrap;
 }
 
-.badge_gratuit { background: #F3F4F6; color: #666; }
+.badge_gratuit { background: var(--bg-secondary); color: var(--text-secondary); }
 .badge_pro { background: #DBEAFE; color: #1D4ED8; }
-.badge_premium { background: #FFFBEB; color: #B45309; }
+.badge_premium { background: var(--or-clair); color: #B45309; }
 
 .pending {
   display: flex;
@@ -52,7 +53,7 @@
 
 .item {
   padding: 12px;
-  background: #F9FAFB;
+  background: var(--bg-secondary);
   border-radius: 10px;
 }
 
@@ -60,11 +61,11 @@
   display: block;
   font-size: 11px;
   text-transform: uppercase;
-  color: #999;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
-.item strong { font-size: 14px; color: #1A1A1A; }
+.item strong { font-size: 14px; color: var(--text-primary); }
 
 .alert {
   display: flex;
@@ -99,4 +100,24 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+}
+
+:global(html[data-theme="dark"]) .pending,
+:global(html[data-theme="dark"]) .alert,
+:global(html.dark-mode) .pending,
+:global(html.dark-mode) .alert {
+  background: var(--or-clair);
+  border-color: rgba(245, 197, 24, 0.35);
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="dark"]) .alert p,
+:global(html.dark-mode) .alert p {
+  color: var(--text-secondary);
+}
+
+:global(html[data-theme="dark"]) .badge_pro,
+:global(html.dark-mode) .badge_pro {
+  background: var(--surface-info);
+  color: var(--text-info);
 }

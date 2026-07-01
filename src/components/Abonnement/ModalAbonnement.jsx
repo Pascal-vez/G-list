@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Copy, Check, Smartphone, ArrowLeft, ArrowRight } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { fetchConfigPaiement, submitDemandeAbonnement } from '../../api/abonnement';
 import { PLANS_INFO, planLabel, toPlanDemande } from '../../utils/plans';
-import DateTimePicker from '../DateTimePicker';
 import styles from './ModalAbonnement.module.css';
 
 function formatGNF(n) {
   return new Intl.NumberFormat('fr-GN').format(n);
+}
+
+function toDatetimeLocalValue(date = new Date()) {
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
 }
 
 export default function ModalAbonnement({
@@ -25,18 +30,36 @@ export default function ModalAbonnement({
   const [idTransaction, setIdTransaction] = useState('');
   const [heureTransaction, setHeureTransaction] = useState('');
   const [error, setError] = useState('');
+  const submittedRef = useRef(false);
+  const wasOpenRef = useRef(false);
 
   const planDemande = toPlanDemande(planId);
   const info = PLANS_INFO[planDemande];
 
+  const maxDatetime = useMemo(() => toDatetimeLocalValue(new Date()), [open, step]);
+  const minDatetime = useMemo(
+    () => toDatetimeLocalValue(new Date(Date.now() - 30 * 86400000)),
+    [open, step],
+  );
+
   useEffect(() => {
-    if (!open) return;
-    setStep('instructions');
-    setNumeroEmetteur('');
-    setIdTransaction('');
-    setHeureTransaction('');
-    setError('');
-    fetchConfigPaiement().then(setConfig).catch(() => setConfig(null));
+    const justOpened = open && !wasOpenRef.current;
+    wasOpenRef.current = open;
+
+    if (!open) {
+      submittedRef.current = false;
+      return;
+    }
+
+    if (justOpened) {
+      setStep('instructions');
+      setNumeroEmetteur('');
+      setIdTransaction('');
+      setHeureTransaction(toDatetimeLocalValue(new Date()));
+      setError('');
+      submittedRef.current = false;
+      fetchConfigPaiement().then(setConfig).catch(() => setConfig(null));
+    }
   }, [open, planId]);
 
   if (!open) return null;
@@ -52,7 +75,9 @@ export default function ModalAbonnement({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading || submittedRef.current) return;
     setError('');
+
     if (!numeroEmetteur.trim()) {
       setError('Le numéro émetteur est obligatoire.');
       return;
@@ -61,18 +86,32 @@ export default function ModalAbonnement({
       setError('Indiquez la date et l\'heure de votre transaction.');
       return;
     }
+
+    const txDate = new Date(heureTransaction);
+    if (Number.isNaN(txDate.getTime())) {
+      setError('Date de transaction invalide.');
+      return;
+    }
+    if (txDate.getTime() > Date.now()) {
+      setError('La date de transaction ne peut pas être dans le futur.');
+      return;
+    }
+
     setLoading(true);
+    submittedRef.current = true;
     try {
       await submitDemandeAbonnement({
         account,
         planId,
         numeroEmetteur,
         idTransaction,
-        heureTransaction: new Date(heureTransaction).toISOString(),
+        heureTransaction: txDate.toISOString(),
       });
+      setStep('success');
       onSuccess?.();
       onClose();
     } catch (err) {
+      submittedRef.current = false;
       setError(err.message || 'Impossible d\'envoyer la demande.');
     } finally {
       setLoading(false);
@@ -91,7 +130,18 @@ export default function ModalAbonnement({
           <X size={20} />
         </button>
 
-        {step === 'instructions' ? (
+        {step === 'success' ? (
+          <>
+            <h2 id="modal-abonnement-title">Demande envoyée</h2>
+            <p className={styles.subtitle}>
+              Votre demande est en cours de vérification. Vous serez notifié dès l&apos;activation de votre abonnement.
+            </p>
+            <div className={styles.amountBox}>
+              <Check size={28} aria-hidden />
+              <strong>Merci — notre équipe traite votre paiement.</strong>
+            </div>
+          </>
+        ) : step === 'instructions' ? (
           <>
             <h2 id="modal-abonnement-title">
               S&apos;abonner au plan {info?.nom || planLabel(planDemande)}
@@ -144,16 +194,16 @@ export default function ModalAbonnement({
 
             <label className={styles.field}>
               Date et heure de la transaction *
-              <DateTimePicker
-                id="heure-transaction"
+              <input
+                type="datetime-local"
+                className={styles.datetimeInput}
                 value={heureTransaction}
-                onChange={setHeureTransaction}
-                placeholder="Cliquez pour ouvrir le calendrier"
-                max={new Date()}
-                min={new Date(Date.now() - 30 * 86400000)}
+                onChange={(e) => setHeureTransaction(e.target.value)}
+                max={maxDatetime}
+                min={minDatetime}
                 required
               />
-              <small>Choisissez la date et l&apos;heure figurant sur votre reçu Orange Money.</small>
+              <small>Indiquez la date et l&apos;heure figurant sur votre reçu Orange Money.</small>
             </label>
 
             <label className={styles.field}>
@@ -174,7 +224,7 @@ export default function ModalAbonnement({
                 <ArrowLeft size={14} aria-hidden /> Retour
               </button>
               <button type="submit" className={styles.primaryBtn} disabled={loading}>
-                {loading ? 'Envoi…' : 'Valider'}
+                {loading ? 'Envoi…' : 'Envoyer ma demande'}
                 {!loading && <ArrowRight size={16} aria-hidden />}
               </button>
             </div>

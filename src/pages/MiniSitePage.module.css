@@ -59,7 +59,7 @@
   gap: 6px;
   padding: 8px 14px;
   background: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
@@ -90,14 +90,14 @@
 }
 
 .notFound p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 20px;
 }
 
 .backLink {
   padding: 10px 20px;
   background: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
   border-radius: 10px;
   font-weight: 700;
   font-size: 14px;

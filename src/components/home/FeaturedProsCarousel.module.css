@@ -22,14 +22,8 @@
   display: flex;
   gap: 20px;
   width: max-content;
-  animation: featuredScroll 250s linear infinite;
+  animation: featuredScroll 40s linear infinite;
   will-change: transform;
-}
-
-.trackStatic {
-  animation: none;
-  width: 100%;
-  justify-content: center;
 }
 
 .viewport:hover .track {

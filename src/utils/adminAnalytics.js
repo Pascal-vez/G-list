@@ -1,10 +1,9 @@
 import { getAllProfessionalsIncludingHidden } from '../api/professionals';
-import { useSupabase } from '../lib/supabaseClient';
 import { CATEGORIES, REGIONS } from '../data/constants';
 import {
   getItem, KEYS, getSearchHistory, getReports, getAllProAccountsList,
   getAllVisitorAccounts, getAdminOverrides, getEvaluations,
-  getPlanMonthlyPrice, getViewHistory, getWaitlistEntries,
+  getPlanMonthlyPrice, getViewHistory,
 } from './storage';
 import {
   filterByDateRange, daysBetween, defaultDateRange, parseISODate, downsampleChartData,
@@ -29,22 +28,14 @@ function periodScale(dateRange) {
 }
 
 export function getProsWithAdminState() {
-  const overrides = useSupabase ? {} : getAdminOverrides();
+  const overrides = getAdminOverrides();
   return getAllProfessionalsIncludingHidden().map((p) => {
     const o = overrides[p.id] || {};
-    const hidden = o.hidden ?? p.hidden ?? false;
-    const disabled = o.disabled ?? p.disabled ?? false;
-    const flaggedDuplicate = o.flaggedDuplicate ?? p.flagged_duplicate ?? false;
-    const verifie = o.verifie ?? p.verifie;
     return {
       ...p,
       ...o,
-      hidden,
-      disabled,
-      flaggedDuplicate,
-      verifie,
-      vues: p.vues ?? p.profileViews ?? 0,
-      adminStatus: hidden ? 'masqué' : disabled ? 'désactivé' : flaggedDuplicate ? 'doublon' : verifie ? 'vérifié' : 'actif',
+      verifie: o.verifie ?? p.verifie,
+      adminStatus: o.hidden ? 'masqué' : o.disabled ? 'désactivé' : o.flaggedDuplicate ? 'doublon' : p.verifie ? 'vérifié' : 'actif',
     };
   });
 }
@@ -60,17 +51,22 @@ export function getPlatformKPIs(dateRange) {
   const searches = getSearchHistory();
   const totalSearches = Math.max(searches.length ? 1 : 0, Math.round(searches.length * Math.min(scale, 1)));
   const reports = filterByDateRange(getReports(), range.startDate, range.endDate, 'date');
-  const waitlist = filterByDateRange(getWaitlistEntries(), range.startDate, range.endDate, 'timestamp');
   const registeredPros = getAllProAccountsList();
   const visitors = getAllVisitorAccounts();
   const newUsers = [
     ...filterByDateRange(registeredPros, range.startDate, range.endDate, 'createdAt'),
     ...filterByDateRange(visitors, range.startDate, range.endDate, 'createdAt'),
   ].length;
-  const premium = registeredPros.filter((p) => p.plan === 'premium' || p.premium).length
-    + active.filter((p) => p.plan === 'premium').length;
-  const advanced = registeredPros.filter((p) => p.plan === 'advanced').length
-    + active.filter((p) => p.plan === 'advanced').length;
+  const premiumIds = new Set([
+    ...registeredPros.filter((p) => p.plan === 'premium' || p.premium).map((p) => p.id),
+    ...active.filter((p) => p.plan === 'premium').map((p) => p.id),
+  ]);
+  const advancedIds = new Set([
+    ...registeredPros.filter((p) => p.plan === 'advanced').map((p) => p.id),
+    ...active.filter((p) => p.plan === 'advanced').map((p) => p.id),
+  ]);
+  const premium = premiumIds.size;
+  const advanced = advancedIds.size;
   const verified = active.filter((p) => p.verifie).length;
   const whatsappEst = Math.floor(totalViews * 0.31);
   const evalCount = filterByDateRange(getEvaluations(), range.startDate, range.endDate, 'date').length;
@@ -84,7 +80,7 @@ export function getPlatformKPIs(dateRange) {
     totalViews,
     totalSearches,
     pendingReports: reports.filter((r) => r.status === 'pending').length,
-    waitlistCount: waitlist.length,
+    waitlistCount: 0,
     whatsappClicks: whatsappEst,
     evalCount,
     growthPct: active.length > 100 ? 12 : 8,

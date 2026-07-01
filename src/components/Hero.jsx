@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../data/constants';
 import { useProfessionalsList } from '../hooks/useProfessionalsList';
+import { useTranslation } from '../i18n/I18nContext';
+import { categoryLabel, formatLocaleNumber } from '../i18n/helpers';
 import SearchBar from './SearchBar';
+import HeroConnection from './hero/HeroConnection';
 import styles from './Hero.module.css';
 
 const QUICK_CATEGORIES = ['sante', 'juridique', 'restaurants', 'plomberie', 'coiffure', 'btp'];
@@ -10,8 +13,20 @@ const QUICK_CATEGORIES = ['sante', 'juridique', 'restaurants', 'plomberie', 'coi
 export default function Hero() {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { t, locale } = useTranslation();
   const professionals = useProfessionalsList();
   const proCount = professionals.length;
+  const [isMobileSearch, setIsMobileSearch] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobileSearch(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -30,24 +45,27 @@ export default function Hero() {
         <div className={`${styles.auroraShape} ${styles.shape1}`} />
         <div className={`${styles.auroraShape} ${styles.shape2}`} />
         <div className={`${styles.auroraShape} ${styles.shape3}`} />
+        <HeroConnection />
       </div>
       <div className={styles.inner}>
         <h1 className={`${styles.title} hero-display`}>
-          <span className={styles.titleLine1}>Trouvez</span>
+          <span className={styles.titleLine1}>{t('hero.title.line1')}</span>
           <span className={styles.titleLine2}>
-            le <span className={styles.titleAccent}>professionnel</span>
+            {t('hero.title.line2Prefix')}{' '}
+            <span className={styles.titleAccent}>{t('hero.title.accent')}</span>
           </span>
-          <span className={styles.titleLine3}>qu&apos;il vous faut</span>
+          <span className={styles.titleLine3}>{t('hero.title.line3')}</span>
         </h1>
         <p className={styles.subtitle}>
-          Plus de {proCount} professionnels référencés en Guinée
+          {t('hero.subtitle', { count: formatLocaleNumber(proCount, locale) })}
         </p>
 
         <SearchBar
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onSubmit={handleSubmit}
-          ariaLabel="Rechercher un professionnel"
+          placeholder={isMobileSearch ? t('search.placeholderMobile') : undefined}
+          ariaLabel={t('search.ariaLabelPro')}
           className={styles.searchWrap}
         />
 
@@ -62,7 +80,7 @@ export default function Hero() {
                 className={styles.quickPill}
                 onClick={() => handleQuickCategory(id)}
               >
-                {cat.name.split(' ')[0]}
+                {categoryLabel(t, cat).split(' ')[0]}
               </button>
             );
           })}

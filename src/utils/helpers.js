@@ -1,5 +1,6 @@
 import { CATEGORY_COLORS, CATEGORIES, REGIONS } from '../data/constants';
 import { getOpenStatus } from './horaires';
+import { localiteCorrespond, normaliserLocalite } from './localite';
 
 export function getInitials(name) {
   const parts = name.replace(/^(Dr\.|Pharmacie|Maquis|Restaurant|Salon|Garage|Centre|Prof)\s*/i, '').trim().split(/\s+/);
@@ -10,7 +11,17 @@ export function getInitials(name) {
 }
 
 export function getAvatarColor(category) {
-  return CATEGORY_COLORS[category] || '#F5C518';
+  return CATEGORY_COLORS[category] || '#6B7280';
+}
+
+export function getAvatarTextColor(hexColor) {
+  if (!hexColor || hexColor.length < 7) return '#FFFFFF';
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#1A1A1A' : '#FFFFFF';
 }
 
 export function formatWhatsAppLink(telephone) {
@@ -57,7 +68,8 @@ export function getCategoryCounts(pros) {
 
 export function getRegionCounts(pros) {
   const counts = countByField(pros, 'region');
-  return REGIONS.reduce((acc, region) => {
+  const keys = new Set([...REGIONS, ...Object.keys(counts)]);
+  return Array.from(keys).sort((a, b) => a.localeCompare(b, 'fr')).reduce((acc, region) => {
     acc[region] = counts[region] || 0;
     return acc;
   }, {});
@@ -75,17 +87,17 @@ export function filterProfessionals(pros, filters) {
 
   return pros.filter((pro) => {
     if (search) {
-      const q = search.toLowerCase();
+      const q = normaliserLocalite(search);
       const match =
-        pro.nom.toLowerCase().includes(q) ||
-        pro.profession.toLowerCase().includes(q) ||
-        pro.categorie.toLowerCase().includes(q) ||
-        pro.region.toLowerCase().includes(q) ||
-        pro.quartier.toLowerCase().includes(q);
+        normaliserLocalite(pro.nom).includes(q) ||
+        normaliserLocalite(pro.profession).includes(q) ||
+        normaliserLocalite(pro.categorie).includes(q) ||
+        normaliserLocalite(pro.region).includes(q) ||
+        normaliserLocalite(pro.quartier).includes(q);
       if (!match) return false;
     }
-    if (regions.length > 0 && !regions.includes(pro.region)) return false;
-    if (region && region !== 'all' && pro.region !== region) return false;
+    if (regions.length > 0 && !regions.some((r) => localiteCorrespond(pro.region, r))) return false;
+    if (region && region !== 'all' && !localiteCorrespond(pro.region, region)) return false;
     if (categories.length > 0 && !categories.includes(pro.categorie)) return false;
     if (category && category !== 'all' && pro.categorie !== category) return false;
     if (verified === 'verified' && !pro.verifie) return false;

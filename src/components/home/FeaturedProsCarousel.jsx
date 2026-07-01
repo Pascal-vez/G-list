@@ -4,12 +4,11 @@ import styles from './FeaturedProsCarousel.module.css';
 export default function FeaturedProsCarousel({ pros }) {
   if (!pros.length) return null;
 
-  const shouldLoop = pros.length >= 3;
-  const loop = shouldLoop ? [...pros, ...pros] : pros;
+  const loop = [...pros, ...pros];
 
   return (
     <div className={styles.viewport} aria-label="Professionnels sponsorisés">
-      <div className={`${styles.track} ${shouldLoop ? '' : styles.trackStatic}`}>
+      <div className={styles.track}>
         {loop.map((pro, index) => (
           <div key={`${pro.id}-${index}`} className={styles.slide}>
             <FeaturedProCard

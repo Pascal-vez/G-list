@@ -22,37 +22,37 @@
 
 .count {
   font-size: 14px;
-  color: #888;
+  color: var(--text-muted);
   font-weight: 500;
   margin-bottom: 16px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
   align-items: start;
 }
 
 .empty {
   text-align: center;
   padding: clamp(32px, 4vw, 48px) clamp(16px, 2vw, 20px);
-  color: #555555;
+  color: var(--text-secondary);
 }
 
 .emptyIcon {
   display: block;
   margin: 0 auto 16px;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 .resetLink {
   margin-top: clamp(10px, 1vw, 12px);
-  color: #555555;
+  color: var(--text-secondary);
   text-decoration: underline;
   font-size: clamp(12px, 1vw, 14px);
 }
 
 .resetLink:hover {
-  color: #1A1A1A;
+  color: var(--text-primary);
 }

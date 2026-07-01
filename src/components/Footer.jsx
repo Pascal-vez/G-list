@@ -10,7 +10,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { CATEGORIES, REGIONS, SITE_CONTACT_EMAIL } from '../data/constants';
-import { SITE_NAV_LINKS, SITE_INFO_LINKS } from '../data/siteNav';
+import { SITE_NAV_LINKS, SITE_INFO_LINKS, FOOTER_LEGAL_LINKS } from '../data/siteNav';
+import { useTranslation } from '../i18n/I18nContext';
 import CategoryIcon, { CATEGORY_COLORS } from './CategoryIcon';
 import Logo from './Logo';
 import SiteNavLink from './SiteNavLink';
@@ -24,11 +25,7 @@ const SOCIAL_LINKS = [
   { label: 'YouTube', href: 'https://youtube.com/@glistgn', Icon: Youtube },
 ];
 
-const LEGAL_FOOTER_LINKS = [
-  { label: 'Confidentialité', to: '/confidentialite' },
-  { label: 'Conditions', to: '/conditions' },
-  { label: 'Admin', to: '/admin-glist-2026' },
-];
+const LEGAL_FOOTER_LINKS = FOOTER_LEGAL_LINKS;
 
 function WhatsAppIcon({ size = 18 }) {
   return (
@@ -40,6 +37,7 @@ function WhatsAppIcon({ size = 18 }) {
 
 export default function Footer() {
   const topCategories = CATEGORIES.slice(0, 8);
+  const { t } = useTranslation();
 
   return (
     <footer className={styles.footer}>
@@ -72,17 +70,17 @@ export default function Footer() {
             </div>
             <span className={styles.guineaBadge}>
               <span aria-hidden="true">🇬🇳</span>
-              Fait pour la Guinée
+              {t('footer.madeForGuinea')}
             </span>
           </div>
 
           <nav className={styles.colNav} aria-label="Navigation du site">
-            <h3 className={styles.sectionTitle}>Navigation</h3>
+            <h3 className={styles.sectionTitle}>{t('footer.navigation')}</h3>
             <ul className={styles.linkList}>
-              {SITE_NAV_LINKS.map(({ label, to }) => (
-                <li key={label}>
+              {SITE_NAV_LINKS.map(({ labelKey, to }) => (
+                <li key={labelKey}>
                   <SiteNavLink to={to} className={styles.navLink}>
-                    <span>{label}</span>
+                    <span>{t(labelKey)}</span>
                     <ArrowRight size={13} className={styles.linkArrow} aria-hidden="true" />
                   </SiteNavLink>
                 </li>
@@ -91,12 +89,12 @@ export default function Footer() {
           </nav>
 
           <nav className={styles.colInfo} aria-label="Informations légales">
-            <h3 className={styles.sectionTitle}>Informations</h3>
+            <h3 className={styles.sectionTitle}>{t('footer.info')}</h3>
             <ul className={styles.linkList}>
-              {SITE_INFO_LINKS.map(({ label, to }) => (
-                <li key={label}>
+              {SITE_INFO_LINKS.map(({ labelKey, to }) => (
+                <li key={labelKey}>
                   <Link to={to} className={styles.navLink}>
-                    <span>{label}</span>
+                    <span>{t(labelKey)}</span>
                     <ArrowRight size={13} className={styles.linkArrow} aria-hidden="true" />
                   </Link>
                 </li>
@@ -105,7 +103,7 @@ export default function Footer() {
           </nav>
 
           <nav className={styles.colCategories} aria-label="Catégories">
-            <h3 className={styles.sectionTitle}>Catégories</h3>
+            <h3 className={styles.sectionTitle}>{t('footer.categories')}</h3>
             <ul className={styles.linkList}>
               {topCategories.map((cat) => {
                 const colors = CATEGORY_COLORS[cat.id] || CATEGORY_COLORS.autre;
@@ -125,13 +123,13 @@ export default function Footer() {
               })}
             </ul>
             <ScrollToTopLink to="/annuaire" className={styles.seeAllLink}>
-              Voir toutes les catégories
+              {t('footer.seeAllCategories')}
               <ArrowRight size={14} aria-hidden="true" />
             </ScrollToTopLink>
           </nav>
 
           <div className={styles.colContact}>
-            <h3 className={styles.sectionTitle}>Contact</h3>
+            <h3 className={styles.sectionTitle}>{t('footer.contact')}</h3>
             <ul className={styles.contactList}>
               <li className={styles.contactItem}>
                 <span className={styles.contactIcon}><MapPin size={15} aria-hidden="true" /></span>
@@ -155,11 +153,11 @@ export default function Footer() {
 
             <div className={styles.ctaGroup}>
               <Link to="/espace-pro" className={styles.joinLink}>
-                Créer mon espace pro
+                {t('footer.createPro')}
                 <ArrowRight size={15} aria-hidden="true" />
               </Link>
               <Link to="/contact" className={styles.feedbackBtn}>
-                Nous contacter
+                {t('footer.contactUs')}
               </Link>
             </div>
           </div>
@@ -170,7 +168,7 @@ export default function Footer() {
         <div className={styles.regionsInner}>
           <div className={styles.regionsHead}>
             <MapPin size={14} aria-hidden="true" />
-            <span className={styles.regionsLabel}>Villes couvertes</span>
+            <span className={styles.regionsLabel}>{t('footer.citiesCovered')}</span>
           </div>
           <div className={styles.regionsScroll}>
             <div className={styles.regionsPills}>
@@ -190,11 +188,11 @@ export default function Footer() {
 
       <div className={styles.copyrightBar}>
         <p className={styles.copyrightText}>
-          © {new Date().getFullYear()} G-List — Annuaire professionnel Guinée
+          © {new Date().getFullYear()} G-List — {t('footer.copyright')}
         </p>
         <nav className={styles.legalLinks} aria-label="Liens légaux">
-          {LEGAL_FOOTER_LINKS.map(({ label, to }) => (
-            <Link key={label} to={to}>{label}</Link>
+          {LEGAL_FOOTER_LINKS.map(({ labelKey, to }) => (
+            <Link key={labelKey} to={to}>{t(labelKey)}</Link>
           ))}
         </nav>
       </div>

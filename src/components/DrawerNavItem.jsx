@@ -19,6 +19,7 @@ import {
   ListTree,
 } from 'lucide-react';
 import SiteNavLink from './SiteNavLink';
+import { useTranslation } from '../i18n/I18nContext';
 import styles from './Header.module.css';
 
 const DRAWER_ICONS = {
@@ -42,13 +43,14 @@ const DRAWER_ICONS = {
 };
 
 export default function DrawerNavItem({ item, onClose, useScrollNav }) {
+  const { t } = useTranslation();
   const Icon = DRAWER_ICONS[item.iconKey];
   const content = (
     <>
       <span className={styles.drawerIcon} aria-hidden="true">
         {Icon && <Icon size={20} strokeWidth={2} />}
       </span>
-      <span className={styles.drawerLabel}>{item.label}</span>
+      <span className={styles.drawerLabel}>{t(item.labelKey)}</span>
     </>
   );
 

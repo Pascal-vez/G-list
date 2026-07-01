@@ -125,9 +125,20 @@ export default function DateTimePicker({
     return false;
   };
 
-  const applySelection = () => {
-    if (!draftDate) return;
+  const applySelection = (close = true) => {
+    if (!draftDate) return false;
     const next = new Date(draftDate);
+    next.setHours(hour, minute, 0, 0);
+    if (next > max) return false;
+    onChange?.(toDatetimeLocalString(next));
+    if (close) setOpen(false);
+    return true;
+  };
+
+  const selectDay = (date) => {
+    if (isDayDisabled(date)) return;
+    setDraftDate(date);
+    const next = new Date(date);
     next.setHours(hour, minute, 0, 0);
     if (next > max) return;
     onChange?.(toDatetimeLocalString(next));
@@ -210,7 +221,7 @@ export default function DateTimePicker({
                     today ? styles.dayToday : '',
                     disabled ? styles.dayDisabled : '',
                   ].filter(Boolean).join(' ')}
-                  onClick={() => setDraftDate(cell.date)}
+                  onClick={() => selectDay(cell.date)}
                 >
                   {cell.day}
                 </button>
@@ -260,9 +271,9 @@ export default function DateTimePicker({
             type="button"
             className={styles.confirmBtn}
             disabled={!draftDate || selectionInFuture}
-            onClick={applySelection}
+            onClick={() => applySelection(true)}
           >
-            Confirmer
+            Appliquer
           </button>
         </div>
       )}

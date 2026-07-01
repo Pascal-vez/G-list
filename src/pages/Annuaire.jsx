@@ -18,12 +18,14 @@ import {
   filtersFromSearchParams,
 } from '../utils/annuaireFilters';
 import SearchBar from '../components/SearchBar';
+import { useTranslation } from '../i18n/I18nContext';
 import styles from './Annuaire.module.css';
 
 export default function Annuaire() {
+  const { t } = useTranslation();
   usePageMeta({
-    title: 'Annuaire',
-    description: 'Parcourez tous les professionnels de Guinée — filtrez par catégorie, ville, note et plus.',
+    title: t('annuaire.meta.title'),
+    description: t('annuaire.meta.description'),
     path: '/annuaire',
   });
 
@@ -102,16 +104,16 @@ export default function Annuaire() {
     <div className={styles.page}>
       <header className={styles.hero}>
         <div className={styles.heroInner}>
-          <p className={styles.eyebrow}>G-List · Guinée</p>
-          <h1 className={`${styles.heroTitle} hero-display`}>Annuaire professionnel</h1>
+          <p className={styles.eyebrow}>{t('annuaire.eyebrow')}</p>
+          <h1 className={`${styles.heroTitle} hero-display`}>{t('annuaire.title')}</h1>
           <p className={styles.heroSubtitle}>
-            {professionals.length} professionnels référencés — trouvez et contactez le bon expert partout en Guinée.
+            {t('annuaire.subtitle', { count: professionals.length })}
           </p>
           <SearchBar
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onSubmit={handleSearchSubmit}
-            ariaLabel="Rechercher dans l'annuaire"
+            ariaLabel={t('search.ariaLabelDirectory')}
           />
         </div>
       </header>
@@ -136,8 +138,8 @@ export default function Annuaire() {
 
           <div className={styles.resultsArea}>
             <p className={styles.count}>
-              {filtered.length} professionnel{filtered.length !== 1 ? 's' : ''}
-              {location && ' · triés par proximité'}
+              {t(filtered.length === 1 ? 'annuaire.results.count' : 'annuaire.results.count_plural', { count: filtered.length })}
+              {location && t('annuaire.results.sortedByProximity')}
             </p>
 
             {filtered.length > 0 ? (
@@ -149,10 +151,10 @@ export default function Annuaire() {
             ) : (
               <div className={styles.empty}>
                 <SearchX size={40} className={styles.emptyIcon} aria-hidden="true" />
-                <p>Aucun professionnel trouvé pour ces critères. Essayez d&apos;élargir votre recherche ou de changer de ville.</p>
+                <p>{t('annuaire.empty.message')}</p>
                 {!isDefaultAnnuaireFilters(filters) && (
                   <button type="button" className={styles.resetLink} onClick={handleReset}>
-                    Réinitialiser les filtres
+                    {t('filters.resetAll')}
                   </button>
                 )}
               </div>

@@ -432,8 +432,24 @@
   font-family: inherit;
 }
 
-.passwordInput::placeholder {
-  color: rgba(160, 190, 220, 0.45);
+/* Annule les styles globaux input (index.css) — fond/bordure lisibles sur la carte glass */
+.glassInputWrap input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.95);
+}
+
+.glassInputWrap input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.glassInputWrap input::placeholder {
+  color: rgba(180, 210, 235, 0.68) !important;
+  opacity: 1;
 }
 
 .passwordInput:disabled {
@@ -467,7 +483,7 @@
   border: none;
   border-radius: 10px;
   background: #F5C518;
-  color: #0E1208;
+  color: var(--texte-sur-or);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.02em;
@@ -492,8 +508,8 @@
 }
 
 .primaryBtnBlocked {
-  background: #F5F5F5 !important;
-  color: #AAA !important;
+  background: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
   box-shadow: none !important;
   opacity: 1 !important;
 }
@@ -502,7 +518,7 @@
   width: 18px;
   height: 18px;
   border: 2px solid rgba(14, 18, 8, 0.2);
-  border-top-color: #0E1208;
+  border-top-color: var(--text-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -768,6 +784,21 @@
   filter: brightness(1.04);
 }
 
+.sidebarBadge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #DC2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .sidebarPremium {
   margin: auto 16px 16px;
   padding: 14px;
@@ -798,7 +829,7 @@
   margin-top: 4px;
   padding: 8px 12px;
   background: var(--or-principal);
-  color: var(--bg-deep);
+  color: var(--texte-sur-or);
   border: none;
   border-radius: 8px;
   font-size: 12px;
@@ -945,7 +976,7 @@
 .kpiValue {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--or-texte);
   line-height: 1;
 }
 
@@ -1054,7 +1085,7 @@
   gap: 8px;
   padding: clamp(10px, 1vw, 12px) clamp(18px, 2vw, 24px);
   background: var(--or-principal);
-  color: var(--bg-deep);
+  color: var(--texte-sur-or);
   border: none;
   border-radius: clamp(8px, 1vw, 10px);
   font-size: clamp(13px, 1.1vw, 14px);
@@ -1125,7 +1156,8 @@
 
 .evalMetricValue {
   font-size: clamp(22px, 2.5vw, 34px);
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--or-texte);
 }
 
 .evalList {
@@ -1437,4 +1469,22 @@
   .actions {
     flex-direction: row;
   }
+}
+
+/* ── Hiérarchie visuelle — mode clair uniquement ── */
+:global(html[data-theme="light"]) .kpiCard {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .card {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .evalMetric {
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-color);
+}
+:global(html[data-theme="light"]) .sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
 }
